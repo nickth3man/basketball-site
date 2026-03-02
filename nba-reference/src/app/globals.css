@@ -3,6 +3,19 @@
 :root {
   --background: #f7f3e9;
   --foreground: #201d19;
+  --heading: #2b261f;
+  --muted: #574f3f;
+  --paper: #fdfbf5;
+  --paper-alt: #f3ecde;
+  --line: #b8ab8f;
+  --line-soft: #d2c8b3;
+  --accent: #ffb11b;
+  --link: #0d4a8a;
+  --button-bg: #f6f3ea;
+  --button-hover: #ece5d7;
+  --row-alt: #faf8f2;
+  --row-hover: #efe7d8;
+  --thead: #ece5d7;
 }
 
 @theme inline {
@@ -13,7 +26,52 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at 15% -10%, #fffaf0 0%, rgba(255, 250, 240, 0) 42%),
+    radial-gradient(circle at 90% 0%, #efe6d4 0%, rgba(239, 230, 212, 0) 34%),
+    var(--background);
   color: var(--foreground);
   font-family: "Times New Roman", Times, serif;
+}
+
+a {
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-slide-in {
+  animation: fade-slide-in 320ms ease-out both;
+}
+
+.panel-paper {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-alt) 100%);
+  box-shadow: 0 8px 20px rgba(32, 29, 25, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-slide-in {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -57,7 +57,7 @@ export function StatsTable({
         <a
           href={`data:text/csv;charset=utf-8,${encodeURIComponent(csvData)}`}
           download="table-export.csv"
-          className="rounded border border-[#b8ab8f] bg-[#f6f3ea] px-2 py-1 text-xs text-[#3b3428] hover:bg-[#ece5d7]"
+          className="rounded border border-[#b8ab8f] bg-[#f6f3ea] px-2 py-1 text-xs text-[#3b3428] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ece5d7] active:translate-y-0 active:scale-[0.98]"
         >
           Export CSV
         </a>
@@ -81,7 +81,7 @@ export function StatsTable({
                       setDirection("desc");
                     }
                   }}
-                  className="w-full cursor-pointer"
+                  className="w-full cursor-pointer transition-colors duration-150 hover:text-[#5a3f12]"
                 >
                   {col.label}
                 </button>
@@ -90,20 +90,31 @@ export function StatsTable({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((row, i) => (
-            <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#faf8f2]"}>
-              {columns.map((col) => (
-                <td
-                  key={`${i}-${col.key}`}
-                  className={`border border-[#d2c8b3] px-2 py-1 ${
-                    col.align === "right" ? "text-right tabular-nums" : "text-left"
-                  }`}
-                >
-                  {row[col.key] == null ? "-" : String(row[col.key])}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {sorted.map((row, i) => {
+            const primaryKey = row.id ?? row.game_id ?? row.bref_abbrev;
+            const rowKey =
+              typeof primaryKey === "string" || typeof primaryKey === "number"
+                ? `${primaryKey}`
+                : columns.map((col) => `${row[col.key] ?? ""}`).join("|");
+
+            return (
+              <tr
+                key={rowKey}
+                className={`${i % 2 === 0 ? "bg-white" : "bg-[#faf8f2]"} transition-colors duration-200 hover:bg-[#efe7d8]`}
+              >
+                {columns.map((col) => (
+                  <td
+                    key={`${rowKey}-${col.key}`}
+                    className={`border border-[#d2c8b3] px-2 py-1 ${
+                      col.align === "right" ? "text-right tabular-nums" : "text-left"
+                    }`}
+                  >
+                    {row[col.key] == null ? "-" : String(row[col.key])}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

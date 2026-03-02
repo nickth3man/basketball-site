@@ -10,19 +10,31 @@ export default function Home() {
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
-      <h1 className="mb-1 text-3xl font-bold text-[#2b261f]">Basketball Stats and History</h1>
-      <p className="mb-5 text-sm text-[#574f3f]">Season {seasonId} standings, scores, and player/team lookup.</p>
+      <h1 className="fade-slide-in mb-1 text-3xl font-bold text-[var(--heading)]">Basketball Stats and History</h1>
+      <p className="fade-slide-in mb-5 text-sm text-[var(--muted)]" style={{ animationDelay: "80ms" }}>
+        Season {seasonId} standings, scores, and player/team lookup.
+      </p>
 
-      <div className="mb-6 grid gap-3 md:grid-cols-[2fr_1fr]">
+      <div className="fade-slide-in mb-6 grid gap-3 md:grid-cols-[2fr_1fr]" style={{ animationDelay: "140ms" }}>
         <SearchBox />
         <div className="flex items-center gap-2 text-sm">
-          <Link href="/api/export/standings" className="rounded border border-[#b8ab8f] bg-[#f6f3ea] px-2 py-2 hover:bg-[#ece5d7]">Export Standings</Link>
-          <Link href="/api/export/games" className="rounded border border-[#b8ab8f] bg-[#f6f3ea] px-2 py-2 hover:bg-[#ece5d7]">Export Games</Link>
+          <Link
+            href="/api/export/standings"
+            className="rounded border border-[var(--line)] bg-[var(--button-bg)] px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--button-hover)] active:translate-y-0 active:scale-[0.98]"
+          >
+            Export Standings
+          </Link>
+          <Link
+            href="/api/export/games"
+            className="rounded border border-[var(--line)] bg-[var(--button-bg)] px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--button-hover)] active:translate-y-0 active:scale-[0.98]"
+          >
+            Export Games
+          </Link>
         </div>
       </div>
 
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold text-[#2b261f]">{seasonId} NBA Standings</h2>
+      <section className="fade-slide-in panel-paper mb-8 p-3" style={{ animationDelay: "200ms" }}>
+        <h2 className="mb-2 text-xl font-bold text-[var(--heading)]">{seasonId} NBA Standings</h2>
         <StatsTable
           columns={[
             { key: "bref_abbrev", label: "Team" },
@@ -36,12 +48,12 @@ export default function Home() {
         />
       </section>
 
-      <section>
-        <h2 className="mb-2 text-xl font-bold text-[#2b261f]">Recent Games</h2>
+      <section className="fade-slide-in panel-paper p-3" style={{ animationDelay: "260ms" }}>
+        <h2 className="mb-2 text-xl font-bold text-[var(--heading)]">Recent Games</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse text-xs">
             <thead>
-              <tr className="bg-[#ece5d7]">
+              <tr className="bg-[var(--thead)]">
                 {[
                   "Date",
                   "Away",
@@ -50,20 +62,23 @@ export default function Home() {
                   "Home PTS",
                   "Box Score",
                 ].map((h) => (
-                  <th key={h} className="border border-[#b8ab8f] px-2 py-1 text-left">{h}</th>
+                  <th key={h} className="border border-[var(--line)] px-2 py-1 text-left">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {games.map((g, i) => (
-                <tr key={g.game_id} className={i % 2 === 0 ? "bg-white" : "bg-[#faf8f2]"}>
-                  <td className="border border-[#d2c8b3] px-2 py-1">{g.game_date}</td>
-                  <td className="border border-[#d2c8b3] px-2 py-1">{g.away_abbrev}</td>
-                  <td className="border border-[#d2c8b3] px-2 py-1 text-right">{g.away_score ?? "-"}</td>
-                  <td className="border border-[#d2c8b3] px-2 py-1">{g.home_abbrev}</td>
-                  <td className="border border-[#d2c8b3] px-2 py-1 text-right">{g.home_score ?? "-"}</td>
-                  <td className="border border-[#d2c8b3] px-2 py-1">
-                    <Link className="text-[#0d4a8a] underline" href={`/games/${g.game_id}`}>
+                <tr
+                  key={g.game_id}
+                  className={`${i % 2 === 0 ? "bg-white" : "bg-[var(--row-alt)]"} transition-colors duration-200 hover:bg-[var(--row-hover)]`}
+                >
+                  <td className="border border-[var(--line-soft)] px-2 py-1">{g.game_date}</td>
+                  <td className="border border-[var(--line-soft)] px-2 py-1">{g.away_abbrev}</td>
+                  <td className="border border-[var(--line-soft)] px-2 py-1 text-right">{g.away_score ?? "-"}</td>
+                  <td className="border border-[var(--line-soft)] px-2 py-1">{g.home_abbrev}</td>
+                  <td className="border border-[var(--line-soft)] px-2 py-1 text-right">{g.home_score ?? "-"}</td>
+                  <td className="border border-[var(--line-soft)] px-2 py-1">
+                    <Link className="text-[var(--link)] underline decoration-transparent transition-all duration-200 hover:decoration-current" href={`/games/${g.game_id}`}>
                       Box Score
                     </Link>
                   </td>
