@@ -44,17 +44,12 @@ import { formatMoney, formatPct } from "@/lib/formatters";
 import { notFound } from "next/navigation";
 
 /**
- * Player detail page component.
- * 
- * Fetches comprehensive player data in parallel:
- * 1. Basic player info (404 if not found)
- * 2. All stat varieties (per-game, per-36, per-100, totals, advanced)
- * 3. Shooting data (traditional and adjusted)
- * 4. Play-by-play derived stats
- * 5. Game log, awards, salaries, career summary, game highs
- * 
- * @param params - Promise resolving to route params containing player ID
- * @returns Player detail page JSX
+ * Render the player detail page showing a comprehensive dashboard of a player's biography, season and per-game statistics, shooting and advanced metrics, play-by-play derived stats, game log, awards, salary history, career summary, and game highs.
+ *
+ * Triggers a 404 (via notFound) when the requested player cannot be found.
+ *
+ * @param params - Promise resolving to route params containing the player's bref `id`
+ * @returns The rendered player detail page JSX
  */
 export default async function PlayerPage({
   params,

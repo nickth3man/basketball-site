@@ -17,13 +17,10 @@
 import { getDb } from "@/lib/db";
 
 /**
- * Retrieves basic game information by ID.
- * 
- * Joins with dim_team to get team names and abbreviations for both
- * home and away teams.
- * 
- * @param gameId - Game ID (e.g., "0022400001")
- * @returns Game record or undefined if not found
+ * Retrieve basic game information for the specified game ID.
+ *
+ * @param gameId - Game identifier (e.g., "0022400001")
+ * @returns A record containing game fields (date, season type, status, home/away scores) and home/away team names and abbreviations, or `undefined` if not found
  */
 export function getGameById(gameId: string) {
   return getDb()
@@ -41,14 +38,14 @@ export function getGameById(gameId: string) {
 }
 
 /**
- * Retrieves play-by-play events for a game.
- * 
- * Returns the most significant events (those with descriptions) from
- * the end of the game (newest first). Useful for game summaries.
- * 
- * @param gameId - Game ID
+ * Return the most significant play-by-play events for a game, ordered from newest to oldest.
+ *
+ * Only events that include a home or visitor description are returned; results are ordered by period (descending)
+ * then clock time (descending) and limited by `limit`.
+ *
+ * @param gameId - Game identifier
  * @param limit - Maximum number of events to return (default: 40)
- * @returns Array of play-by-play records
+ * @returns An array of play-by-play records, each containing `period`, `pc_time_string`, `home_description`, `visitor_description`, and `score`
  */
 export function getGamePbpEvents(gameId: string, limit = 40) {
   return getDb()
@@ -64,15 +61,14 @@ export function getGamePbpEvents(gameId: string, limit = 40) {
 }
 
 /**
- * Retrieves traditional player box score statistics.
- * 
- * Returns all player stats for both teams, sorted by:
- * 1. Team (alphabetical)
- * 2. Starter status (starters first)
- * 3. Minutes played (descending)
- * 
- * @param gameId - Game ID
- * @returns Array of player box score records
+ * Retrieve traditional player box score statistics for a game.
+ *
+ * Results include team abbreviation, player identifiers and name, starter flag, minutes played,
+ * standard counting stats (FGM/FGA, 3PM/3PA, FTM/FTA, rebounds, assists, steals, blocks, turnovers, fouls),
+ * points, and plus/minus. Rows are ordered by team abbreviation (A–Z), starters before reserves, then minutes played descending.
+ *
+ * @param gameId - Unique identifier of the game to query
+ * @returns An array of player box score records matching the game, or an empty array if no records exist
  */
 export function getGamePlayerBox(gameId: string) {
   return getDb()
@@ -108,18 +104,16 @@ export function getGamePlayerBox(gameId: string) {
 }
 
 /**
- * Retrieves advanced player box score statistics.
- * 
- * Calculates advanced metrics from raw box score data:
- * - eFG%: Effective FG% = (FG + 0.5*3P) / FGA
- * - TS%: True Shooting% = PTS / (2 * (FGA + 0.44*FTA))
- * - TOV%: Turnover Rate = 100 * TOV / (FGA + 0.44*FTA + TOV)
- * - Game Score: Single-game productivity metric
- * 
- * Sorted by team then Game Score (highest first).
- * 
- * @param gameId - Game ID
- * @returns Array of advanced player box score records
+ * Retrieve advanced player box score statistics for a specific game.
+ *
+ * Computes player-level advanced metrics: effective field goal percentage (`efg_pct`),
+ * true shooting percentage (`ts_pct`), turnover percentage (`tov_pct`), and Hollinger
+ * single-game `game_score`. Results are ordered by team abbreviation and then by
+ * `game_score` descending.
+ *
+ * @param gameId - Identifier of the game to query
+ * @returns Array of records with keys: `team`, `bref_id`, `full_name`, `minutes_played`,
+ * `efg_pct`, `ts_pct`, `tov_pct`, and `game_score`
  */
 export function getGamePlayerAdvancedBox(gameId: string) {
   return getDb()
@@ -159,19 +153,21 @@ export function getGamePlayerAdvancedBox(gameId: string) {
 }
 
 /**
- * Calculates Four Factors for both teams in a game.
- * 
- * The Four Factors explain team success through:
- * - eFG%: Shooting efficiency
- * - TOV%: Ball security (lower is better)
- * - ORB%: Offensive rebounding (extending possessions)
- * - FT/FGA: Free throw generation
- * 
- * Note: This function performs calculations in JavaScript rather than SQL
- * to handle division-by-zero edge cases cleanly.
- * 
- * @param gameId - Game ID
- * @returns Array of Four Factors records (one per team)
+ * Compute the Four Factors for each team in a game.
+ *
+ * Calculates effective field goal percentage (eFG%), turnover percentage (TOV%),
+ * offensive rebounding percentage (ORB%), free throws per field goal attempt (FT/FGA),
+ * and defensive rebounding percentage (DRB%) for both teams and returns one record per team.
+ * If a metric cannot be computed due to zero denominators, the corresponding value is `null`.
+ *
+ * @param gameId - Game identifier
+ * @returns An array of records (one per team) with fields:
+ * - `team`: team abbreviation
+ * - `efg_pct`: effective field goal percentage (number | null)
+ * - `tov_pct`: turnover percentage (number | null)
+ * - `orb_pct`: offensive rebounding percentage (number | null)
+ * - `ft_fga`: free throws made per field goal attempt (number | null)
+ * - `drb_pct`: defensive rebounding percentage (number | null)
  */
 export function getGameTeamFourFactors(gameId: string) {
   const rows = getDb()
@@ -235,14 +231,12 @@ export function getGameTeamFourFactors(gameId: string) {
 }
 
 /**
- * Calculates the line score (points per period) for a game.
- * 
- * Processes play-by-play score strings to derive each team's
- * scoring by period. Handles edge cases where score format
- * may be inconsistent.
- * 
- * @param gameId - Game ID
- * @returns Array of period scoring records
+ * Compute each team's points scored in each period for a game.
+ *
+ * Parses cumulative score entries from play-by-play and converts them into per-period points. Rows with nonstandard or unparsable score values are ignored.
+ *
+ * @param gameId - The game identifier used to fetch play-by-play score entries
+ * @returns Array of objects with `period` (period number), `away` (away team points in that period), and `home` (home team points in that period)
  */
 export function getGameLineScore(gameId: string) {
   const rows = getDb()

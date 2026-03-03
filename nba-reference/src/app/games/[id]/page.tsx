@@ -27,21 +27,16 @@ import {
 import { notFound } from "next/navigation";
 
 /**
- * Game detail page component.
- * 
- * Fetches all game data:
- * 1. Basic game info (404 if not found)
- * 2. Team box scores
- * 3. Player box scores (both teams)
- * 4. Advanced player stats
- * 5. Line score by period
- * 6. Four Factors
- * 7. Play-by-play events
- * 
- * Separates home and away players for display.
- * 
- * @param params - Promise resolving to route params containing game ID
- * @returns Game detail page JSX
+ * Render the game detail page for a specified game.
+ *
+ * Fetches game metadata, team and player box scores, advanced player stats,
+ * line score by period, team four factors, and recent play-by-play events,
+ * then partitions player data by home and away teams for display.
+ *
+ * Triggers a 404 response when the game ID is not found.
+ *
+ * @param params - Route params promise that resolves to an object with the `id` of the game
+ * @returns The game detail page JSX element for the specified game
  */
 export default async function GamePage({
   params,

@@ -43,16 +43,10 @@ export const metadata: Metadata = {
 };
 
 /**
- * Root layout component.
- * 
- * Wraps all pages with:
- * - Geist font CSS variables
- * - Antialiased text rendering
- * - SiteHeader navigation
- * - Main content area
- * 
- * @param children - Page content from route segments
- * @returns Root layout JSX
+ * Application root layout that applies global fonts and styles and renders the site header around page content.
+ *
+ * @param children - Page content for the current route
+ * @returns The root HTML structure containing the site header and `children`
  */
 export default function RootLayout({
   children,

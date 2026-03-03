@@ -24,12 +24,12 @@ import {
 } from "@/lib/table-styles";
 
 /**
- * Games page component.
- * 
- * Fetches recent games from the cached query and displays
- * them in a table with links to individual game pages.
- * 
- * @returns Games page JSX
+ * Render the Games page showing recent completed games in a table.
+ *
+ * Fetches up to 200 recent games and lists each game's date, away/home teams,
+ * scores (or "-" when missing), and a link to the game's box score.
+ *
+ * @returns The Games page JSX element containing the table of recent games
  */
 export default function GamesPage() {
   const games = getRecentGames(200);

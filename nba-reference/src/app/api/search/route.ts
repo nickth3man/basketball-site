@@ -12,32 +12,14 @@ import { searchEntities } from "@/lib/query/search";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * GET handler for /api/search?q={query}
- * 
- * Query Parameters:
- * - `q`: Search query string (minimum 2 characters)
- * 
- * Response:
- * ```json
- * {
- *   "results": [
- *     { "type": "player", "id": "jamesle01", "label": "LeBron James" },
- *     { "type": "team", "id": "LAL", "label": "Los Angeles Lakers" }
- *   ]
- * }
- * ```
- * 
- * Validation:
- * - Returns empty results array if query is less than 2 characters
- * - This prevents excessive short queries and improves performance
- * 
- * @param req - Next.js request object
- * @returns JSON response with search results
- * @example
- * ```ts
- * // Request: /api/search?q=lebron
- * // Response: { results: [...] }
- * ```
+ * Handle GET requests to /api/search and return matching search results.
+ *
+ * Enforces a minimum query length of 2 characters; if the `q` parameter is shorter than 2 characters
+ * the response contains an empty `results` array. When `q` is 2 or more characters, returns search
+ * results produced from the query.
+ *
+ * @param req - Next.js request object containing the `q` query parameter
+ * @returns An object with a `results` array of search entries (e.g. `{ type: string, id: string, label: string }`)
  */
 export function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";

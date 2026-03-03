@@ -23,12 +23,11 @@ import {
 } from "@/lib/table-styles";
 
 /**
- * Teams directory page component.
- * 
- * Fetches all teams from the directory query and displays
- * them in a simple table format with links to detail pages.
- * 
- * @returns Teams directory page JSX
+ * Render the Teams directory page.
+ *
+ * Displays a table of NBA teams where each row shows the team's full name (with abbreviation), conference, and division, and links the team name to its detail page.
+ *
+ * @returns The Teams directory page JSX element
  */
 export default function TeamsPage() {
   const teams = getTeamDirectory();

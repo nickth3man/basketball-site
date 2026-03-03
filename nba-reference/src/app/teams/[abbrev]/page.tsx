@@ -31,20 +31,10 @@ import { formatSignedNumber } from "@/lib/formatters";
 import { notFound } from "next/navigation";
 
 /**
- * Team detail page component.
- * 
- * Fetches comprehensive team data:
- * 1. Basic team info (404 if not found)
- * 2. Roster with per-game stats
- * 3. Season history (20 seasons)
- * 4. Current season summary
- * 5. Four Factors comparison
- * 6. Recent games (20)
- * 7. Per-game averages
- * 8. Player leaders
- * 
- * @param params - Promise resolving to route params containing team abbreviation
- * @returns Team detail page JSX
+ * Render the team detail dashboard for the team identified by the route abbreviation.
+ *
+ * @param params - Promise resolving to route params containing the `abbrev` route parameter
+ * @returns The JSX element for the team's detail page
  */
 export default async function TeamPage({
   params,

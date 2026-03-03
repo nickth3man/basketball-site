@@ -49,12 +49,13 @@ type PreparePatchOptions = {
 const queryResultCache = new Map<string, CacheEntry>();
 
 /**
- * Builds a unique cache key from SQL query and parameters.
- * Uses JSON serialization for parameter comparison.
- * 
- * @param sql - The SQL query string
- * @param params - Array of query parameters
- * @returns Unique cache key string
+ * Create a stable cache key for a SQL query and its parameters.
+ *
+ * The key is formed by concatenating the SQL string, "::", and the JSON-serialized `params`.
+ *
+ * @param sql - The SQL query string to include in the key
+ * @param params - Ordered array of query parameters; values are JSON-serialized
+ * @returns The combined cache key string
  */
 function buildQueryCacheKey(sql: string, params: unknown[]): string {
   return `${sql}::${JSON.stringify(params)}`;
@@ -74,12 +75,11 @@ function cleanupExpiredCacheEntries(): void {
 }
 
 /**
- * Retrieves a cached result if it exists and hasn't expired.
- * Implements LRU behavior by moving accessed entries to the end of the Map.
- * 
+ * Return the cached value for `key` if present and not expired; marks the entry as recently used.
+ *
  * @param key - Cache key to look up
- * @returns Cached value or undefined if not found/expired
  * @typeParam T - Expected return type
+ * @returns The cached value for `key`, or `undefined` if not found or expired
  */
 function readCachedResult<T>(key: string): T | undefined {
   const entry = queryResultCache.get(key);
@@ -112,14 +112,15 @@ function evictLeastRecentlyUsedEntryIfNeeded(): void {
 }
 
 /**
- * Stores a query result in the cache with TTL expiration.
- * Also triggers cleanup of expired entries and LRU eviction if needed.
- * 
+ * Store a query result in the in-memory cache with a TTL and enforce cache limits.
+ *
+ * Cleans up any expired entries before storing and evicts the least-recently-used entry if the cache exceeds its maximum size.
+ *
+ * @typeParam T - Type of the cached value
  * @param key - Cache key for this entry
  * @param value - Query result to cache
  * @param ttlMs - Time-to-live in milliseconds
- * @returns The cached value (for convenient chaining)
- * @typeParam T - Type of the cached value
+ * @returns The stored `value`
  */
 function writeCachedResult<T>(key: string, value: T, ttlMs: number): T {
   // opportunistic cleanup of expired entries to keep map from growing with dead keys
@@ -178,17 +179,13 @@ function stripLeadingSqlComments(sql: string): string {
 }
 
 /**
- * Determines whether a SQL query is safe for read-result caching.
+ * Determines whether a SQL query is eligible for read-result caching.
  *
- * Guardrail policy:
- * - Cache only queries whose first token is SELECT
- * - Do not cache other statements (INSERT/UPDATE/DELETE/PRAGMA/etc.)
+ * Only queries whose first non-comment token is `SELECT` are considered cacheable;
+ * other statement types (INSERT/UPDATE/DELETE/PRAGMA/etc.) are excluded to avoid stale reads.
  *
- * This intentionally conservative check avoids stale read issues for future
- * write-enabled database usage.
- *
- * @param sql - SQL query string
- * @returns True when query is cacheable as read-only SELECT
+ * @param sql - The SQL query string to evaluate
+ * @returns `true` if the query's first non-comment token is `SELECT`, `false` otherwise
  */
 function isCacheableReadQuery(sql: string): boolean {
   const normalized = stripLeadingSqlComments(sql).toUpperCase();
@@ -259,11 +256,12 @@ function patchPrepareWithCache(
 }
 
 /**
- * Determines the database file path.
- * Uses DB_PATH environment variable if set, otherwise defaults to
- * "nba_raw_data.db" in the current working directory.
- * 
- * @returns Absolute path to the SQLite database file
+ * Get the filesystem path to the SQLite database used by the application.
+ *
+ * If the `DB_PATH` environment variable is set its value is returned; otherwise
+ * returns an absolute path to `nba_raw_data.db` in the current working directory.
+ *
+ * @returns The database file path; when `DB_PATH` is unset, an absolute path to `nba_raw_data.db`
  */
 function dbPath(): string {
   const envPath = process.env.DB_PATH;
@@ -272,15 +270,9 @@ function dbPath(): string {
 }
 
 /**
- * Returns the singleton database instance, initializing it if necessary.
- * 
- * Configuration applied on initialization:
- * - Read-only mode (no mutations allowed)
- * - WAL (Write-Ahead Logging) mode for better read concurrency
- * - Foreign key constraints enabled
- * - Automatic query caching via patchPrepareWithCache()
- * 
- * @returns Database instance with caching enabled
+ * Get the singleton database instance, initializing it on first access and configuring it for read-only use with WAL, foreign keys, and automatic query caching.
+ *
+ * @returns The singleton Database instance configured for read-only access, WAL journaling, foreign key enforcement, and automatic query caching.
  */
 export function getDb(): Database.Database {
   if (!db) {
@@ -295,21 +287,13 @@ export function getDb(): Database.Database {
 }
 
 /**
- * Executes a single-row query with caching.
- * 
+ * Execute a SQL query and cache its single-row result.
+ *
  * @param sql - SQL query string with placeholders
- * @param params - Array of parameter values
- * @param ttlMs - Cache TTL in milliseconds (default: 30s)
- * @returns Single row result or undefined
- * @typeParam T - Expected row type
- * @example
- * ```ts
- * const row = getCachedQueryOne<{ id: string; name: string }>(
- *   "SELECT id, name FROM users WHERE id = ?",
- *   [userId],
- *   60_000
- * );
- * ```
+ * @param params - Positional parameter values for the query
+ * @param ttlMs - Cache TTL in milliseconds (default: 30000)
+ * @returns `T` or `undefined` — the first row returned by the query
+ * @typeParam T - Expected row shape
  */
 export function getCachedQueryOne<T>(
   sql: string,
@@ -327,21 +311,13 @@ export function getCachedQueryOne<T>(
 }
 
 /**
- * Executes a multi-row query with caching.
- * 
+ * Executes a SQL query that returns multiple rows and caches the result for the specified TTL.
+ *
  * @param sql - SQL query string with placeholders
- * @param params - Array of parameter values
- * @param ttlMs - Cache TTL in milliseconds (default: 30s)
- * @returns Array of row results
- * @typeParam T - Expected row type
- * @example
- * ```ts
- * const rows = getCachedQueryMany<Array<{ id: string }>>(
- *   "SELECT id FROM users WHERE active = ?",
- *   [1],
- *   60_000
- * );
- * ```
+ * @param params - Values to bind to the query placeholders in order
+ * @param ttlMs - Cache TTL in milliseconds (default: 30_000)
+ * @returns The query result; typically an array of rows conforming to `T`
+ * @typeParam T - Expected shape of the returned rows
  */
 export function getCachedQueryMany<T>(
   sql: string,
@@ -359,12 +335,11 @@ export function getCachedQueryMany<T>(
 }
 
 /**
- * Returns the most recent season ID from the database.
- * Falls back to "2025-26" if no seasons are found.
- * 
- * Used throughout the app as a default season filter.
- * 
- * @returns Season ID string (e.g., "2024-25")
+ * Get the most recent season ID from the database.
+ *
+ * Falls back to "2025-26" when the seasons table is empty or no row is found.
+ *
+ * @returns The latest season ID (e.g., "2024-25"); `"2025-26"` if none found.
  */
 export function getLatestSeasonId(): string {
   const row = getDb()

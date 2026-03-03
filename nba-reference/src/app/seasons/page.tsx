@@ -24,12 +24,11 @@ import {
 } from "@/lib/table-styles";
 
 /**
- * Seasons directory page component.
- * 
- * Fetches up to 40 seasons and displays them in a table
- * with links to season detail pages.
- * 
- * @returns Seasons directory page JSX
+ * Render the Seasons directory page listing NBA seasons in a table with links to each season's detail page.
+ *
+ * Fetches up to 40 seasons and orders them by start year (newest first) before rendering.
+ *
+ * @returns The JSX element for the Seasons directory page
  */
 export default function SeasonsPage() {
   const seasons = getSeasons(40);

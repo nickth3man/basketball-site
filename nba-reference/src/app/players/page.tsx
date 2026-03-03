@@ -23,12 +23,11 @@ import {
 } from "@/lib/table-styles";
 
 /**
- * Players directory page component.
- * 
- * Fetches up to 400 players from the directory query.
- * Uses a simple HTML table for lightweight rendering.
- * 
- * @returns Players directory page JSX
+ * Render the players directory page.
+ *
+ * Fetches up to 400 players and displays them in a simple HTML table with columns for Player, Pos, and Status.
+ *
+ * @returns The page JSX containing the players table
  */
 export default function PlayersPage() {
   const players = getPlayerDirectory(400);

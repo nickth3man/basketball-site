@@ -91,19 +91,12 @@ export function getHomeStandings(limit = 15): TeamStandingRow[] {
 }
 
 /**
- * Retrieves the most recent completed games.
- * 
- * Only returns games with final scores (home_score and away_score not null).
- * Joins with dim_team to get team abbreviations.
- * 
- * Cache TTL: 15s (games complete frequently during season).
- * 
+ * Retrieve the most recent completed games for the homepage.
+ *
+ * Only games with final scores are included; results are ordered newest first.
+ *
  * @param limit - Maximum number of games to return (default: 12)
- * @returns Array of recent game records, ordered by date (newest first)
- * @example
- * ```ts
- * const games = getRecentGames(20); // Last 20 games
- * ```
+ * @returns An array of recent game records with team abbreviations and final scores, ordered by game date descending
  */
 export function getRecentGames(limit = 12): RecentGameRow[] {
   return getCachedQueryMany<RecentGameRow[]>(

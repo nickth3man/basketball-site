@@ -35,22 +35,10 @@ export function formatPct(value: string | number | null | undefined) {
 }
 
 /**
- * Formats a numeric value as USD currency.
- * 
- * Uses Intl.NumberFormat for locale-aware formatting with:
- * - USD currency symbol ($)
- * - No decimal places (rounded to whole dollars)
- * 
- * Returns "-" for null, undefined, or NaN values.
- * 
- * @param value - Numeric salary value
- * @returns Formatted currency string (e.g., "$45,000,000") or "-"
- * @example
- * ```ts
- * formatMoney(45000000)   // "$45,000,000"
- * formatMoney("45000000") // "$45,000,000"
- * formatMoney(null)       // "-"
- * ```
+ * Format a numeric value as US dollar currency with no fractional digits.
+ *
+ * @param value - Numeric value or numeric string representing an amount
+ * @returns The formatted currency string (e.g., "$45,000,000"), or "-" for null, undefined, or NaN
  */
 export function formatMoney(value: string | number | null | undefined) {
   if (value == null) return "-";

@@ -11,26 +11,11 @@
 import Link from "next/link";
 
 /**
- * Site header component with main navigation.
- * 
- * Features:
- * - Sticky positioning at top of viewport
- * - Gradient background (header-start → header-mid → header-start)
- * - Navigation links: Players, Teams, Games, Seasons
- * - Hover effects on links
- * - Responsive layout with max-width container
- * 
- * @returns React component for the site header
- * @example
- * ```tsx
- * // Used in root layout
- * <html>
- *   <body>
- *     <SiteHeader />
- *     {children}
- *   </body>
- * </html>
- * ```
+ * Renders the global site header with logo and primary navigation.
+ *
+ * The header is sticky with a gradient background and contains a home link labeled "NBA Reference" plus navigation links for Players, Teams, Games, and Seasons.
+ *
+ * @returns The header JSX element for the site's global navigation.
  */
 export function SiteHeader() {
   return (

@@ -25,16 +25,12 @@ import {
 import { notFound } from "next/navigation";
 
 /**
- * Season detail page component.
- * 
- * Fetches season data:
- * 1. Standings (404 if empty - invalid season)
- * 2. Statistical leaders (scoring, rebounding, assists)
- * 3. League-wide summary averages
- * 4. Recent games from the season
- * 
- * @param params - Promise resolving to route params containing season year/ID
- * @returns Season detail page JSX
+ * Render the season detail page for the specified year.
+ *
+ * If the season has no standings data, a 404 page is triggered.
+ *
+ * @param params - Promise resolving to route parameters containing the `year` string
+ * @returns The season detail page JSX element
  */
 export default async function SeasonPage({
   params,

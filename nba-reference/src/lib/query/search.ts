@@ -25,28 +25,12 @@ export type SearchEntityResult = {
 };
 
 /**
- * Searches for players and teams matching the query string.
- * 
- * Performs case-insensitive partial matching on:
- * - Players: full_name
- * - Teams: full_name and abbreviation
- * 
- * Results are combined and limited to 12 total (first 10 from each
- * category, then sliced). Each query is cached for 5 seconds.
- * 
- * Note: This function does not filter by minimum query length - 
- * callers should validate q.length >= 2 before calling for performance.
- * 
- * @param query - Search query string
- * @returns Array of matching entities (players and teams mixed)
- * @example
- * ```ts
- * const results = searchEntities("lebron");
- * // [{ type: "player", id: "jamesle01", label: "LeBron James" }, ...]
- * 
- * const teams = searchEntities("lal");
- * // [{ type: "team", id: "LAL", label: "Los Angeles Lakers" }]
- * ```
+ * Find players and teams whose names or abbreviations partially match the query.
+ *
+ * Performs case-insensitive partial matching against player full names and team full names and abbreviations, combines player and team results, and returns up to 12 total matches. Results for identical queries are cached for 5 seconds.
+ *
+ * @param query - Search string to match against names or abbreviations
+ * @returns An array of search results where each item has `type` ("player" | "team"), `id` (player bref_id or team abbreviation), and `label` (display name)
  */
 export function searchEntities(query: string): SearchEntityResult[] {
   const q = `%${query.toLowerCase()}%`;

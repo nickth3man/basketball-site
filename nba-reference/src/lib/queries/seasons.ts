@@ -37,13 +37,12 @@ export function getSeasons(limit = 30) {
 }
 
 /**
- * Retrieves the final standings for a season.
- * 
- * Sorted by wins (descending) then losses (ascending).
- * Includes key metrics: SRS (Simple Rating System), ratings, and pace.
- * 
- * @param seasonId - Season ID (e.g., "2024-25")
- * @returns Array of team standing records
+ * Retrieve final team standings for the specified season.
+ *
+ * Results are ordered by wins (descending) then losses (ascending).
+ *
+ * @param seasonId - Season identifier (for example, "2024-25")
+ * @returns An array of records for each team containing: `bref_abbrev` (team abbreviation), `w` (wins), `l` (losses), `srs` (Simple Rating System), `o_rtg` (offensive rating), `d_rtg` (defensive rating), `n_rtg` (net rating), and `pace`. Numeric fields may be `null`.
  */
 export function getSeasonStandings(seasonId: string) {
   return getDb()
@@ -57,14 +56,13 @@ export function getSeasonStandings(seasonId: string) {
 }
 
 /**
- * Retrieves the top scoring leaders for a season.
- * 
- * Players are ranked by points per game (minimum 10 games played).
- * Returns both per-game and total points for context.
- * 
- * @param seasonId - Season ID (e.g., "2024-25")
+ * Get the top scoring leaders for a season ordered by points per game.
+ *
+ * Includes only players with at least 10 games and returns both total and per-game scoring.
+ *
+ * @param seasonId - Season identifier (e.g., "2024-25")
  * @param limit - Maximum number of leaders to return (default: 25)
- * @returns Array of scoring leader records
+ * @returns Array of records with fields: `bref_id` (player Basketball-Reference id), `full_name`, `team` (team abbreviation), `g` (games played), `pts` (total points), `pts_pg` (points per game, rounded to one decimal)
  */
 export function getSeasonScoringLeaders(seasonId: string, limit = 25) {
   return getDb()
@@ -88,12 +86,12 @@ export function getSeasonScoringLeaders(seasonId: string, limit = 25) {
 
 /**
  * Retrieves the top rebounding leaders for a season.
- * 
- * Players are ranked by rebounds per game (minimum 10 games played).
- * 
+ *
+ * Returns players who played at least 10 games in the season, ordered by rebounds per game.
+ *
  * @param seasonId - Season ID (e.g., "2024-25")
- * @param limit - Maximum number of leaders to return (default: 25)
- * @returns Array of rebounding leader records
+ * @param limit - Maximum number of leaders to return
+ * @returns Array of records with `bref_id`, `full_name`, `team`, `g` (games), `reb` (total rebounds), and `reb_pg` (rebounds per game)
  */
 export function getSeasonReboundLeaders(seasonId: string, limit = 25) {
   return getDb()
@@ -116,13 +114,19 @@ export function getSeasonReboundLeaders(seasonId: string, limit = 25) {
 }
 
 /**
- * Retrieves the top assist leaders for a season.
- * 
- * Players are ranked by assists per game (minimum 10 games played).
- * 
- * @param seasonId - Season ID (e.g., "2024-25")
+ * Retrieve the season's top assist leaders ranked by assists per game.
+ *
+ * Players must have played at least 10 games; results are limited by `limit`.
+ *
+ * @param seasonId - Season identifier (for example, "2024-25")
  * @param limit - Maximum number of leaders to return (default: 25)
- * @returns Array of assist leader records
+ * @returns An array of records with the following fields:
+ *  - `bref_id`: Basketball-Reference player identifier
+ *  - `full_name`: Player's full name
+ *  - `team`: Team abbreviation
+ *  - `g`: Games played (integer)
+ *  - `ast`: Total assists (integer)
+ *  - `ast_pg`: Assists per game rounded to one decimal place (number)
  */
 export function getSeasonAssistLeaders(seasonId: string, limit = 25) {
   return getDb()
@@ -145,13 +149,17 @@ export function getSeasonAssistLeaders(seasonId: string, limit = 25) {
 }
 
 /**
- * Retrieves league-wide averages for a season.
- * 
- * Calculates average team stats per game across all regular season games.
- * Useful for understanding league-wide trends and comparing teams.
- * 
- * @param seasonId - Season ID (e.g., "2024-25")
- * @returns League summary record with per-game averages
+ * Compute league-wide per-game team averages for a given season.
+ *
+ * Averages are calculated across all regular-season team game logs for the specified season.
+ *
+ * @param seasonId - Season identifier (for example, "2024-25")
+ * @returns A record with:
+ *  - `ppg`: average team points per game (rounded to 1 decimal),
+ *  - `rpg`: average team rebounds per game (rounded to 1 decimal),
+ *  - `apg`: average team assists per game (rounded to 1 decimal),
+ *  - `efg_pct`: league average effective field-goal percentage (decimal, rounded to 3 decimals),
+ *  - `ts_pct`: league average true shooting percentage (decimal, rounded to 3 decimals)
  */
 export function getSeasonLeagueSummary(seasonId: string) {
   return getDb()

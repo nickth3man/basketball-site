@@ -29,16 +29,11 @@ import {
 } from "@/lib/table-styles";
 
 /**
- * Homepage server component.
- * 
- * Fetches data at request time with caching:
- * - Latest season ID for header
- * - Top 30 team standings
- * - 12 most recent completed games
- * 
- * Uses staggered animation delays for visual polish.
- * 
- * @returns Homepage JSX with standings and games sections
+ * Render the homepage showing the current season standings and recent games.
+ *
+ * Fetches the latest season ID, the top 30 team standings, and the 12 most recent completed games, then renders the page header, search/export controls, a standings table, and a recent games table.
+ *
+ * @returns The homepage JSX element containing header text, controls, a standings StatsTable, and a recent games table with box score links.
  */
 export default function Home() {
   const seasonId = getLatestSeasonId();

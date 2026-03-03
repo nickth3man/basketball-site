@@ -19,13 +19,12 @@
 import { getDb } from "@/lib/db";
 
 /**
- * Retrieves a player's basic information by their Basketball-Reference ID.
- * 
- * Falls back to most recent season's position if player.position is null.
- * Position lookup queries fact_player_season_stats for the latest non-empty position.
- * 
+ * Fetches a player's profile by Basketball-Reference ID.
+ *
+ * If the stored position is null or empty, uses the most recent non-empty position from the player's season stats.
+ *
  * @param brefId - Basketball-Reference player ID (e.g., "jamesle01")
- * @returns Player record or undefined if not found
+ * @returns The player record matching `brefId`, or `undefined` if not found
  */
 export function getPlayerByBrefId(brefId: string) {
   return getDb()
@@ -506,10 +505,10 @@ export function getPlayerCareerSummary(brefId: string) {
 }
 
 /**
- * Retrieves career single-game highs for all major stats.
- * 
- * @param playerId - Internal player ID (not bref_id)
- * @returns Record with maximum values for each stat category
+ * Retrieves a player's career single-game highs across major box-score categories.
+ *
+ * @param playerId - Internal player ID (database identifier, not Basketball-Reference ID)
+ * @returns A record with keys `mp`, `fg`, `fga`, `fg3`, `fg3a`, `ft`, `fta`, `pts`, `reb`, `ast`, `stl`, `blk`, `tov`, `pf`, and `plus_minus` mapping to the career single-game maximum for each stat, or `null` if no value exists.
  */
 export function getPlayerGameHighs(playerId: string) {
   return getDb()
@@ -537,10 +536,10 @@ export function getPlayerGameHighs(playerId: string) {
 }
 
 /**
- * Retrieves career totals for a player.
- * 
+ * Retrieves career totals for a player across all seasons.
+ *
  * @param brefId - Basketball-Reference player ID
- * @returns Record with summed totals across all seasons
+ * @returns A record mapping stat names (`g`, `mp`, `fg`, `fga`, `x3p`, `x3pa`, `ft`, `fta`, `reb`, `ast`, `stl`, `blk`, `tov`, `pf`, `pts`) to their summed totals; values may be `null` if no data exists
  */
 export function getPlayerCareerTotals(brefId: string) {
   return getDb()
@@ -568,11 +567,15 @@ export function getPlayerCareerTotals(brefId: string) {
 }
 
 /**
- * Retrieves career statistics against a specific opponent.
- * 
- * @param playerId - Internal player ID (not bref_id)
- * @param opponentTeamId - Internal team ID of opponent
- * @returns Aggregated stats for games vs the specified opponent
+ * Return aggregated career statistics for a player against a specific opponent.
+ *
+ * @param playerId - Internal player ID (database id, not Basketball-Reference ID)
+ * @param opponentTeamId - Internal team ID of the opponent
+ * @returns A record with the following fields:
+ * - `g`: number of matched games
+ * - `pts`, `reb`, `ast`: summed totals for points, rebounds, and assists
+ * - `pts_pg`, `reb_pg`, `ast_pg`: per-game averages rounded to one decimal place
+ * Only games with a non-null final score are included.
  */
 export function getPlayerVsOpponentStats(
   playerId: string,

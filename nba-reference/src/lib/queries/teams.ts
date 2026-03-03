@@ -50,13 +50,12 @@ export function getTeamByAbbrev(abbrev: string) {
 }
 
 /**
- * Retrieves the current roster for a team.
- * 
- * Uses the most recent season with roster data. If no roster exists,
- * falls back to the latest season ID from the database.
- * 
+ * Retrieve the current roster for a team.
+ *
+ * Determines the most recent season with roster data for the team; if none exists, falls back to the latest season ID from the database.
+ *
  * @param teamId - Internal team ID
- * @returns Array of player records on the team's roster
+ * @returns An array of player records for the roster. Each record contains `bref_id`, `full_name`, `position`, `height_cm`, `weight_kg`, and `birth_date` (values may be `null` where unknown)
  */
 export function getTeamRoster(teamId: string) {
   const latestRosterSeason = getDb()
@@ -82,14 +81,10 @@ export function getTeamRoster(teamId: string) {
 }
 
 /**
- * Retrieves the current roster with per-game statistics.
- * 
- * Joins roster data with player season stats for the same season.
- * Players are sorted by points per game (descending) to highlight
- * top contributors.
- * 
- * @param teamId - Internal team ID
- * @returns Array of roster records with stats
+ * Retrieve the current roster for a team including per-game season statistics.
+ *
+ * @param teamId - Internal team identifier
+ * @returns An array of roster records; each record contains player identifiers and profile fields (`bref_id`, `full_name`, `position`, `height_cm`, `weight_kg`, `birth_date`), season games played (`g`), and per-game averages (`pts_pg`, `reb_pg`, `ast_pg`) which are numbers or `null` when not available
  */
 export function getTeamRosterWithStats(teamId: string) {
   const latestRosterSeason = getDb()
@@ -162,16 +157,14 @@ export function getTeamFourFactorsComparison(teamAbbrev: string) {
 }
 
 /**
- * Retrieves season-by-season statistics for a team.
- * 
- * Returns the most recent 20 seasons of team data including:
- * - Win/loss record
- * - Margin of victory
- * - Offensive/defensive/net ratings
- * - Pace and efficiency metrics
- * 
+ * Retrieve season-by-season statistics for a team.
+ *
+ * Provides up to the most recent 20 seasons of team data, including wins, losses,
+ * margin of victory, offensive/defensive/net ratings, pace, true shooting percentage,
+ * effective field goal percentage, and turnover percentage.
+ *
  * @param teamAbbrev - Team abbreviation (e.g., "LAL")
- * @returns Array of season records, ordered by season (newest first)
+ * @returns An array of season records ordered newest first, each containing fields such as `season_id`, `w`, `l`, `mov`, `o_rtg`, `d_rtg`, `n_rtg`, `pace`, `ts_pct`, `e_fg_pct`, and `tov_pct`
  */
 export function getTeamSeasonStats(teamAbbrev: string) {
   return getDb()
@@ -214,12 +207,13 @@ export function getTeamSeasonNeighbors(teamAbbrev: string, seasonId: string) {
 }
 
 /**
- * Retrieves the current season summary for a team.
- * 
- * Returns the most recent season's record with arena and attendance info.
- * 
+ * Retrieve the most recent season summary for a team.
+ *
+ * The record includes season metadata and team metrics such as wins, losses,
+ * margin of victory, rating metrics, pace, efficiency percentages, arena, and attendance.
+ *
  * @param teamAbbrev - Team abbreviation (e.g., "LAL")
- * @returns Season summary record or undefined
+ * @returns The most recent season summary containing `season_id`, `w`, `l`, `mov`, `srs`, `o_rtg`, `d_rtg`, `n_rtg`, `pace`, `ts_pct`, `e_fg_pct`, `tov_pct`, `arena`, `attend`, and `attend_g`, or `undefined` if no record exists
  */
 export function getTeamCurrentSeasonSummary(teamAbbrev: string) {
   return getDb()
@@ -295,13 +289,10 @@ export function getTeamRecentGames(teamId: string, limit = 20) {
 }
 
 /**
- * Retrieves per-game averages for a team's most recent season.
- * 
- * Calculates averages from team_game_log entries joined to fact_game
- * for the latest season with game data.
- * 
- * @param teamId - Internal team ID
- * @returns Per-game averages record or undefined
+ * Get per-game averages for the team's most recent season with game data.
+ *
+ * @param teamId - Internal team identifier
+ * @returns An object containing per-game averages: `pts`, `reb`, `ast`, `stl`, `blk`, `tov`, `fg3m`, `fg3a`, `fg_pct`, and `ft_pct` (each a number or `null`), or `undefined` if the team has no games for any season
  */
 export function getTeamPerGameAverages(teamId: string) {
   const latestGameSeason = getDb()
@@ -338,15 +329,13 @@ export function getTeamPerGameAverages(teamId: string) {
 }
 
 /**
- * Retrieves player statistical leaders for a team.
- * 
- * Returns top players by points per game for the team's most recent
- * season with game data. Players must have played at least 10 games
- * to qualify (prevents small-sample outliers).
- * 
- * @param teamId - Internal team ID
+ * Get the team's top scoring leaders for the most recent season in which the team has game data.
+ *
+ * Players must have played at least 10 games; results are ordered by points per game and limited by `limit`.
+ *
+ * @param teamId - Internal team identifier used to filter player game logs
  * @param limit - Maximum number of leaders to return (default: 8)
- * @returns Array of player leader records
+ * @returns Array of leader records with fields: `bref_id`, `full_name`, `g`, `pts`, `reb`, `ast`, `pts_pg`, `reb_pg`, `ast_pg`
  */
 export function getTeamPlayerLeaders(teamId: string, limit = 8) {
   const latestGameSeason = getDb()

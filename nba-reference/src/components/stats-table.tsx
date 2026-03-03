@@ -45,41 +45,16 @@ interface StatsTableProps {
 }
 
 /**
- * Sortable data table with CSV export.
- * 
- * Features:
- * - Click column headers to sort (toggle asc/desc)
- * - Proper handling of null values (sorted to end)
- * - Case-insensitive string sorting
- * - CSV export with proper escaping
- * - Automatic row key generation for React lists
- * 
- * Sorting Algorithm:
- * 1. Null values are always sorted to the end regardless of direction
- * 2. Strings are compared case-insensitively
- * 3. Numbers are compared numerically
- * 4. Clicking the same column toggles direction
- * 5. Clicking a different column resets to descending
- * 
- * CSV Export:
- * - All values wrapped in quotes
- * - Internal quotes are doubled (RFC 4180 compliant)
- * - Filename: table-export.csv
- * - Blob URL cleaned up after download
- * 
+ * Render a sortable data table with a client-side CSV export button.
+ *
+ * Supports click-to-sort per column (toggles ascending/descending), sorts nulls to the end,
+ * compares strings case-insensitively and numbers numerically, and generates stable React row keys.
+ *
+ * CSV export produces RFC 4180-compliant output (all fields wrapped in double quotes; internal quotes doubled),
+ * triggers a download named "table-export.csv", and revokes the temporary Blob URL after download.
+ *
  * @param props - Component props
- * @returns React component for the stats table
- * @example
- * ```tsx
- * <StatsTable
- *   columns={[
- *     { key: "name", label: "Player" },
- *     { key: "pts", label: "PTS", align: "right" },
- *   ]}
- *   rows={[{ name: "LeBron", pts: 25 }]}
- *   initialSort="pts"
- * />
- * ```
+ * @returns The rendered stats table element
  */
 export function StatsTable({
   columns,

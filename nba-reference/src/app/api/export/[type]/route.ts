@@ -55,35 +55,15 @@ function toCsv(rows: Array<Record<string, string | number | null>>) {
 }
 
 /**
- * GET handler for /api/export/{type}
- * 
- * Route Parameters:
- * - `type`: Export type - "standings", "games", or "search"
- * 
- * Query Parameters (for search type):
- * - `q`: Search query string
- * 
- * Response:
- * - Content-Type: text/csv; charset=utf-8
- * - Content-Disposition: attachment; filename="{type}.csv"
- * - Body: CSV formatted data
- * 
- * Export Types:
- * - `standings`: Returns current team standings (30 teams)
- * - `games`: Returns recent games (100 games)
- * - `search`: Returns search results for query q
- * 
- * @param req - Next.js request object
- * @param params - Promise resolving to route parameters
- * @returns CSV response with appropriate headers
- * @example
- * ```ts
- * // Export standings
- * fetch('/api/export/standings')
- * 
- * // Export search results
- * fetch('/api/export/search?q=lebron')
- * ```
+ * Handle GET requests to export data as a CSV file for "standings", "games", or "search".
+ *
+ * For `standings` returns current team standings (30 teams). For `games` returns recent games (100 games).
+ * For `search` reads query parameter `q` from the request URL and returns matching search results.
+ *
+ * @param req - Next.js request object (used to read query parameter `q` for search)
+ * @param params - Promise resolving to route parameters with `type` set to "standings" | "games" | "search"
+ * @returns A CSV response whose body is the exported data and headers include `Content-Type: text/csv; charset=utf-8`
+ *          and `Content-Disposition: attachment; filename="{type}.csv"`
  */
 export function GET(
   req: NextRequest,
