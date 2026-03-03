@@ -27,12 +27,12 @@ export default async function SeasonPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-1 text-xs text-[#6b604b]">
+      <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/seasons">Seasons</Link> / {year}
       </div>
       <h1 className="mb-3 text-3xl font-bold">{year} NBA Season</h1>
 
-      <section className="mb-8 border border-[#c9b998] bg-[#f8f3e8] p-3 text-sm">
+      <section className="mb-8 border border-line-mid bg-paper-soft p-3 text-sm">
         <h2 className="mb-2 text-lg font-bold">League Summary</h2>
         <div className="grid gap-2 sm:grid-cols-5">
           <div>PPG: <span className="font-bold tabular-nums">{leagueSummary.ppg ?? "-"}</span></div>

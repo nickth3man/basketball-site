@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { StatsTable } from "./stats-table";
 
 describe("StatsTable", () => {
@@ -42,15 +42,30 @@ describe("StatsTable", () => {
     expect(tableRows[1]).toHaveTextContent("LeBron"); // 25
   });
 
-  it("generates correct CSV export link", () => {
+  it("exports CSV data through Blob download", () => {
+    vi.useFakeTimers();
+    const createObjectURL = vi.fn(() => "blob:mock-url");
+    const revokeObjectURL = vi.fn();
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    vi.stubGlobal("URL", {
+      createObjectURL,
+      revokeObjectURL,
+    });
+
     render(<StatsTable columns={columns} rows={rows} />);
-    const exportLink = screen.getByText("Export CSV") as HTMLAnchorElement;
-    expect(exportLink).toBeInTheDocument();
-    expect(exportLink.getAttribute("download")).toBe("table-export.csv");
-    
-    const href = decodeURIComponent(exportLink.href);
-    expect(href).toContain("Name,Points");
-    expect(href).toContain('"Steph","30"');
-    expect(href).toContain('"LeBron","25"');
+
+    fireEvent.click(screen.getByRole("button", { name: /Export CSV/i }));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const blobArg = createObjectURL.mock.calls[0][0] as Blob;
+    expect(blobArg.type).toBe("text/csv;charset=utf-8");
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(300);
+    expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+
+    clickSpy.mockRestore();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 });

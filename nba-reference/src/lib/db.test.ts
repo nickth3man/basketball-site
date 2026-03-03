@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  getHomeStandings,
   getLatestSeasonId,
-  getRecentGames,
-  searchEntities,
 } from "@/lib/db";
+import { getHomeStandings, getRecentGames } from "@/lib/query/home";
+import { searchEntities } from "@/lib/query/search";
 
 describe("db utilities", () => {
   it("returns a latest season id", () => {

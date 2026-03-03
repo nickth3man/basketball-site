@@ -10,12 +10,8 @@ import {
   getTeamRosterWithStats,
   getTeamSeasonStats,
 } from "@/lib/queries";
+import { formatSignedNumber } from "@/lib/formatters";
 import { notFound } from "next/navigation";
-
-function signed(v: number | null | undefined) {
-  if (v == null) return "-";
-  return v > 0 ? `+${v}` : String(v);
-}
 
 export default async function TeamPage({
   params,
@@ -48,30 +44,30 @@ export default async function TeamPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-1 text-xs text-[#6b604b]">
+      <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/teams">Teams</Link> / {team.abbreviation}
       </div>
 
-      <section id="summary" className="mb-5 border border-[#b8ab8f] bg-[#f8f3e8] p-4">
-        <div className="mb-2 text-xs text-[#6b604b]">{seasonLabel} Team Profile</div>
+      <section id="summary" className="mb-5 border border-line bg-paper-soft p-4">
+        <div className="mb-2 text-xs text-crumb">{seasonLabel} Team Profile</div>
         <h1 className="mb-2 text-3xl font-bold">{team.full_name}</h1>
 
-        <div className="grid gap-2 text-sm text-[#3b3428] md:grid-cols-3">
+        <div className="grid gap-2 text-sm text-muted-strong md:grid-cols-3">
           <div>Conference: {team.conference ?? "-"}</div>
           <div>Division: {team.division ?? "-"}</div>
           <div>Arena: {current?.arena ?? team.arena_name ?? "-"}</div>
           <div>
             Record: {current?.w ?? "-"}-{current?.l ?? "-"}
           </div>
-          <div>Net Rtg: {signed(current?.n_rtg as number | null)}</div>
+          <div>Net Rtg: {formatSignedNumber(current?.n_rtg as number | null)}</div>
           <div>Pace: {current?.pace ?? "-"}</div>
           <div>Off Rtg: {current?.o_rtg ?? "-"}</div>
           <div>Def Rtg: {current?.d_rtg ?? "-"}</div>
-          <div>SRS: {signed(current?.srs as number | null)}</div>
+          <div>SRS: {formatSignedNumber(current?.srs as number | null)}</div>
         </div>
 
         {averages ? (
-          <div className="mt-3 grid gap-2 border border-[#d2c8b3] bg-white p-3 text-xs sm:grid-cols-5 lg:grid-cols-10">
+          <div className="mt-3 grid gap-2 border border-line-soft bg-white p-3 text-xs sm:grid-cols-5 lg:grid-cols-10">
             <div>PTS/G: <span className="font-bold tabular-nums">{averages.pts ?? "-"}</span></div>
             <div>REB/G: <span className="font-bold tabular-nums">{averages.reb ?? "-"}</span></div>
             <div>AST/G: <span className="font-bold tabular-nums">{averages.ast ?? "-"}</span></div>
@@ -87,11 +83,11 @@ export default async function TeamPage({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        <aside className="h-max border border-[#c9b998] bg-white p-3 lg:sticky lg:top-3">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[#6b604b]">On this page</div>
+        <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">On this page</div>
           <nav className="space-y-1 text-sm">
             {anchors.map((a) => (
-              <a key={a.id} href={`#${a.id}`} className="block rounded px-2 py-1 hover:bg-[#f5efe2]">
+              <a key={a.id} href={`#${a.id}`} className="block rounded px-2 py-1 hover:bg-nav-hover">
                 {a.label}
               </a>
             ))}

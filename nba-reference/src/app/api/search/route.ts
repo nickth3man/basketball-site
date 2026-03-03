@@ -1,4 +1,4 @@
-import { searchEntities } from "@/lib/db";
+import { searchEntities } from "@/lib/query/search";
 import { NextRequest, NextResponse } from "next/server";
 
 export function GET(req: NextRequest) {

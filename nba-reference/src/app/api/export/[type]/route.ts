@@ -1,8 +1,8 @@
 import {
   getHomeStandings,
   getRecentGames,
-  searchEntities,
-} from "@/lib/db";
+} from "@/lib/query/home";
+import { searchEntities } from "@/lib/query/search";
 import { NextRequest } from "next/server";
 
 function toCsv(rows: Array<Record<string, string | number | null>>) {

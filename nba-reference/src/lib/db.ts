@@ -3,6 +3,99 @@ import path from "node:path";
 
 let db: Database.Database | null = null;
 
+type CacheEntry = {
+  expiresAt: number;
+  value: unknown;
+};
+
+const MAX_QUERY_CACHE_SIZE = 500;
+
+const queryResultCache = new Map<string, CacheEntry>();
+
+function buildQueryCacheKey(sql: string, params: unknown[]): string {
+  return `${sql}::${JSON.stringify(params)}`;
+}
+
+function cleanupExpiredCacheEntries(): void {
+  const now = Date.now();
+  for (const [key, entry] of queryResultCache) {
+    if (entry.expiresAt <= now) {
+      queryResultCache.delete(key);
+    }
+  }
+}
+
+function readCachedResult<T>(key: string): T | undefined {
+  const entry = queryResultCache.get(key);
+  if (!entry) return undefined;
+  if (entry.expiresAt <= Date.now()) {
+    queryResultCache.delete(key);
+    return undefined;
+  }
+
+  // touch entry to implement simple LRU behavior with Map iteration order
+  queryResultCache.delete(key);
+  queryResultCache.set(key, entry);
+
+  return entry.value as T;
+}
+
+function evictLeastRecentlyUsedEntryIfNeeded(): void {
+  if (queryResultCache.size <= MAX_QUERY_CACHE_SIZE) {
+    return;
+  }
+  // Evict the oldest entry (first inserted / least recently used due to re-insertion on access)
+  const firstKey = queryResultCache.keys().next().value as string | undefined;
+  if (firstKey !== undefined) {
+    queryResultCache.delete(firstKey);
+  }
+}
+
+function writeCachedResult<T>(key: string, value: T, ttlMs: number): T {
+  // opportunistic cleanup of expired entries to keep map from growing with dead keys
+  cleanupExpiredCacheEntries();
+
+  queryResultCache.set(key, {
+    expiresAt: Date.now() + ttlMs,
+    value,
+  });
+
+  // enforce a max size to keep memory usage bounded
+  evictLeastRecentlyUsedEntryIfNeeded();
+
+  return value;
+}
+
+function patchPrepareWithCache(database: Database.Database): void {
+  const originalPrepare = database.prepare.bind(database);
+
+  const wrappedPrepare: Database.Database["prepare"] = ((sql: string) => {
+    const statement = originalPrepare(sql);
+    const originalGet = statement.get.bind(statement);
+    const originalAll = statement.all.bind(statement);
+
+    statement.get = ((...params: unknown[]) => {
+      const key = `stmt:get:${buildQueryCacheKey(sql, params)}`;
+      const cached = readCachedResult<unknown>(key);
+      if (cached !== undefined) return cached;
+
+      return writeCachedResult(key, originalGet(...params), 30_000);
+    }) as typeof statement.get;
+
+    statement.all = ((...params: unknown[]) => {
+      const key = `stmt:all:${buildQueryCacheKey(sql, params)}`;
+      const cached = readCachedResult<unknown>(key);
+      if (cached !== undefined) return cached;
+
+      return writeCachedResult(key, originalAll(...params), 30_000);
+    }) as typeof statement.all;
+
+    return statement;
+  }) as Database.Database["prepare"];
+
+  database.prepare = wrappedPrepare;
+}
+
 function dbPath(): string {
   const envPath = process.env.DB_PATH;
   if (envPath) return envPath;
@@ -12,6 +105,7 @@ function dbPath(): string {
 export function getDb(): Database.Database {
   if (!db) {
     db = new Database(dbPath(), { readonly: true });
+    patchPrepareWithCache(db);
     db.pragma("journal_mode = WAL");
     db.pragma("foreign_keys = ON");
   }
@@ -19,30 +113,23 @@ export function getDb(): Database.Database {
   return db;
 }
 
-export type TeamStandingRow = {
-  season_id: string;
-  bref_abbrev: string;
-  w: number | null;
-  l: number | null;
-  n_rtg: number | null;
-  pace: number | null;
-};
+export function getCachedQueryOne<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
+  const key = `one:${buildQueryCacheKey(sql, params)}`;
+  const cached = readCachedResult<T>(key);
+  if (cached !== undefined) return cached;
 
-export type RecentGameRow = {
-  game_id: string;
-  game_date: string;
-  home_abbrev: string;
-  away_abbrev: string;
-  home_score: number | null;
-  away_score: number | null;
-};
+  const result = getDb().prepare(sql).get(...params) as T;
+  return writeCachedResult(key, result, ttlMs);
+}
 
-export type PlayerDirectoryRow = {
-  bref_id: string;
-  full_name: string;
-  position: string | null;
-  is_active: number;
-};
+export function getCachedQueryMany<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
+  const key = `many:${buildQueryCacheKey(sql, params)}`;
+  const cached = readCachedResult<T>(key);
+  if (cached !== undefined) return cached;
+
+  const result = getDb().prepare(sql).all(...params) as T;
+  return writeCachedResult(key, result, ttlMs);
+}
 
 export function getLatestSeasonId(): string {
   const row = getDb()
@@ -50,65 +137,4 @@ export function getLatestSeasonId(): string {
     .get() as { season_id: string } | undefined;
 
   return row?.season_id ?? "2025-26";
-}
-
-export function getHomeStandings(limit = 15): TeamStandingRow[] {
-  const latestWithTeamData = getDb()
-    .prepare("SELECT season_id FROM fact_team_season ORDER BY season_id DESC LIMIT 1")
-    .get() as { season_id: string } | undefined;
-  const seasonId = latestWithTeamData?.season_id ?? getLatestSeasonId();
-
-  return getDb()
-    .prepare(
-      `SELECT season_id, bref_abbrev, w, l, n_rtg, pace
-       FROM fact_team_season
-       WHERE season_id = ?
-       ORDER BY w DESC, l ASC
-       LIMIT ?`,
-    )
-    .all(seasonId, limit) as TeamStandingRow[];
-}
-
-export function getRecentGames(limit = 12): RecentGameRow[] {
-  return getDb()
-    .prepare(
-      `SELECT g.game_id, g.game_date,
-              ht.abbreviation as home_abbrev,
-              at.abbreviation as away_abbrev,
-              g.home_score, g.away_score
-       FROM fact_game g
-       JOIN dim_team ht ON ht.team_id = g.home_team_id
-       JOIN dim_team at ON at.team_id = g.away_team_id
-       WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL
-       ORDER BY g.game_date DESC
-       LIMIT ?`,
-    )
-    .all(limit) as RecentGameRow[];
-}
-
-export function searchEntities(query: string): Array<{
-  type: "player" | "team";
-  id: string;
-  label: string;
-}> {
-  const q = `%${query.toLowerCase()}%`;
-  const players = getDb()
-    .prepare(
-      `SELECT 'player' as type, bref_id as id, full_name as label
-       FROM dim_player
-       WHERE bref_id IS NOT NULL AND LOWER(full_name) LIKE ?
-       LIMIT 10`,
-    )
-    .all(q) as Array<{ type: "player"; id: string; label: string }>;
-
-  const teams = getDb()
-    .prepare(
-      `SELECT 'team' as type, abbreviation as id, full_name as label
-       FROM dim_team
-       WHERE LOWER(full_name) LIKE ? OR LOWER(abbreviation) LIKE ?
-       LIMIT 10`,
-    )
-    .all(q, q) as Array<{ type: "team"; id: string; label: string }>;
-
-  return [...players, ...teams].slice(0, 12);
 }

@@ -1,7 +1,17 @@
 import Link from "next/link";
 import { SearchBox } from "@/components/search-box";
 import { StatsTable } from "@/components/stats-table";
-import { getHomeStandings, getLatestSeasonId, getRecentGames } from "@/lib/db";
+import { getLatestSeasonId } from "@/lib/db";
+import { getHomeStandings, getRecentGames } from "@/lib/query/home";
+import {
+  tableBodyRowClass,
+  tableCellClass,
+  tableClass,
+  tableContainerClass,
+  tableHeadRowClass,
+  tableHeaderCellClass,
+  tableLinkClass,
+} from "@/lib/table-styles";
 
 export default function Home() {
   const seasonId = getLatestSeasonId();
@@ -10,8 +20,8 @@ export default function Home() {
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
-      <h1 className="fade-slide-in mb-1 text-3xl font-bold text-[var(--heading)]">Basketball Stats and History</h1>
-      <p className="fade-slide-in mb-5 text-sm text-[var(--muted)]" style={{ animationDelay: "80ms" }}>
+      <h1 className="fade-slide-in mb-1 text-3xl font-bold text-heading">Basketball Stats and History</h1>
+      <p className="fade-slide-in mb-5 text-sm text-muted" style={{ animationDelay: "80ms" }}>
         Season {seasonId} standings, scores, and player/team lookup.
       </p>
 
@@ -20,13 +30,13 @@ export default function Home() {
         <div className="flex items-center gap-2 text-sm">
           <Link
             href="/api/export/standings"
-            className="rounded border border-[var(--line)] bg-[var(--button-bg)] px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--button-hover)] active:translate-y-0 active:scale-[0.98]"
+            className="rounded border border-line bg-button-bg px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
           >
             Export Standings
           </Link>
           <Link
             href="/api/export/games"
-            className="rounded border border-[var(--line)] bg-[var(--button-bg)] px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--button-hover)] active:translate-y-0 active:scale-[0.98]"
+            className="rounded border border-line bg-button-bg px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
           >
             Export Games
           </Link>
@@ -34,7 +44,7 @@ export default function Home() {
       </div>
 
       <section className="fade-slide-in panel-paper mb-8 p-3" style={{ animationDelay: "200ms" }}>
-        <h2 className="mb-2 text-xl font-bold text-[var(--heading)]">{seasonId} NBA Standings</h2>
+        <h2 className="mb-2 text-xl font-bold text-heading">{seasonId} NBA Standings</h2>
         <StatsTable
           columns={[
             { key: "bref_abbrev", label: "Team" },
@@ -49,11 +59,11 @@ export default function Home() {
       </section>
 
       <section className="fade-slide-in panel-paper p-3" style={{ animationDelay: "260ms" }}>
-        <h2 className="mb-2 text-xl font-bold text-[var(--heading)]">Recent Games</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-xs">
+        <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
+        <div className={tableContainerClass}>
+          <table className={tableClass}>
             <thead>
-              <tr className="bg-[var(--thead)]">
+              <tr className={tableHeadRowClass}>
                 {[
                   "Date",
                   "Away",
@@ -62,23 +72,23 @@ export default function Home() {
                   "Home PTS",
                   "Box Score",
                 ].map((h) => (
-                  <th key={h} className="border border-[var(--line)] px-2 py-1 text-left">{h}</th>
+                  <th key={h} className={tableHeaderCellClass("left")}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {games.map((g, i) => (
+              {games.map((g) => (
                 <tr
                   key={g.game_id}
-                  className={`${i % 2 === 0 ? "bg-white" : "bg-[var(--row-alt)]"} transition-colors duration-200 hover:bg-[var(--row-hover)]`}
+                  className={tableBodyRowClass}
                 >
-                  <td className="border border-[var(--line-soft)] px-2 py-1">{g.game_date}</td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1">{g.away_abbrev}</td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1 text-right">{g.away_score ?? "-"}</td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1">{g.home_abbrev}</td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1 text-right">{g.home_score ?? "-"}</td>
-                  <td className="border border-[var(--line-soft)] px-2 py-1">
-                    <Link className="text-[var(--link)] underline decoration-transparent transition-all duration-200 hover:decoration-current" href={`/games/${g.game_id}`}>
+                  <td className={tableCellClass("left")}>{g.game_date}</td>
+                  <td className={tableCellClass("left")}>{g.away_abbrev}</td>
+                  <td className={tableCellClass("right")}>{g.away_score ?? "-"}</td>
+                  <td className={tableCellClass("left")}>{g.home_abbrev}</td>
+                  <td className={tableCellClass("right")}>{g.home_score ?? "-"}</td>
+                  <td className={tableCellClass("left")}>
+                    <Link className={tableLinkClass} href={`/games/${g.game_id}`}>
                       Box Score
                     </Link>
                   </td>

@@ -36,13 +36,13 @@ export default async function GamePage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-1 text-xs text-[#6b604b]">
+      <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/games">Games</Link> / {game.game_id}
       </div>
       <h1 className="mb-2 text-3xl font-bold">
         {game.away_name} at {game.home_name}
       </h1>
-      <p className="mb-4 text-sm text-[#3b3428]">
+      <p className="mb-4 text-sm text-muted-strong">
         {game.game_date} | Final: {game.away_abbrev} {game.away_score} - {game.home_abbrev} {game.home_score}
       </p>
 

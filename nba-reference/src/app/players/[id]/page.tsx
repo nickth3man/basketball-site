@@ -17,25 +17,8 @@ import {
   getPlayerPbpSeasonStats,
   getPlayerPer36Stats,
 } from "@/lib/queries";
+import { formatMoney, formatPct } from "@/lib/formatters";
 import { notFound } from "next/navigation";
-
-function formatPct(value: string | number | null | undefined) {
-  if (value == null) return "-";
-  const n = Number(value);
-  if (Number.isNaN(n)) return "-";
-  return n.toFixed(3);
-}
-
-function formatMoney(value: string | number | null | undefined) {
-  if (value == null) return "-";
-  const n = Number(value);
-  if (Number.isNaN(n)) return "-";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 export default async function PlayerPage({
   params,
@@ -86,11 +69,11 @@ export default async function PlayerPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-1 text-xs text-[#6b604b]">
+      <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/players">Players</Link> / {player.full_name}
       </div>
 
-      <section className="mb-5 border border-[#b8ab8f] bg-[#f8f3e8] p-4">
+      <section className="mb-5 border border-line bg-paper-soft p-4">
         <div className="grid gap-4 md:grid-cols-[140px_1fr_260px]">
           <div>
             <Image
@@ -98,13 +81,13 @@ export default async function PlayerPage({
               alt={`Photo of ${player.full_name}`}
               width={130}
               height={170}
-              className="h-[170px] w-[130px] border border-[#a69066] object-cover"
+              className="h-[170px] w-[130px] border border-image-line object-cover"
             />
           </div>
 
           <div>
             <h1 className="mb-2 text-3xl font-bold">{player.full_name}</h1>
-            <div className="grid gap-1 text-sm text-[#3b3428] sm:grid-cols-2">
+            <div className="grid gap-1 text-sm text-muted-strong sm:grid-cols-2">
               <div>Position: {player.position ?? "-"}</div>
               <div>Birth: {player.birth_date ?? "-"}</div>
               <div>Birthplace: {[player.birth_city, player.birth_country].filter(Boolean).join(", ") || "-"}</div>
@@ -117,8 +100,8 @@ export default async function PlayerPage({
             </div>
           </div>
 
-          <div className="border border-[#c9b998] bg-white p-3 text-xs">
-            <div className="mb-2 font-bold uppercase tracking-wide text-[#6b604b]">Career Summary</div>
+          <div className="border border-line-mid bg-white p-3 text-xs">
+            <div className="mb-2 font-bold uppercase tracking-wide text-crumb">Career Summary</div>
             <div className="grid grid-cols-2 gap-y-1">
               <span>G</span>
               <span className="text-right tabular-nums">{summary.g ?? "-"}</span>
@@ -140,13 +123,13 @@ export default async function PlayerPage({
       </section>
 
       {awardCounts.length > 0 ? (
-        <section className="mb-5 border border-[#c9b998] bg-white p-3">
+        <section className="mb-5 border border-line-mid bg-white p-3">
           <h2 className="mb-2 text-lg font-bold">Leaderboards, Awards, & Honors</h2>
           <div className="flex flex-wrap gap-2">
             {awardCounts.map(([name, count]) => (
               <span
                 key={name}
-                className="rounded border border-[#b8ab8f] bg-[#f6f3ea] px-2 py-1 text-xs"
+                className="rounded border border-line bg-button-bg px-2 py-1 text-xs"
               >
                 {count}x {name}
               </span>
@@ -156,14 +139,14 @@ export default async function PlayerPage({
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        <aside className="h-max border border-[#c9b998] bg-white p-3 lg:sticky lg:top-3">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[#6b604b]">On this page</div>
+        <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">On this page</div>
           <nav className="space-y-1 text-sm">
             {anchorSections.map((section) => (
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="block rounded px-2 py-1 hover:bg-[#f5efe2]"
+                className="block rounded px-2 py-1 hover:bg-nav-hover"
               >
                 {section.label}
               </a>
@@ -442,24 +425,24 @@ export default async function PlayerPage({
             />
           </section>
 
-          <section id="highs" className="scroll-mt-4 border border-[#c9b998] bg-white p-3">
+          <section id="highs" className="scroll-mt-4 border border-line-mid bg-white p-3">
             <h2 className="mb-2 text-xl font-bold">Game Highs</h2>
             <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">MP: <span className="font-bold tabular-nums">{highs.mp ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">FG: <span className="font-bold tabular-nums">{highs.fg ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">FGA: <span className="font-bold tabular-nums">{highs.fga ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">3P: <span className="font-bold tabular-nums">{highs.fg3 ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">3PA: <span className="font-bold tabular-nums">{highs.fg3a ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">FT: <span className="font-bold tabular-nums">{highs.ft ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">FTA: <span className="font-bold tabular-nums">{highs.fta ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">PTS: <span className="font-bold tabular-nums">{highs.pts ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">REB: <span className="font-bold tabular-nums">{highs.reb ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">AST: <span className="font-bold tabular-nums">{highs.ast ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">STL: <span className="font-bold tabular-nums">{highs.stl ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">BLK: <span className="font-bold tabular-nums">{highs.blk ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">TOV: <span className="font-bold tabular-nums">{highs.tov ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">PF: <span className="font-bold tabular-nums">{highs.pf ?? "-"}</span></div>
-              <div className="rounded border border-[#d9cdb7] bg-[#faf8f2] p-2">+/-: <span className="font-bold tabular-nums">{highs.plus_minus ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">MP: <span className="font-bold tabular-nums">{highs.mp ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">FG: <span className="font-bold tabular-nums">{highs.fg ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">FGA: <span className="font-bold tabular-nums">{highs.fga ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">3P: <span className="font-bold tabular-nums">{highs.fg3 ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">3PA: <span className="font-bold tabular-nums">{highs.fg3a ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">FT: <span className="font-bold tabular-nums">{highs.ft ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">FTA: <span className="font-bold tabular-nums">{highs.fta ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">PTS: <span className="font-bold tabular-nums">{highs.pts ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">REB: <span className="font-bold tabular-nums">{highs.reb ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">AST: <span className="font-bold tabular-nums">{highs.ast ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">STL: <span className="font-bold tabular-nums">{highs.stl ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">BLK: <span className="font-bold tabular-nums">{highs.blk ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">TOV: <span className="font-bold tabular-nums">{highs.tov ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">PF: <span className="font-bold tabular-nums">{highs.pf ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">+/-: <span className="font-bold tabular-nums">{highs.plus_minus ?? "-"}</span></div>
             </div>
           </section>
         </div>

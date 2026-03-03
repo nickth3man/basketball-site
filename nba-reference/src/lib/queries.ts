@@ -1,4 +1,9 @@
 import { getDb, getLatestSeasonId } from "@/lib/db";
+import { getHomeStandings, getRecentGames } from "@/lib/query/home";
+import { searchEntities } from "@/lib/query/search";
+import { getPlayerDirectory, getTeamDirectory } from "@/lib/query/directory";
+
+export { getHomeStandings, getRecentGames, searchEntities, getPlayerDirectory, getTeamDirectory };
 
 export function getPlayerByBrefId(brefId: string) {
   return getDb()

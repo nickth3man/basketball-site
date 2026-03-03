@@ -1,6 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  tableBodyRowClass,
+  tableCellClass,
+  tableClass,
+  tableContainerClass,
+  tableHeadRowClass,
+  tableHeaderButtonClass,
+  tableHeaderCellClass,
+} from "@/lib/table-styles";
 
 type RowValue = string | number | null;
 type Row = Record<string, RowValue>;
@@ -37,7 +46,28 @@ export function StatsTable({
     return copy;
   }, [rows, sortKey, direction]);
 
-  const csvData = useMemo(() => {
+  const keyedRows = useMemo(() => {
+    const seenKeys = new Map<string, number>();
+
+    return sorted.map((row, rowIndex) => {
+      const primaryKey = row.id ?? row.game_id ?? row.bref_abbrev;
+      const fallbackKey = columns.map((col) => `${row[col.key] ?? ""}`).join("|");
+      const baseKey =
+        typeof primaryKey === "string" || typeof primaryKey === "number"
+          ? `${primaryKey}`
+          : `${fallbackKey}|${rowIndex}`;
+
+      const duplicateCount = seenKeys.get(baseKey) ?? 0;
+      seenKeys.set(baseKey, duplicateCount + 1);
+
+      return {
+        row,
+        rowKey: duplicateCount === 0 ? baseKey : `${baseKey}__dup${duplicateCount}`,
+      };
+    });
+  }, [columns, sorted]);
+
+  const handleExportCsv = () => {
     const header = columns.map((c) => c.label).join(",");
     const lines = sorted.map((row) =>
       columns
@@ -48,29 +78,36 @@ export function StatsTable({
         })
         .join(","),
     );
-    return [header, ...lines].join("\n");
-  }, [columns, sorted]);
+    const csvData = [header, ...lines].join("\n");
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8" });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = "table-export.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 250);
+  };
 
   return (
-    <div className="overflow-x-auto">
+    <div className={tableContainerClass}>
       <div className="mb-2 flex justify-end">
-        <a
-          href={`data:text/csv;charset=utf-8,${encodeURIComponent(csvData)}`}
-          download="table-export.csv"
-          className="rounded border border-[#b8ab8f] bg-[#f6f3ea] px-2 py-1 text-xs text-[#3b3428] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ece5d7] active:translate-y-0 active:scale-[0.98]"
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          className="rounded border border-line bg-button-bg px-2 py-1 text-xs text-muted-strong transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
         >
           Export CSV
-        </a>
+        </button>
       </div>
-      <table className="min-w-full border-collapse text-xs text-[#222]">
+      <table className={tableClass}>
         <thead>
-          <tr className="bg-[#ece5d7]">
+          <tr className={tableHeadRowClass}>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`border border-[#b8ab8f] px-2 py-1 ${
-                  col.align === "right" ? "text-right" : "text-left"
-                }`}
+                className={tableHeaderCellClass(col.align)}
               >
                 <button
                   onClick={() => {
@@ -81,7 +118,7 @@ export function StatsTable({
                       setDirection("desc");
                     }
                   }}
-                  className="w-full cursor-pointer transition-colors duration-150 hover:text-[#5a3f12]"
+                  className={tableHeaderButtonClass}
                 >
                   {col.label}
                 </button>
@@ -90,24 +127,16 @@ export function StatsTable({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((row, i) => {
-            const primaryKey = row.id ?? row.game_id ?? row.bref_abbrev;
-            const rowKey =
-              typeof primaryKey === "string" || typeof primaryKey === "number"
-                ? `${primaryKey}`
-                : columns.map((col) => `${row[col.key] ?? ""}`).join("|");
-
+          {keyedRows.map(({ row, rowKey }) => {
             return (
               <tr
                 key={rowKey}
-                className={`${i % 2 === 0 ? "bg-white" : "bg-[#faf8f2]"} transition-colors duration-200 hover:bg-[#efe7d8]`}
+                className={tableBodyRowClass}
               >
                 {columns.map((col) => (
                   <td
                     key={`${rowKey}-${col.key}`}
-                    className={`border border-[#d2c8b3] px-2 py-1 ${
-                      col.align === "right" ? "text-right tabular-nums" : "text-left"
-                    }`}
+                    className={tableCellClass(col.align)}
                   >
                     {row[col.key] == null ? "-" : String(row[col.key])}
                   </td>
