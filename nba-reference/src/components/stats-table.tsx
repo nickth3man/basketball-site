@@ -70,8 +70,7 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
       if (rightValue == null) return -1;
 
       // Case-insensitive comparison for strings
-      const leftComparable =
-        typeof leftValue === 'string' ? leftValue.toLowerCase() : leftValue;
+      const leftComparable = typeof leftValue === 'string' ? leftValue.toLowerCase() : leftValue;
       const rightComparable =
         typeof rightValue === 'string' ? rightValue.toLowerCase() : rightValue;
 

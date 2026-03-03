@@ -70,17 +70,16 @@ export function getSeasonScoringLeaders(
 ): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
-      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT t.abbreviation) as team,
-              COUNT(*) as g,
-              SUM(pgl.pts) as pts,
-              ROUND(1.0 * SUM(pgl.pts) / COUNT(*), 1) as pts_pg
-       FROM player_game_log pgl
-       JOIN fact_game fg ON fg.game_id = pgl.game_id
-       JOIN dim_player p ON p.player_id = pgl.player_id
-       JOIN dim_team t ON t.team_id = pgl.team_id
-       WHERE fg.season_id = ?
-       GROUP BY p.player_id
-       HAVING COUNT(*) >= 10  -- Minimum games threshold (total across all teams)
+      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT fpss.team_abbrev) as team,
+              SUM(fpss.g) as g,
+              SUM(fpss.pts) as pts,
+              ROUND(1.0 * SUM(fpss.pts) / SUM(fpss.g), 1) as pts_pg
+       FROM fact_player_season_stats fpss
+       JOIN dim_player p ON p.bref_id = fpss.bref_player_id
+       WHERE fpss.season_id = ?
+         AND fpss.team_abbrev NOT LIKE '%TM'
+       GROUP BY p.bref_id, p.full_name
+       HAVING SUM(fpss.g) >= 10
        ORDER BY pts_pg DESC
        LIMIT ?`
     )
@@ -102,17 +101,16 @@ export function getSeasonReboundLeaders(
 ): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
-      `SELECT p.bref_id, p.full_name, t.abbreviation as team,
-              COUNT(*) as g,
-              SUM(pgl.reb) as reb,
-              ROUND(1.0 * SUM(pgl.reb) / COUNT(*), 1) as reb_pg
-       FROM player_game_log pgl
-       JOIN fact_game fg ON fg.game_id = pgl.game_id
-       JOIN dim_player p ON p.player_id = pgl.player_id
-       JOIN dim_team t ON t.team_id = pgl.team_id
-       WHERE fg.season_id = ?
-       GROUP BY p.player_id, t.abbreviation
-       HAVING COUNT(*) >= 10  -- Minimum games threshold
+      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT fpss.team_abbrev) as team,
+              SUM(fpss.g) as g,
+              SUM(fpss.reb) as reb,
+              ROUND(1.0 * SUM(fpss.reb) / SUM(fpss.g), 1) as reb_pg
+       FROM fact_player_season_stats fpss
+       JOIN dim_player p ON p.bref_id = fpss.bref_player_id
+       WHERE fpss.season_id = ?
+         AND fpss.team_abbrev NOT LIKE '%TM'
+       GROUP BY p.bref_id, p.full_name
+       HAVING SUM(fpss.g) >= 10
        ORDER BY reb_pg DESC
        LIMIT ?`
     )
@@ -140,17 +138,16 @@ export function getSeasonAssistLeaders(
 ): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
-      `SELECT p.bref_id, p.full_name, t.abbreviation as team,
-              COUNT(*) as g,
-              SUM(pgl.ast) as ast,
-              ROUND(1.0 * SUM(pgl.ast) / COUNT(*), 1) as ast_pg
-       FROM player_game_log pgl
-       JOIN fact_game fg ON fg.game_id = pgl.game_id
-       JOIN dim_player p ON p.player_id = pgl.player_id
-       JOIN dim_team t ON t.team_id = pgl.team_id
-       WHERE fg.season_id = ?
-       GROUP BY p.player_id, t.abbreviation
-       HAVING COUNT(*) >= 10  -- Minimum games threshold
+      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT fpss.team_abbrev) as team,
+              SUM(fpss.g) as g,
+              SUM(fpss.ast) as ast,
+              ROUND(1.0 * SUM(fpss.ast) / SUM(fpss.g), 1) as ast_pg
+       FROM fact_player_season_stats fpss
+       JOIN dim_player p ON p.bref_id = fpss.bref_player_id
+       WHERE fpss.season_id = ?
+         AND fpss.team_abbrev NOT LIKE '%TM'
+       GROUP BY p.bref_id, p.full_name
+       HAVING SUM(fpss.g) >= 10
        ORDER BY ast_pg DESC
        LIMIT ?`
     )
@@ -180,7 +177,8 @@ export function getSeasonLeagueSummary(seasonId: string): Record<string, number 
               ROUND(AVG(CASE WHEN (fga + 0.44 * fta) > 0 THEN 1.0 * pts / (2 * (fga + 0.44 * fta)) END), 3) AS ts_pct
        FROM team_game_log tgl
        JOIN fact_game fg ON fg.game_id = tgl.game_id
-       WHERE fg.season_id = ?`
+       WHERE fg.season_id = ?
+         AND fg.season_type = 'Regular Season'`
     )
     .get(seasonId) as Record<string, number | null>;
 }

@@ -47,7 +47,10 @@ export default function PlayersPage(): React.JSX.Element {
           </thead>
           <tbody>
             {players.map((player, playerIndex) => (
-              <tr key={player.bref_id} className={playerIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+              <tr
+                key={player.bref_id}
+                className={playerIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
+              >
                 <td className={tableCellClass('left')}>
                   <Link className={tableLinkClass} href={`/players/${player.bref_id}`}>
                     {player.full_name}

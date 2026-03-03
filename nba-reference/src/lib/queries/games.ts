@@ -73,7 +73,9 @@ export function getGamePbpEvents(
  * @param gameId - Unique identifier of the game to query
  * @returns An array of player box score records matching the game, or an empty array if no records exist
  */
-export function getGamePlayerBoxScore(gameId: string): Array<Record<string, string | number | null>> {
+export function getGamePlayerBoxScore(
+  gameId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT t.abbreviation as team,
@@ -224,9 +226,7 @@ export function getGameTeamFourFactors(gameId: string): Array<{
       // eFG%: Accounts for 3P being worth 1.5x a 2P
       efg_pct:
         fieldGoalsAttempted > 0
-          ? Number(
-              ((fieldGoalsMade + 0.5 * threePointersMade) / fieldGoalsAttempted).toFixed(3)
-            )
+          ? Number(((fieldGoalsMade + 0.5 * threePointersMade) / fieldGoalsAttempted).toFixed(3))
           : null,
       // TOV%: Percentage of possessions ending in turnover
       tov_pct: possessions > 0 ? Number(((100 * turnovers) / possessions).toFixed(1)) : null,
@@ -241,9 +241,7 @@ export function getGameTeamFourFactors(gameId: string): Array<{
           : null,
       // FT/FGA: Free throws made per field goal attempt
       ft_fga:
-        fieldGoalsAttempted > 0
-          ? Number((freeThrowsMade / fieldGoalsAttempted).toFixed(3))
-          : null,
+        fieldGoalsAttempted > 0 ? Number((freeThrowsMade / fieldGoalsAttempted).toFixed(3)) : null,
       // DRB%: Percentage of available defensive rebounds grabbed
       drb_pct:
         defensiveRebounds + opponentOffensiveRebounds > 0
@@ -320,7 +318,9 @@ export function getGameLineScore(
  * @param gameId - Game ID
  * @returns Array of team box score records (typically 2: home and away)
  */
-export function getGameTeamBoxScores(gameId: string): Array<Record<string, string | number | null>> {
+export function getGameTeamBoxScores(
+  gameId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT t.abbreviation as team, tgl.fgm, tgl.fga, tgl.fg3m, tgl.fg3a,
