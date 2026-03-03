@@ -1,4 +1,8 @@
-import { getCachedQueryMany, getCachedQueryOne, getLatestSeasonId } from "@/lib/db";
+import {
+  getCachedQueryMany,
+  getCachedQueryOne,
+  getLatestSeasonId,
+} from "@/lib/db";
 
 export type TeamStandingRow = {
   season_id: string;
@@ -19,7 +23,9 @@ export type RecentGameRow = {
 };
 
 export function getHomeStandings(limit = 15): TeamStandingRow[] {
-  const latestWithTeamData = getCachedQueryOne<{ season_id: string } | undefined>(
+  const latestWithTeamData = getCachedQueryOne<
+    { season_id: string } | undefined
+  >(
     "SELECT season_id FROM fact_team_season ORDER BY season_id DESC LIMIT 1",
     [],
     60_000,

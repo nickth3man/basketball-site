@@ -51,7 +51,9 @@ export function SearchBox() {
               href={r.type === "player" ? `/players/${r.id}` : `/teams/${r.id}`}
               className="block border-b border-dropdown-line px-3 py-2 text-sm transition-colors duration-150 last:border-b-0 hover:bg-paper-soft"
             >
-              <span className="mr-2 text-xs uppercase text-label">{r.type}</span>
+              <span className="mr-2 text-xs uppercase text-label">
+                {r.type}
+              </span>
               {r.label}
             </Link>
           ))}

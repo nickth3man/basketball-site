@@ -18,7 +18,9 @@ describe("SearchBox", () => {
 
   it("updates input value on change", () => {
     render(<SearchBox />);
-    const input = screen.getByPlaceholderText(/Search players or teams/i) as HTMLInputElement;
+    const input = screen.getByPlaceholderText(
+      /Search players or teams/i,
+    ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "LeBron" } });
     expect(input.value).toBe("LeBron");
   });
@@ -27,15 +29,17 @@ describe("SearchBox", () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        results: [{ type: "player", id: "lebron-james", label: "LeBron James" }],
+        results: [
+          { type: "player", id: "lebron-james", label: "LeBron James" },
+        ],
       }),
     });
 
     render(<SearchBox />);
     const input = screen.getByPlaceholderText(/Search players or teams/i);
-    
+
     fireEvent.change(input, { target: { value: "Le" } });
-    
+
     // Fast-forward time and wait for async tasks
     await act(async () => {
       await vi.advanceTimersByTimeAsync(200);
@@ -43,17 +47,17 @@ describe("SearchBox", () => {
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/search?q=Le"),
-      expect.any(Object)
+      expect.any(Object),
     );
 
     // Give it one more microtask for the state update after fetch
     await act(async () => {
-       await Promise.resolve();
+      await Promise.resolve();
     });
 
     expect(screen.getByText("LeBron James")).toBeInTheDocument();
     expect(screen.getByText("player")).toBeInTheDocument();
-    
+
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "/players/lebron-james");
   });
@@ -68,7 +72,7 @@ describe("SearchBox", () => {
 
     render(<SearchBox />);
     const input = screen.getByPlaceholderText(/Search players or teams/i);
-    
+
     fireEvent.change(input, { target: { value: "Lak" } });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(200);
@@ -76,12 +80,12 @@ describe("SearchBox", () => {
 
     // Give it one more microtask for the state update after fetch
     await act(async () => {
-       await Promise.resolve();
+      await Promise.resolve();
     });
 
     expect(screen.getByText("Lakers")).toBeInTheDocument();
     expect(screen.getByText("team")).toBeInTheDocument();
-    
+
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "/teams/LAL");
   });
@@ -90,11 +94,11 @@ describe("SearchBox", () => {
     render(<SearchBox />);
     const input = screen.getByPlaceholderText(/Search players or teams/i);
     fireEvent.change(input, { target: { value: "L" } });
-    
+
     await act(async () => {
       await vi.advanceTimersByTimeAsync(200);
     });
-    
+
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });

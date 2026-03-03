@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  getLatestSeasonId,
-} from "@/lib/db";
+import { getLatestSeasonId } from "@/lib/db";
 import { getHomeStandings, getRecentGames } from "@/lib/query/home";
 import { searchEntities } from "@/lib/query/search";
 

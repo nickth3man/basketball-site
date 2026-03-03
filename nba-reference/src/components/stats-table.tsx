@@ -23,7 +23,9 @@ export function StatsTable({
   rows: Row[];
   initialSort?: string;
 }) {
-  const [sortKey, setSortKey] = useState<string>(initialSort ?? columns[0]?.key ?? "");
+  const [sortKey, setSortKey] = useState<string>(
+    initialSort ?? columns[0]?.key ?? "",
+  );
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
 
   const sorted = useMemo(() => {
@@ -51,7 +53,9 @@ export function StatsTable({
 
     return sorted.map((row, rowIndex) => {
       const primaryKey = row.id ?? row.game_id ?? row.bref_abbrev;
-      const fallbackKey = columns.map((col) => `${row[col.key] ?? ""}`).join("|");
+      const fallbackKey = columns
+        .map((col) => `${row[col.key] ?? ""}`)
+        .join("|");
       const baseKey =
         typeof primaryKey === "string" || typeof primaryKey === "number"
           ? `${primaryKey}`
@@ -62,7 +66,8 @@ export function StatsTable({
 
       return {
         row,
-        rowKey: duplicateCount === 0 ? baseKey : `${baseKey}__dup${duplicateCount}`,
+        rowKey:
+          duplicateCount === 0 ? baseKey : `${baseKey}__dup${duplicateCount}`,
       };
     });
   }, [columns, sorted]);
@@ -105,10 +110,7 @@ export function StatsTable({
         <thead>
           <tr className={tableHeadRowClass}>
             {columns.map((col) => (
-              <th
-                key={col.key}
-                className={tableHeaderCellClass(col.align)}
-              >
+              <th key={col.key} className={tableHeaderCellClass(col.align)}>
                 <button
                   onClick={() => {
                     if (sortKey === col.key) {
@@ -129,10 +131,7 @@ export function StatsTable({
         <tbody>
           {keyedRows.map(({ row, rowKey }) => {
             return (
-              <tr
-                key={rowKey}
-                className={tableBodyRowClass}
-              >
+              <tr key={rowKey} className={tableBodyRowClass}>
                 {columns.map((col) => (
                   <td
                     key={`${rowKey}-${col.key}`}

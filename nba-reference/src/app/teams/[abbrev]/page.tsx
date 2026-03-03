@@ -30,7 +30,8 @@ export default async function TeamPage({
   const averages = getTeamPerGameAverages(team.team_id);
   const leaders = getTeamPlayerLeaders(team.team_id, 12);
 
-  const seasonLabel = current?.season_id ?? seasonStats[0]?.season_id ?? "Current";
+  const seasonLabel =
+    current?.season_id ?? seasonStats[0]?.season_id ?? "Current";
 
   const anchors = [
     { id: "summary", label: "Summary" },
@@ -45,11 +46,17 @@ export default async function TeamPage({
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <div className="mb-1 text-xs text-crumb">
-        <Link href="/">Home</Link> / <Link href="/teams">Teams</Link> / {team.abbreviation}
+        <Link href="/">Home</Link> / <Link href="/teams">Teams</Link> /{" "}
+        {team.abbreviation}
       </div>
 
-      <section id="summary" className="mb-5 border border-line bg-paper-soft p-4">
-        <div className="mb-2 text-xs text-crumb">{seasonLabel} Team Profile</div>
+      <section
+        id="summary"
+        className="mb-5 border border-line bg-paper-soft p-4"
+      >
+        <div className="mb-2 text-xs text-crumb">
+          {seasonLabel} Team Profile
+        </div>
         <h1 className="mb-2 text-3xl font-bold">{team.full_name}</h1>
 
         <div className="grid gap-2 text-sm text-muted-strong md:grid-cols-3">
@@ -59,7 +66,9 @@ export default async function TeamPage({
           <div>
             Record: {current?.w ?? "-"}-{current?.l ?? "-"}
           </div>
-          <div>Net Rtg: {formatSignedNumber(current?.n_rtg as number | null)}</div>
+          <div>
+            Net Rtg: {formatSignedNumber(current?.n_rtg as number | null)}
+          </div>
           <div>Pace: {current?.pace ?? "-"}</div>
           <div>Off Rtg: {current?.o_rtg ?? "-"}</div>
           <div>Def Rtg: {current?.d_rtg ?? "-"}</div>
@@ -68,26 +77,82 @@ export default async function TeamPage({
 
         {averages ? (
           <div className="mt-3 grid gap-2 border border-line-soft bg-white p-3 text-xs sm:grid-cols-5 lg:grid-cols-10">
-            <div>PTS/G: <span className="font-bold tabular-nums">{averages.pts ?? "-"}</span></div>
-            <div>REB/G: <span className="font-bold tabular-nums">{averages.reb ?? "-"}</span></div>
-            <div>AST/G: <span className="font-bold tabular-nums">{averages.ast ?? "-"}</span></div>
-            <div>STL/G: <span className="font-bold tabular-nums">{averages.stl ?? "-"}</span></div>
-            <div>BLK/G: <span className="font-bold tabular-nums">{averages.blk ?? "-"}</span></div>
-            <div>TOV/G: <span className="font-bold tabular-nums">{averages.tov ?? "-"}</span></div>
-            <div>3PM/G: <span className="font-bold tabular-nums">{averages.fg3m ?? "-"}</span></div>
-            <div>3PA/G: <span className="font-bold tabular-nums">{averages.fg3a ?? "-"}</span></div>
-            <div>FG%: <span className="font-bold tabular-nums">{averages.fg_pct ?? "-"}</span></div>
-            <div>FT%: <span className="font-bold tabular-nums">{averages.ft_pct ?? "-"}</span></div>
+            <div>
+              PTS/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.pts ?? "-"}
+              </span>
+            </div>
+            <div>
+              REB/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.reb ?? "-"}
+              </span>
+            </div>
+            <div>
+              AST/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.ast ?? "-"}
+              </span>
+            </div>
+            <div>
+              STL/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.stl ?? "-"}
+              </span>
+            </div>
+            <div>
+              BLK/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.blk ?? "-"}
+              </span>
+            </div>
+            <div>
+              TOV/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.tov ?? "-"}
+              </span>
+            </div>
+            <div>
+              3PM/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.fg3m ?? "-"}
+              </span>
+            </div>
+            <div>
+              3PA/G:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.fg3a ?? "-"}
+              </span>
+            </div>
+            <div>
+              FG%:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.fg_pct ?? "-"}
+              </span>
+            </div>
+            <div>
+              FT%:{" "}
+              <span className="font-bold tabular-nums">
+                {averages.ft_pct ?? "-"}
+              </span>
+            </div>
           </div>
         ) : null}
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">On this page</div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">
+            On this page
+          </div>
           <nav className="space-y-1 text-sm">
             {anchors.map((a) => (
-              <a key={a.id} href={`#${a.id}`} className="block rounded px-2 py-1 hover:bg-nav-hover">
+              <a
+                key={a.id}
+                href={`#${a.id}`}
+                className="block rounded px-2 py-1 hover:bg-nav-hover"
+              >
                 {a.label}
               </a>
             ))}
@@ -135,7 +200,9 @@ export default async function TeamPage({
           </section>
 
           <section id="four-factors">
-            <h2 className="mb-2 text-xl font-bold">Four Factors (Team vs Opponent)</h2>
+            <h2 className="mb-2 text-xl font-bold">
+              Four Factors (Team vs Opponent)
+            </h2>
             <StatsTable
               columns={[
                 { key: "side", label: "Side" },
@@ -158,7 +225,10 @@ export default async function TeamPage({
                         side: "Opponent",
                         efg_pct: fourFactors.opp_e_fg_pct,
                         tov_pct: fourFactors.opp_tov_pct,
-                        orb_pct: fourFactors.drb_pct == null ? null : Number(100) - Number(fourFactors.drb_pct),
+                        orb_pct:
+                          fourFactors.drb_pct == null
+                            ? null
+                            : Number(100) - Number(fourFactors.drb_pct),
                         ft_fga: fourFactors.opp_ft_fga,
                       },
                     ]
@@ -191,7 +261,9 @@ export default async function TeamPage({
           </section>
 
           <section id="leaders">
-            <h2 className="mb-2 text-xl font-bold">Player Leaders (Current Season)</h2>
+            <h2 className="mb-2 text-xl font-bold">
+              Player Leaders (Current Season)
+            </h2>
             <StatsTable
               columns={[
                 { key: "full_name", label: "Player" },

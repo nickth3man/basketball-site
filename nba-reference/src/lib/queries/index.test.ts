@@ -10,7 +10,7 @@ import {
   getTeamGameBox,
   getTeamRoster,
   getTeamSeasonStats,
-} from "@/lib/queries";
+} from "./index";
 
 describe("query helpers", () => {
   it("finds known teams", () => {
@@ -62,18 +62,27 @@ describe("query helpers", () => {
   });
 
   it("returns player metadata including active status", () => {
-    const player = getPlayerByBrefId("jamesle01") as Record<string, unknown> | undefined;
+    const player = getPlayerByBrefId("jamesle01") as
+      | Record<string, unknown>
+      | undefined;
     expect(player).toBeTruthy();
-    expect(Object.prototype.hasOwnProperty.call(player ?? {}, "is_active")).toBe(true);
+    expect(
+      Object.prototype.hasOwnProperty.call(player ?? {}, "is_active"),
+    ).toBe(true);
   });
 
   it("returns expanded game highs including minutes and shooting", () => {
     const player = getPlayerByBrefId("jamesle01");
     expect(player).toBeTruthy();
-    const highs = getPlayerGameHighs(player!.player_id) as Record<string, unknown>;
+    const highs = getPlayerGameHighs(player!.player_id) as Record<
+      string,
+      unknown
+    >;
     expect(Object.prototype.hasOwnProperty.call(highs, "mp")).toBe(true);
     expect(Object.prototype.hasOwnProperty.call(highs, "fga")).toBe(true);
-    expect(Object.prototype.hasOwnProperty.call(highs, "plus_minus")).toBe(true);
+    expect(Object.prototype.hasOwnProperty.call(highs, "plus_minus")).toBe(
+      true,
+    );
   });
 
   it("returns game box for a known game", () => {

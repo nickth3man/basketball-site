@@ -26,14 +26,22 @@ export default function PlayersPage() {
           </thead>
           <tbody>
             {players.map((p, i) => (
-              <tr key={p.bref_id} className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}>
+              <tr
+                key={p.bref_id}
+                className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}
+              >
                 <td className={tableCellClass("left")}>
-                  <Link className={tableLinkClass} href={`/players/${p.bref_id}`}>
+                  <Link
+                    className={tableLinkClass}
+                    href={`/players/${p.bref_id}`}
+                  >
                     {p.full_name}
                   </Link>
                 </td>
                 <td className={tableCellClass("left")}>{p.position ?? "-"}</td>
-                <td className={tableCellClass("left")}>{p.is_active ? "Active" : "Retired"}</td>
+                <td className={tableCellClass("left")}>
+                  {p.is_active ? "Active" : "Retired"}
+                </td>
               </tr>
             ))}
           </tbody>

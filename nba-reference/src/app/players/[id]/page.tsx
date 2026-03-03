@@ -70,7 +70,8 @@ export default async function PlayerPage({
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <div className="mb-1 text-xs text-crumb">
-        <Link href="/">Home</Link> / <Link href="/players">Players</Link> / {player.full_name}
+        <Link href="/">Home</Link> / <Link href="/players">Players</Link> /{" "}
+        {player.full_name}
       </div>
 
       <section className="mb-5 border border-line bg-paper-soft p-4">
@@ -90,33 +91,65 @@ export default async function PlayerPage({
             <div className="grid gap-1 text-sm text-muted-strong sm:grid-cols-2">
               <div>Position: {player.position ?? "-"}</div>
               <div>Birth: {player.birth_date ?? "-"}</div>
-              <div>Birthplace: {[player.birth_city, player.birth_country].filter(Boolean).join(", ") || "-"}</div>
+              <div>
+                Birthplace:{" "}
+                {[player.birth_city, player.birth_country]
+                  .filter(Boolean)
+                  .join(", ") || "-"}
+              </div>
               <div>College: {player.college ?? "-"}</div>
-              <div>Height: {player.height_cm ? `${Math.round(player.height_cm)} cm` : "-"}</div>
-              <div>Weight: {player.weight_kg ? `${Math.round(player.weight_kg)} kg` : "-"}</div>
-              <div>Draft: {player.draft_year ? `${player.draft_year} R${player.draft_round ?? "?"} P${player.draft_number ?? "?"}` : "-"}</div>
+              <div>
+                Height:{" "}
+                {player.height_cm ? `${Math.round(player.height_cm)} cm` : "-"}
+              </div>
+              <div>
+                Weight:{" "}
+                {player.weight_kg ? `${Math.round(player.weight_kg)} kg` : "-"}
+              </div>
+              <div>
+                Draft:{" "}
+                {player.draft_year
+                  ? `${player.draft_year} R${player.draft_round ?? "?"} P${player.draft_number ?? "?"}`
+                  : "-"}
+              </div>
               <div>Status: {player.is_active ? "Active" : "Inactive"}</div>
               <div>Hall of Fame: {player.hof ? "Yes" : "No"}</div>
             </div>
           </div>
 
           <div className="border border-line-mid bg-white p-3 text-xs">
-            <div className="mb-2 font-bold uppercase tracking-wide text-crumb">Career Summary</div>
+            <div className="mb-2 font-bold uppercase tracking-wide text-crumb">
+              Career Summary
+            </div>
             <div className="grid grid-cols-2 gap-y-1">
               <span>G</span>
-              <span className="text-right tabular-nums">{summary.g ?? "-"}</span>
+              <span className="text-right tabular-nums">
+                {summary.g ?? "-"}
+              </span>
               <span>PTS/G</span>
-              <span className="text-right tabular-nums">{summary.pts_pg ?? "-"}</span>
+              <span className="text-right tabular-nums">
+                {summary.pts_pg ?? "-"}
+              </span>
               <span>REB/G</span>
-              <span className="text-right tabular-nums">{summary.reb_pg ?? "-"}</span>
+              <span className="text-right tabular-nums">
+                {summary.reb_pg ?? "-"}
+              </span>
               <span>AST/G</span>
-              <span className="text-right tabular-nums">{summary.ast_pg ?? "-"}</span>
+              <span className="text-right tabular-nums">
+                {summary.ast_pg ?? "-"}
+              </span>
               <span>FG%</span>
-              <span className="text-right tabular-nums">{formatPct(summary.fg_pct)}</span>
+              <span className="text-right tabular-nums">
+                {formatPct(summary.fg_pct)}
+              </span>
               <span>3P%</span>
-              <span className="text-right tabular-nums">{formatPct(summary.fg3_pct)}</span>
+              <span className="text-right tabular-nums">
+                {formatPct(summary.fg3_pct)}
+              </span>
               <span>FT%</span>
-              <span className="text-right tabular-nums">{formatPct(summary.ft_pct)}</span>
+              <span className="text-right tabular-nums">
+                {formatPct(summary.ft_pct)}
+              </span>
             </div>
           </div>
         </div>
@@ -124,7 +157,9 @@ export default async function PlayerPage({
 
       {awardCounts.length > 0 ? (
         <section className="mb-5 border border-line-mid bg-white p-3">
-          <h2 className="mb-2 text-lg font-bold">Leaderboards, Awards, & Honors</h2>
+          <h2 className="mb-2 text-lg font-bold">
+            Leaderboards, Awards, & Honors
+          </h2>
           <div className="flex flex-wrap gap-2">
             {awardCounts.map(([name, count]) => (
               <span
@@ -140,7 +175,9 @@ export default async function PlayerPage({
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">On this page</div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">
+            On this page
+          </div>
           <nav className="space-y-1 text-sm">
             {anchorSections.map((section) => (
               <a
@@ -348,12 +385,24 @@ export default async function PlayerPage({
                 { key: "sf_pct", label: "SF%", align: "right" },
                 { key: "pf_pct", label: "PF%", align: "right" },
                 { key: "c_pct", label: "C%", align: "right" },
-                { key: "on_court_pm_per100", label: "OnCourt/100", align: "right" },
+                {
+                  key: "on_court_pm_per100",
+                  label: "OnCourt/100",
+                  align: "right",
+                },
                 { key: "net_pm_per100", label: "Net/100", align: "right" },
                 { key: "bad_pass_tov", label: "BadPassTO", align: "right" },
                 { key: "lost_ball_tov", label: "LostBallTO", align: "right" },
-                { key: "shoot_foul_drawn", label: "ShtFoulDrawn", align: "right" },
-                { key: "off_foul_drawn", label: "OffFoulDrawn", align: "right" },
+                {
+                  key: "shoot_foul_drawn",
+                  label: "ShtFoulDrawn",
+                  align: "right",
+                },
+                {
+                  key: "off_foul_drawn",
+                  label: "OffFoulDrawn",
+                  align: "right",
+                },
                 { key: "and1", label: "And1", align: "right" },
               ]}
               rows={pbpStats}
@@ -425,24 +474,102 @@ export default async function PlayerPage({
             />
           </section>
 
-          <section id="highs" className="scroll-mt-4 border border-line-mid bg-white p-3">
+          <section
+            id="highs"
+            className="scroll-mt-4 border border-line-mid bg-white p-3"
+          >
             <h2 className="mb-2 text-xl font-bold">Game Highs</h2>
             <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
-              <div className="rounded border border-line-subtle bg-row-alt p-2">MP: <span className="font-bold tabular-nums">{highs.mp ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">FG: <span className="font-bold tabular-nums">{highs.fg ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">FGA: <span className="font-bold tabular-nums">{highs.fga ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">3P: <span className="font-bold tabular-nums">{highs.fg3 ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">3PA: <span className="font-bold tabular-nums">{highs.fg3a ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">FT: <span className="font-bold tabular-nums">{highs.ft ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">FTA: <span className="font-bold tabular-nums">{highs.fta ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">PTS: <span className="font-bold tabular-nums">{highs.pts ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">REB: <span className="font-bold tabular-nums">{highs.reb ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">AST: <span className="font-bold tabular-nums">{highs.ast ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">STL: <span className="font-bold tabular-nums">{highs.stl ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">BLK: <span className="font-bold tabular-nums">{highs.blk ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">TOV: <span className="font-bold tabular-nums">{highs.tov ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">PF: <span className="font-bold tabular-nums">{highs.pf ?? "-"}</span></div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">+/-: <span className="font-bold tabular-nums">{highs.plus_minus ?? "-"}</span></div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                MP:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.mp ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                FG:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.fg ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                FGA:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.fga ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                3P:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.fg3 ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                3PA:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.fg3a ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                FT:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.ft ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                FTA:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.fta ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                PTS:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.pts ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                REB:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.reb ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                AST:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.ast ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                STL:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.stl ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                BLK:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.blk ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                TOV:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.tov ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                PF:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.pf ?? "-"}
+                </span>
+              </div>
+              <div className="rounded border border-line-subtle bg-row-alt p-2">
+                +/-:{" "}
+                <span className="font-bold tabular-nums">
+                  {highs.plus_minus ?? "-"}
+                </span>
+              </div>
             </div>
           </section>
         </div>

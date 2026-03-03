@@ -8,7 +8,9 @@ export type SearchEntityResult = {
 
 export function searchEntities(query: string): SearchEntityResult[] {
   const q = `%${query.toLowerCase()}%`;
-  const players = getCachedQueryMany<Array<{ type: "player"; id: string; label: string }>>(
+  const players = getCachedQueryMany<
+    Array<{ type: "player"; id: string; label: string }>
+  >(
     `SELECT 'player' as type, bref_id as id, full_name as label
      FROM dim_player
      WHERE bref_id IS NOT NULL AND LOWER(full_name) LIKE ?
@@ -17,7 +19,9 @@ export function searchEntities(query: string): SearchEntityResult[] {
     5_000,
   );
 
-  const teams = getCachedQueryMany<Array<{ type: "team"; id: string; label: string }>>(
+  const teams = getCachedQueryMany<
+    Array<{ type: "team"; id: string; label: string }>
+  >(
     `SELECT 'team' as type, abbreviation as id, full_name as label
      FROM dim_team
      WHERE LOWER(full_name) LIKE ? OR LOWER(abbreviation) LIKE ?

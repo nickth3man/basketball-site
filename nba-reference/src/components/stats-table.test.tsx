@@ -23,7 +23,7 @@ describe("StatsTable", () => {
   it("sorts rows by clicking header", () => {
     // Initial sort defaults to columns[0].key ("name") and direction "desc"
     render(<StatsTable columns={columns} rows={rows} />);
-    
+
     // Name desc: Steph, then LeBron
     let tableRows = screen.getAllByRole("row").slice(1);
     expect(tableRows[0]).toHaveTextContent("Steph");
@@ -44,9 +44,12 @@ describe("StatsTable", () => {
 
   it("exports CSV data through Blob download", () => {
     vi.useFakeTimers();
-    const createObjectURL = vi.fn(() => "blob:mock-url");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const createObjectURL = vi.fn((_blob: Blob | MediaSource) => "blob:mock-url");
     const revokeObjectURL = vi.fn();
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
 
     vi.stubGlobal("URL", {
       createObjectURL,
@@ -58,7 +61,18 @@ describe("StatsTable", () => {
     fireEvent.click(screen.getByRole("button", { name: /Export CSV/i }));
 
     expect(createObjectURL).toHaveBeenCalledTimes(1);
-    const blobArg = createObjectURL.mock.calls[0][0] as Blob;
+    const firstCall = createObjectURL.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    if (!firstCall) {
+      throw new Error(
+        "Expected URL.createObjectURL to be called at least once",
+      );
+    }
+    const blobArg = firstCall[0];
+    expect(blobArg).toBeInstanceOf(Blob);
+    if (!(blobArg instanceof Blob)) {
+      throw new Error("Expected URL.createObjectURL to be called with a Blob");
+    }
     expect(blobArg.type).toBe("text/csv;charset=utf-8");
     expect(clickSpy).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(300);

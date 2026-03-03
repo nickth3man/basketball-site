@@ -31,19 +31,25 @@ export default async function GamePage({
   const homeTeam = String(game.home_abbrev ?? "");
   const awayPlayers = players.filter((p) => String(p.team) === awayTeam);
   const homePlayers = players.filter((p) => String(p.team) === homeTeam);
-  const awayAdvanced = playerAdvanced.filter((p) => String(p.team) === awayTeam);
-  const homeAdvanced = playerAdvanced.filter((p) => String(p.team) === homeTeam);
+  const awayAdvanced = playerAdvanced.filter(
+    (p) => String(p.team) === awayTeam,
+  );
+  const homeAdvanced = playerAdvanced.filter(
+    (p) => String(p.team) === homeTeam,
+  );
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <div className="mb-1 text-xs text-crumb">
-        <Link href="/">Home</Link> / <Link href="/games">Games</Link> / {game.game_id}
+        <Link href="/">Home</Link> / <Link href="/games">Games</Link> /{" "}
+        {game.game_id}
       </div>
       <h1 className="mb-2 text-3xl font-bold">
         {game.away_name} at {game.home_name}
       </h1>
       <p className="mb-4 text-sm text-muted-strong">
-        {game.game_date} | Final: {game.away_abbrev} {game.away_score} - {game.home_abbrev} {game.home_score}
+        {game.game_date} | Final: {game.away_abbrev} {game.away_score} -{" "}
+        {game.home_abbrev} {game.home_score}
       </p>
 
       <section className="mb-8">

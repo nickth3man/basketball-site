@@ -1,7 +1,4 @@
-import {
-  getHomeStandings,
-  getRecentGames,
-} from "@/lib/query/home";
+import { getHomeStandings, getRecentGames } from "@/lib/query/home";
 import { searchEntities } from "@/lib/query/search";
 import { NextRequest } from "next/server";
 
@@ -32,8 +29,14 @@ export function GET(
   return params.then(({ type }) => {
     let rows: Array<Record<string, string | number | null>> = [];
 
-    if (type === "standings") rows = getHomeStandings(30) as Array<Record<string, string | number | null>>;
-    if (type === "games") rows = getRecentGames(100) as Array<Record<string, string | number | null>>;
+    if (type === "standings")
+      rows = getHomeStandings(30) as Array<
+        Record<string, string | number | null>
+      >;
+    if (type === "games")
+      rows = getRecentGames(100) as Array<
+        Record<string, string | number | null>
+      >;
     if (type === "search") {
       const q = req.nextUrl.searchParams.get("q") ?? "";
       rows = searchEntities(q) as Array<Record<string, string | number | null>>;

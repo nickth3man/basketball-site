@@ -113,27 +113,41 @@ export function getDb(): Database.Database {
   return db;
 }
 
-export function getCachedQueryOne<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
+export function getCachedQueryOne<T>(
+  sql: string,
+  params: unknown[],
+  ttlMs = 30_000,
+): T {
   const key = `one:${buildQueryCacheKey(sql, params)}`;
   const cached = readCachedResult<T>(key);
   if (cached !== undefined) return cached;
 
-  const result = getDb().prepare(sql).get(...params) as T;
+  const result = getDb()
+    .prepare(sql)
+    .get(...params) as T;
   return writeCachedResult(key, result, ttlMs);
 }
 
-export function getCachedQueryMany<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
+export function getCachedQueryMany<T>(
+  sql: string,
+  params: unknown[],
+  ttlMs = 30_000,
+): T {
   const key = `many:${buildQueryCacheKey(sql, params)}`;
   const cached = readCachedResult<T>(key);
   if (cached !== undefined) return cached;
 
-  const result = getDb().prepare(sql).all(...params) as T;
+  const result = getDb()
+    .prepare(sql)
+    .all(...params) as T;
   return writeCachedResult(key, result, ttlMs);
 }
 
 export function getLatestSeasonId(): string {
   const row = getDb()
-    .prepare("SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT 1")
+    .prepare(
+      "SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT 1",
+    )
     .get() as { season_id: string } | undefined;
 
   return row?.season_id ?? "2025-26";

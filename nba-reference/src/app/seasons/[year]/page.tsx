@@ -28,18 +28,44 @@ export default async function SeasonPage({
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       <div className="mb-1 text-xs text-crumb">
-        <Link href="/">Home</Link> / <Link href="/seasons">Seasons</Link> / {year}
+        <Link href="/">Home</Link> / <Link href="/seasons">Seasons</Link> /{" "}
+        {year}
       </div>
       <h1 className="mb-3 text-3xl font-bold">{year} NBA Season</h1>
 
       <section className="mb-8 border border-line-mid bg-paper-soft p-3 text-sm">
         <h2 className="mb-2 text-lg font-bold">League Summary</h2>
         <div className="grid gap-2 sm:grid-cols-5">
-          <div>PPG: <span className="font-bold tabular-nums">{leagueSummary.ppg ?? "-"}</span></div>
-          <div>RPG: <span className="font-bold tabular-nums">{leagueSummary.rpg ?? "-"}</span></div>
-          <div>APG: <span className="font-bold tabular-nums">{leagueSummary.apg ?? "-"}</span></div>
-          <div>eFG%: <span className="font-bold tabular-nums">{leagueSummary.efg_pct ?? "-"}</span></div>
-          <div>TS%: <span className="font-bold tabular-nums">{leagueSummary.ts_pct ?? "-"}</span></div>
+          <div>
+            PPG:{" "}
+            <span className="font-bold tabular-nums">
+              {leagueSummary.ppg ?? "-"}
+            </span>
+          </div>
+          <div>
+            RPG:{" "}
+            <span className="font-bold tabular-nums">
+              {leagueSummary.rpg ?? "-"}
+            </span>
+          </div>
+          <div>
+            APG:{" "}
+            <span className="font-bold tabular-nums">
+              {leagueSummary.apg ?? "-"}
+            </span>
+          </div>
+          <div>
+            eFG%:{" "}
+            <span className="font-bold tabular-nums">
+              {leagueSummary.efg_pct ?? "-"}
+            </span>
+          </div>
+          <div>
+            TS%:{" "}
+            <span className="font-bold tabular-nums">
+              {leagueSummary.ts_pct ?? "-"}
+            </span>
+          </div>
         </div>
       </section>
 

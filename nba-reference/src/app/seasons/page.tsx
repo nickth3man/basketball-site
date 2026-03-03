@@ -26,9 +26,15 @@ export default function SeasonsPage() {
           </thead>
           <tbody>
             {seasons.map((s, i) => (
-              <tr key={s.season_id} className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}>
+              <tr
+                key={s.season_id}
+                className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}
+              >
                 <td className={tableCellClass("left")}>
-                  <Link className={tableLinkClass} href={`/seasons/${s.season_id}`}>
+                  <Link
+                    className={tableLinkClass}
+                    href={`/seasons/${s.season_id}`}
+                  >
                     {s.season_id}
                   </Link>
                 </td>

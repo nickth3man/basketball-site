@@ -26,13 +26,21 @@ export default function TeamsPage() {
           </thead>
           <tbody>
             {teams.map((t, i) => (
-              <tr key={t.abbreviation} className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}>
+              <tr
+                key={t.abbreviation}
+                className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}
+              >
                 <td className={tableCellClass("left")}>
-                  <Link className={tableLinkClass} href={`/teams/${t.abbreviation}`}>
+                  <Link
+                    className={tableLinkClass}
+                    href={`/teams/${t.abbreviation}`}
+                  >
                     {t.full_name} ({t.abbreviation})
                   </Link>
                 </td>
-                <td className={tableCellClass("left")}>{t.conference ?? "-"}</td>
+                <td className={tableCellClass("left")}>
+                  {t.conference ?? "-"}
+                </td>
                 <td className={tableCellClass("left")}>{t.division ?? "-"}</td>
               </tr>
             ))}

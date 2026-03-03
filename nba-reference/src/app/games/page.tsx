@@ -29,12 +29,19 @@ export default function GamesPage() {
           </thead>
           <tbody>
             {games.map((g, i) => (
-              <tr key={g.game_id} className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}>
+              <tr
+                key={g.game_id}
+                className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}
+              >
                 <td className={tableCellClass("left")}>{g.game_date}</td>
                 <td className={tableCellClass("left")}>{g.away_abbrev}</td>
-                <td className={tableCellClass("right")}>{g.away_score ?? "-"}</td>
+                <td className={tableCellClass("right")}>
+                  {g.away_score ?? "-"}
+                </td>
                 <td className={tableCellClass("left")}>{g.home_abbrev}</td>
-                <td className={tableCellClass("right")}>{g.home_score ?? "-"}</td>
+                <td className={tableCellClass("right")}>
+                  {g.home_score ?? "-"}
+                </td>
                 <td className={tableCellClass("left")}>
                   <Link className={tableLinkClass} href={`/games/${g.game_id}`}>
                     Box
