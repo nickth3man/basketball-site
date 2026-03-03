@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #f7f3e9;
@@ -79,14 +79,15 @@
 body {
   background:
     radial-gradient(circle at 15% -10%, #fffaf0 0%, rgba(255, 250, 240, 0) 42%),
-    radial-gradient(circle at 90% 0%, #efe6d4 0%, rgba(239, 230, 212, 0) 34%),
-    var(--background);
+    radial-gradient(circle at 90% 0%, #efe6d4 0%, rgba(239, 230, 212, 0) 34%), var(--background);
   color: var(--foreground);
-  font-family: "Times New Roman", Times, serif;
+  font-family: 'Times New Roman', Times, serif;
 }
 
 a {
-  transition: color 180ms ease, opacity 180ms ease;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
 }
 
 @keyframes fade-slide-in {

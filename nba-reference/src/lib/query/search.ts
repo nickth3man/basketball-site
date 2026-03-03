@@ -1,23 +1,23 @@
 /**
  * @fileoverview Search functionality - finds players and teams by name.
- * 
+ *
  * Provides cross-entity search across players and teams with:
  * - Case-insensitive matching
  * - Partial string matching (LIKE queries)
  * - Result limiting and deduplication
  * - Short query filtering (minimum 2 characters)
- * 
+ *
  * @module @/lib/query/search
  */
 
-import { getCachedQueryMany } from "@/lib/db";
+import { getCachedQueryMany } from '@/lib/db';
 
 /**
  * Represents a search result entity.
  */
-export type SearchEntityResult = {
+export interface SearchEntityResult {
   /** Entity type: "player" or "team" */
-  type: "player" | "team";
+  type: 'player' | 'team';
   /** Entity ID (player bref_id or team abbreviation) */
   id: string;
   /** Display label (full name) */
@@ -33,30 +33,28 @@ export type SearchEntityResult = {
  * @returns An array of search results where each item has `type` ("player" | "team"), `id` (player bref_id or team abbreviation), and `label` (display name)
  */
 export function searchEntities(query: string): SearchEntityResult[] {
-  const q = `%${query.toLowerCase()}%`;
-  
+  const normalized = query.trim().toLowerCase();
+  if (normalized.length < 2) return [];
+  const q = `%${normalized}%`;
+
   // Search players by name (cached for 5s)
-  const players = getCachedQueryMany<
-    Array<{ type: "player"; id: string; label: string }>
-  >(
+  const players = getCachedQueryMany<{ type: 'player'; id: string; label: string }[]>(
     `SELECT 'player' as type, bref_id as id, full_name as label
      FROM dim_player
      WHERE bref_id IS NOT NULL AND LOWER(full_name) LIKE ?
      LIMIT 10`,
     [q],
-    5_000,
+    5_000
   );
 
   // Search teams by name or abbreviation (cached for 5s)
-  const teams = getCachedQueryMany<
-    Array<{ type: "team"; id: string; label: string }>
-  >(
+  const teams = getCachedQueryMany<{ type: 'team'; id: string; label: string }[]>(
     `SELECT 'team' as type, abbreviation as id, full_name as label
      FROM dim_team
      WHERE LOWER(full_name) LIKE ? OR LOWER(abbreviation) LIKE ?
      LIMIT 10`,
     [q, q],
-    5_000,
+    5_000
   );
 
   // Combine and limit total results

@@ -29,15 +29,15 @@ NBA Reference is a Basketball-Reference clone built as a modern web application 
 
 ### Tech Stack
 
-| Category | Technology | Version |
-|----------|------------|---------|
-| **Framework** | Next.js (App Router) | 16.x |
-| **Language** | TypeScript | 5.x |
-| **Styling** | Tailwind CSS | 4.x |
-| **Database** | SQLite | 3.x |
-| **Database Driver** | better-sqlite3 | 12.x |
-| **Testing** | Vitest | 3.x |
-| **React** | React | 19.x |
+| Category            | Technology           | Version |
+| ------------------- | -------------------- | ------- |
+| **Framework**       | Next.js (App Router) | 16.x    |
+| **Language**        | TypeScript           | 5.x     |
+| **Styling**         | Tailwind CSS         | 4.x     |
+| **Database**        | SQLite               | 3.x     |
+| **Database Driver** | better-sqlite3       | 12.x    |
+| **Testing**         | Vitest               | 3.x     |
+| **React**           | React                | 19.x    |
 
 ### Key Characteristics
 
@@ -175,13 +175,14 @@ src/lib/queries/              # Domain-split query modules
 
 **Responsibility:** Render UI and handle user interactions.
 
-| Component Type | Location | Purpose |
-|---------------|----------|---------|
-| Pages | `src/app/*/page.tsx` | Route handlers, data fetching, page composition |
-| Layouts | `src/app/*/layout.tsx` | Shared UI structure, navigation |
-| Components | `src/components/*.tsx` | Reusable UI elements |
+| Component Type | Location               | Purpose                                         |
+| -------------- | ---------------------- | ----------------------------------------------- |
+| Pages          | `src/app/*/page.tsx`   | Route handlers, data fetching, page composition |
+| Layouts        | `src/app/*/layout.tsx` | Shared UI structure, navigation                 |
+| Components     | `src/components/*.tsx` | Reusable UI elements                            |
 
 **Key Principles:**
+
 - Pages fetch data directly from query functions (Server Components)
 - Components receive data via props; no direct database access
 - Use `"use client"` directive only when client-side interactivity is required
@@ -190,12 +191,12 @@ src/lib/queries/              # Domain-split query modules
 
 ```tsx
 // src/app/players/[id]/page.tsx
-import { getPlayerByBrefId, getPlayerSeasonStats } from "@/lib/queries";
+import { getPlayerByBrefId, getPlayerSeasonStats } from '@/lib/queries';
 
 export default async function PlayerPage({ params }: { params: { id: string } }) {
   const player = await getPlayerByBrefId(params.id);
   const stats = await getPlayerSeasonStats(params.id);
-  
+
   return <PlayerDetailView player={player} stats={stats} />;
 }
 ```
@@ -208,12 +209,13 @@ export default async function PlayerPage({ params }: { params: { id: string } })
 
 **Responsibility:** Expose REST endpoints for programmatic access.
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/search` | GET | Search players, teams, games |
-| `/api/export/[type]` | GET | Export data as JSON/CSV |
+| Endpoint             | Method | Purpose                      |
+| -------------------- | ------ | ---------------------------- |
+| `/api/search`        | GET    | Search players, teams, games |
+| `/api/export/[type]` | GET    | Export data as JSON/CSV      |
 
 **Key Principles:**
+
 - Route handlers are async functions that return `NextResponse`
 - Validate query parameters before processing
 - Reuse query functions from the Application Layer
@@ -222,17 +224,17 @@ export default async function PlayerPage({ params }: { params: { id: string } })
 
 ```typescript
 // src/app/api/search/route.ts
-import { searchEntities } from "@/lib/query/search";
-import { NextResponse } from "next/server";
+import { searchEntities } from '@/lib/query/search';
+import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q");
-  
+  const q = searchParams.get('q');
+
   if (!q || q.length < 2) {
-    return NextResponse.json({ error: "Query too short" }, { status: 400 });
+    return NextResponse.json({ error: 'Query too short' }, { status: 400 });
   }
-  
+
   const results = searchEntities(q);
   return NextResponse.json(results);
 }
@@ -246,17 +248,18 @@ export async function GET(request: Request) {
 
 **Responsibility:** Encapsulate business logic and data access patterns.
 
-| Module | Purpose |
-|--------|---------|
-| `queries/players.ts` | Player-related queries (stats, bio, career) |
-| `queries/teams.ts` | Team-related queries (roster, standings, stats) |
-| `queries/games.ts` | Game-related queries (box scores, schedule) |
-| `queries/seasons.ts` | Season-related queries (leaders, aggregates) |
-| `query/home.ts` | Homepage-specific aggregations |
-| `query/search.ts` | Cross-entity search logic |
-| `query/directory.ts` | Entity listing/directory queries |
+| Module               | Purpose                                         |
+| -------------------- | ----------------------------------------------- |
+| `queries/players.ts` | Player-related queries (stats, bio, career)     |
+| `queries/teams.ts`   | Team-related queries (roster, standings, stats) |
+| `queries/games.ts`   | Game-related queries (box scores, schedule)     |
+| `queries/seasons.ts` | Season-related queries (leaders, aggregates)    |
+| `query/home.ts`      | Homepage-specific aggregations                  |
+| `query/search.ts`    | Cross-entity search logic                       |
+| `query/directory.ts` | Entity listing/directory queries                |
 
 **Key Principles:**
+
 - Each function should have a single, clear purpose
 - Return typed objects; avoid `any`
 - Functions should be pure data fetchers; no side effects
@@ -266,12 +269,12 @@ export async function GET(request: Request) {
 
 ```typescript
 // src/lib/queries/players.ts
-import { getDb } from "@/lib/db";
+import { getDb } from '@/lib/db';
 
 export function getPlayerByBrefId(brefId: string) {
-  return getDb()
-    .prepare(`SELECT * FROM dim_player WHERE bref_id = ?`)
-    .get(brefId) as PlayerRecord | undefined;
+  return getDb().prepare(`SELECT * FROM dim_player WHERE bref_id = ?`).get(brefId) as
+    | PlayerRecord
+    | undefined;
 }
 ```
 
@@ -283,21 +286,21 @@ export function getPlayerByBrefId(brefId: string) {
 
 **Responsibility:** Manage database connections, caching, and low-level data access.
 
-| Feature | Description |
-|---------|-------------|
-| Connection Management | Singleton database connection via `getDb()` |
-| Query Caching | 30-second TTL cache with LRU eviction |
-| Cache Size | Maximum 500 cached query results |
-| Path Resolution | Configurable via `DB_PATH` environment variable |
+| Feature               | Description                                     |
+| --------------------- | ----------------------------------------------- |
+| Connection Management | Singleton database connection via `getDb()`     |
+| Query Caching         | 30-second TTL cache with LRU eviction           |
+| Cache Size            | Maximum 500 cached query results                |
+| Path Resolution       | Configurable via `DB_PATH` environment variable |
 
 **Key Functions:**
 
 ```typescript
 // Core exports from db.ts
-export function getDb(): Database;                    // Get database instance
-export function getLatestSeasonId(): string;          // Helper for current season
-export function getCachedQueryOne<T>(sql, params, ttl): T;   // Single row with cache
-export function getCachedQueryMany<T>(sql, params, ttl): T;  // Multiple rows with cache
+export function getDb(): Database; // Get database instance
+export function getLatestSeasonId(): string; // Helper for current season
+export function getCachedQueryOne<T>(sql, params, ttl): T; // Single row with cache
+export function getCachedQueryMany<T>(sql, params, ttl): T; // Multiple rows with cache
 ```
 
 ---
@@ -308,11 +311,11 @@ export function getCachedQueryMany<T>(sql, params, ttl): T;  // Multiple rows wi
 
 **Responsibility:** Provide reusable helper functions across layers.
 
-| Module | Purpose |
-|--------|---------|
-| `formatters.ts` | Data formatting (percentages, currency, signed numbers) |
-| `utils.ts` | General utilities (clsx, tailwind-merge helpers) |
-| `table-styles.ts` | CSS class generators for stats tables |
+| Module            | Purpose                                                 |
+| ----------------- | ------------------------------------------------------- |
+| `formatters.ts`   | Data formatting (percentages, currency, signed numbers) |
+| `utils.ts`        | General utilities (clsx, tailwind-merge helpers)        |
+| `table-styles.ts` | CSS class generators for stats tables                   |
 
 ---
 
@@ -338,30 +341,30 @@ export function getCachedQueryMany<T>(sql, params, ttl): T;  // Multiple rows wi
 
 ### Allowed Imports Matrix
 
-| Layer | Can Import From |
-|-------|----------------|
-| **Presentation** (`app/`, `components/`) | Application, Shared Utils |
-| **API** (`app/api/`) | Application, Shared Utils |
+| Layer                                          | Can Import From              |
+| ---------------------------------------------- | ---------------------------- |
+| **Presentation** (`app/`, `components/`)       | Application, Shared Utils    |
+| **API** (`app/api/`)                           | Application, Shared Utils    |
 | **Application** (`lib/queries/`, `lib/query/`) | Infrastructure, Shared Utils |
-| **Infrastructure** (`lib/db.ts`) | External packages only |
-| **Shared Utils** (`lib/formatters.ts`, etc.) | External packages only |
+| **Infrastructure** (`lib/db.ts`)               | External packages only       |
+| **Shared Utils** (`lib/formatters.ts`, etc.)   | External packages only       |
 
 ### Forbidden Patterns
 
 ```typescript
 // ❌ NEVER: Infrastructure importing from Application
 // lib/db.ts
-import { getPlayerStats } from "./queries/players"; // WRONG!
+import { getPlayerStats } from './queries/players'; // WRONG!
 
 // ❌ NEVER: Application importing from Presentation
 // lib/queries/players.ts
-import { PlayerCard } from "@/components/player-card"; // WRONG!
+import { PlayerCard } from '@/components/player-card'; // WRONG!
 
 // ❌ NEVER: Circular dependencies between modules
 // lib/queries/players.ts
-import { getTeamRoster } from "./teams";
+import { getTeamRoster } from './teams';
 // lib/queries/teams.ts
-import { getPlayerStats } from "./players"; // WRONG - creates cycle!
+import { getPlayerStats } from './players'; // WRONG - creates cycle!
 ```
 
 ### Best Practices
@@ -456,11 +459,11 @@ import { getPlayerStats } from "./players"; // WRONG - creates cycle!
 
 ### Cache Configuration
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| Default TTL | 30,000ms | Query results expire after 30 seconds |
-| Max Entries | 500 | Maximum cached queries before eviction |
-| Eviction Policy | LRU | Least Recently Used entries evicted first |
+| Setting         | Value    | Description                               |
+| --------------- | -------- | ----------------------------------------- |
+| Default TTL     | 30,000ms | Query results expire after 30 seconds     |
+| Max Entries     | 500      | Maximum cached queries before eviction    |
+| Eviction Policy | LRU      | Least Recently Used entries evicted first |
 
 ---
 
@@ -474,40 +477,40 @@ graph TB
         PAGES[Pages<br/>app/*/page.tsx]
         COMPS[Components<br/>components/*.tsx]
     end
-    
+
     subgraph "API Layer"
         API[API Routes<br/>app/api/*/route.ts]
     end
-    
+
     subgraph "Application Layer"
         QUERIES[Query Modules<br/>lib/queries/*.ts]
         QUERY[Feature Queries<br/>lib/query/*.ts]
     end
-    
+
     subgraph "Infrastructure Layer"
         DB[Database<br/>lib/db.ts]
         CACHE[(Query Cache<br/>In-Memory Map)]
     end
-    
+
     subgraph "Shared Utilities"
         FMT[Formatters<br/>lib/formatters.ts]
         UTIL[Utils<br/>lib/utils.ts]
     end
-    
+
     PAGES --> QUERIES
     PAGES --> QUERY
     PAGES --> COMPS
     PAGES --> FMT
-    
+
     API --> QUERY
     API --> QUERIES
-    
+
     COMPS --> FMT
     COMPS --> UTIL
-    
+
     QUERIES --> DB
     QUERY --> DB
-    
+
     DB --> CACHE
     DB --> SQLITE[(SQLite<br/>nba_raw_data.db)]
 ```
@@ -525,7 +528,7 @@ sequenceDiagram
     U->>P: Navigate to /players/curryst01
     P->>Q: getPlayerByBrefId("curryst01")
     Q->>D: getDb().prepare(sql).get(params)
-    
+
     alt Cache Hit
         D-->>Q: Return cached result
     else Cache Miss
@@ -534,7 +537,7 @@ sequenceDiagram
         D->>D: Cache result (30s TTL)
         D-->>Q: Return result
     end
-    
+
     Q-->>P: Return typed player data
     P-->>U: Render player page
 ```
@@ -550,27 +553,27 @@ graph LR
         games[games.ts]
         seasons[seasons.ts]
     end
-    
+
     subgraph "lib/query/ (Feature Queries)"
         home[home.ts]
         search[search.ts]
         directory[directory.ts]
     end
-    
+
     subgraph "Consumers"
         pages[Pages]
         api[API Routes]
     end
-    
+
     pages --> index
     api --> search
     api --> directory
-    
+
     index --> players
     index --> teams
     index --> games
     index --> seasons
-    
+
     home --> players
     home --> teams
 ```
@@ -581,42 +584,42 @@ graph LR
 
 ### 8.1 File Naming
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Page components | `page.tsx` | `app/players/page.tsx` |
-| Layout components | `layout.tsx` | `app/layout.tsx` |
-| API routes | `route.ts` | `app/api/search/route.ts` |
-| React components | `kebab-case.tsx` | `search-box.tsx`, `stats-table.tsx` |
-| Query modules | `kebab-case.ts` | `players.ts`, `home.ts` |
-| Test files | `*.test.ts` or `*.test.tsx` | `queries.test.ts`, `search-box.test.tsx` |
-| Utilities | `kebab-case.ts` | `formatters.ts`, `utils.ts` |
+| Type              | Pattern                     | Example                                  |
+| ----------------- | --------------------------- | ---------------------------------------- |
+| Page components   | `page.tsx`                  | `app/players/page.tsx`                   |
+| Layout components | `layout.tsx`                | `app/layout.tsx`                         |
+| API routes        | `route.ts`                  | `app/api/search/route.ts`                |
+| React components  | `kebab-case.tsx`            | `search-box.tsx`, `stats-table.tsx`      |
+| Query modules     | `kebab-case.ts`             | `players.ts`, `home.ts`                  |
+| Test files        | `*.test.ts` or `*.test.tsx` | `queries.test.ts`, `search-box.test.tsx` |
+| Utilities         | `kebab-case.ts`             | `formatters.ts`, `utils.ts`              |
 
 ### 8.2 Function Naming
 
-| Pattern | Convention | Example |
-|---------|------------|---------|
-| Query functions | `get<Entity>[By<Field>][<Action>]` | `getPlayerByBrefId`, `getTeamRoster` |
-| Search functions | `search<Entities>` | `searchEntities`, `searchPlayers` |
-| Formatter functions | `format<DataType>` | `formatPct`, `formatMoney` |
-| Event handlers | `handle<Event>` | `handleSearch`, `handleSubmit` |
-| React components | `<PascalCase>` | `SearchBox`, `StatsTable` |
+| Pattern             | Convention                         | Example                              |
+| ------------------- | ---------------------------------- | ------------------------------------ |
+| Query functions     | `get<Entity>[By<Field>][<Action>]` | `getPlayerByBrefId`, `getTeamRoster` |
+| Search functions    | `search<Entities>`                 | `searchEntities`, `searchPlayers`    |
+| Formatter functions | `format<DataType>`                 | `formatPct`, `formatMoney`           |
+| Event handlers      | `handle<Event>`                    | `handleSearch`, `handleSubmit`       |
+| React components    | `<PascalCase>`                     | `SearchBox`, `StatsTable`            |
 
 ### 8.3 Type Naming
 
-| Pattern | Convention | Example |
-|---------|------------|---------|
-| Database row types | `<Entity>Row` | `TeamStandingRow`, `RecentGameRow` |
-| Props types | `<Component>Props` | `StatsTableProps`, `SearchBoxProps` |
-| API response types | `<Endpoint>Response` | `SearchResponse`, `ExportResponse` |
-| Record types | `<Table>Record` | `PlayerRecord`, `GameRecord` |
+| Pattern            | Convention           | Example                             |
+| ------------------ | -------------------- | ----------------------------------- |
+| Database row types | `<Entity>Row`        | `TeamStandingRow`, `RecentGameRow`  |
+| Props types        | `<Component>Props`   | `StatsTableProps`, `SearchBoxProps` |
+| API response types | `<Endpoint>Response` | `SearchResponse`, `ExportResponse`  |
+| Record types       | `<Table>Record`      | `PlayerRecord`, `GameRecord`        |
 
 ### 8.4 Directory Naming
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Dynamic routes | `[param]` | `[id]`, `[abbrev]`, `[year]` |
-| Feature directories | `kebab-case` | `player-stats/`, `team-roster/` |
-| Domain directories | `singular-noun` | `queries/`, `query/` |
+| Type                | Convention      | Example                         |
+| ------------------- | --------------- | ------------------------------- |
+| Dynamic routes      | `[param]`       | `[id]`, `[abbrev]`, `[year]`    |
+| Feature directories | `kebab-case`    | `player-stats/`, `team-roster/` |
+| Domain directories  | `singular-noun` | `queries/`, `query/`            |
 
 ---
 
@@ -641,11 +644,11 @@ src/
 
 ### 9.2 Test Types
 
-| Type | Location | Purpose |
-|------|----------|---------|
-| Unit Tests | `*.test.ts` | Test individual functions in isolation |
-| Component Tests | `*.test.tsx` | Test React components with Testing Library |
-| API Route Tests | `__tests__/` subdirectory | Integration tests for API endpoints |
+| Type            | Location                  | Purpose                                    |
+| --------------- | ------------------------- | ------------------------------------------ |
+| Unit Tests      | `*.test.ts`               | Test individual functions in isolation     |
+| Component Tests | `*.test.tsx`              | Test React components with Testing Library |
+| API Route Tests | `__tests__/` subdirectory | Integration tests for API endpoints        |
 
 ### 9.3 Target Test Structure (Post-Migration)
 
@@ -669,16 +672,16 @@ src/app/api/
 
 ```typescript
 // src/lib/formatters.test.ts
-import { describe, it, expect } from "vitest";
-import { formatPct, formatMoney } from "./formatters";
+import { describe, it, expect } from 'vitest';
+import { formatPct, formatMoney } from './formatters';
 
-describe("formatPct", () => {
-  it("formats decimal as 3-digit percentage", () => {
-    expect(formatPct(0.456)).toBe("0.456");
+describe('formatPct', () => {
+  it('formats decimal as 3-digit percentage', () => {
+    expect(formatPct(0.456)).toBe('0.456');
   });
 
-  it("returns dash for null values", () => {
-    expect(formatPct(null)).toBe("-");
+  it('returns dash for null values', () => {
+    expect(formatPct(null)).toBe('-');
   });
 });
 ```
@@ -695,7 +698,7 @@ describe("SearchBox", () => {
   it("calls onSearch when user types", async () => {
     const onSearch = vi.fn();
     render(<SearchBox onSearch={onSearch} />);
-    
+
     await userEvent.type(screen.getByRole("searchbox"), "curry");
     expect(onSearch).toHaveBeenCalledWith("curry");
   });
@@ -726,11 +729,13 @@ This architecture documentation reflects the state of the codebase **after** the
 ### 10.1 Query Module Split
 
 **Before:**
+
 ```
 src/lib/queries.ts (921 lines, mixed domains)
 ```
 
 **After:**
+
 ```
 src/lib/queries/
 ├── index.ts      # Re-exports all for backward compatibility
@@ -741,6 +746,7 @@ src/lib/queries/
 ```
 
 **Rationale:**
+
 - Improves code discoverability (related functions grouped)
 - Reduces merge conflicts (smaller files)
 - Enables domain-focused testing
@@ -749,6 +755,7 @@ src/lib/queries/
 ### 10.2 .gitignore Cleanup
 
 **Added patterns:**
+
 ```gitignore
 # SQLite WAL files
 *.db-shm
@@ -759,12 +766,14 @@ src/lib/queries/
 ```
 
 **Issue Resolved:**
+
 - `.next/` directory was being tracked despite being in `.gitignore`
 - SQLite WAL (Write-Ahead Logging) files were committed
 
 ### 10.3 API Test Directories
 
 **New structure:**
+
 ```
 src/app/api/
 └── [endpoint]/
@@ -773,6 +782,7 @@ src/app/api/
 ```
 
 **Rationale:**
+
 - API routes benefit from integration tests
 - Co-located `__tests__/` keeps tests near the code
 - Follows Next.js community conventions
@@ -782,6 +792,7 @@ src/app/api/
 To complete the migration, execute these steps:
 
 1. **Create query module directories**
+
    ```bash
    mkdir -p src/lib/queries
    ```
@@ -793,6 +804,7 @@ To complete the migration, execute these steps:
    - Move season functions → `queries/seasons.ts`
 
 3. **Create index.ts for backward compatibility**
+
    ```typescript
    // src/lib/queries/index.ts
    export * from './players';
@@ -806,6 +818,7 @@ To complete the migration, execute these steps:
    - New code can import directly: `import { getPlayerStats } from '@/lib/queries/players'`
 
 5. **Remove original queries.ts**
+
    ```bash
    # After verifying all imports work
    rm src/lib/queries.ts
@@ -823,14 +836,14 @@ To complete the migration, execute these steps:
 
 ### Core Tables
 
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| `dim_player` | Player dimension | `player_id`, `bref_id`, `full_name` |
-| `dim_team` | Team dimension | `team_id`, `abbreviation`, `name` |
-| `fact_player_season_stats` | Player season totals | `bref_player_id`, `season_id`, counting stats |
-| `fact_player_advanced_season` | Advanced player stats | `per`, `ws`, `bpm`, `vorp` |
-| `fact_team_season` | Team season aggregates | `w`, `l`, `pace`, `n_rtg` |
-| `fact_game` | Individual games | `game_id`, `home_team_id`, `away_team_id` |
+| Table                         | Purpose                | Key Columns                                   |
+| ----------------------------- | ---------------------- | --------------------------------------------- |
+| `dim_player`                  | Player dimension       | `player_id`, `bref_id`, `full_name`           |
+| `dim_team`                    | Team dimension         | `team_id`, `abbreviation`, `name`             |
+| `fact_player_season_stats`    | Player season totals   | `bref_player_id`, `season_id`, counting stats |
+| `fact_player_advanced_season` | Advanced player stats  | `per`, `ws`, `bpm`, `vorp`                    |
+| `fact_team_season`            | Team season aggregates | `w`, `l`, `pace`, `n_rtg`                     |
+| `fact_game`                   | Individual games       | `game_id`, `home_team_id`, `away_team_id`     |
 
 ---
 
@@ -838,22 +851,22 @@ To complete the migration, execute these steps:
 
 ```typescript
 // Query functions
-import { getPlayerByBrefId } from "@/lib/queries";
-import { getPlayerByBrefId } from "@/lib/queries/players";  // Direct (post-migration)
+import { getPlayerByBrefId } from '@/lib/queries';
+import { getPlayerByBrefId } from '@/lib/queries/players'; // Direct (post-migration)
 
 // Feature queries
-import { searchEntities } from "@/lib/query/search";
-import { getHomeStandings } from "@/lib/query/home";
+import { searchEntities } from '@/lib/query/search';
+import { getHomeStandings } from '@/lib/query/home';
 
 // Database (rare, usually via queries)
-import { getDb } from "@/lib/db";
+import { getDb } from '@/lib/db';
 
 // Formatters
-import { formatPct, formatMoney } from "@/lib/formatters";
+import { formatPct, formatMoney } from '@/lib/formatters';
 
 // Components
-import { SearchBox } from "@/components/search-box";
-import { StatsTable } from "@/components/stats-table";
+import { SearchBox } from '@/components/search-box';
+import { StatsTable } from '@/components/stats-table';
 ```
 
 ---
@@ -872,4 +885,4 @@ docs/adr/
 
 ---
 
-*This document is maintained as part of the NBA Reference project. For questions or updates, contact the development team.*
+_This document is maintained as part of the NBA Reference project. For questions or updates, contact the development team._

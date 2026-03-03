@@ -1,23 +1,23 @@
 /**
  * @fileoverview Homepage component - displays standings and recent games.
- * 
+ *
  * The main landing page showing:
  * - Site title and description
  * - Search box for players/teams
  * - Export buttons for standings and games data
  * - Current season standings table
  * - Recent games list
- * 
+ *
  * Data is fetched server-side using cached queries for optimal performance.
- * 
+ *
  * @module @/app/page
  */
 
-import Link from "next/link";
-import { SearchBox } from "@/components/search-box";
-import { StatsTable } from "@/components/stats-table";
-import { getLatestSeasonId } from "@/lib/db";
-import { getHomeStandings, getRecentGames } from "@/lib/query/home";
+import Link from 'next/link';
+import { SearchBox } from '@/components/search-box';
+import { StatsTable } from '@/components/stats-table';
+import { getLatestSeasonId } from '@/lib/db';
+import { getHomeStandings, getRecentGames } from '@/lib/query/home';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -26,7 +26,7 @@ import {
   tableHeadRowClass,
   tableHeaderCellClass,
   tableLinkClass,
-} from "@/lib/table-styles";
+} from '@/lib/table-styles';
 
 /**
  * Render the homepage showing the current season standings and recent games.
@@ -43,13 +43,18 @@ export default function Home() {
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
       {/* Page header */}
-      <h1 className="fade-slide-in mb-1 text-3xl font-bold text-heading">Basketball Stats and History</h1>
-      <p className="fade-slide-in mb-5 text-sm text-muted" style={{ animationDelay: "80ms" }}>
+      <h1 className="mb-1 fade-slide-in text-3xl font-bold text-heading">
+        Basketball Stats and History
+      </h1>
+      <p className="mb-5 fade-slide-in text-sm text-muted" style={{ animationDelay: '80ms' }}>
         Season {seasonId} standings, scores, and player/team lookup.
       </p>
 
       {/* Search and export controls */}
-      <div className="fade-slide-in mb-6 grid gap-3 md:grid-cols-[2fr_1fr]" style={{ animationDelay: "140ms" }}>
+      <div
+        className="mb-6 grid fade-slide-in gap-3 md:grid-cols-[2fr_1fr]"
+        style={{ animationDelay: '140ms' }}
+      >
         <SearchBox />
         <div className="flex items-center gap-2 text-sm">
           <Link
@@ -68,15 +73,15 @@ export default function Home() {
       </div>
 
       {/* Standings section */}
-      <section className="fade-slide-in panel-paper mb-8 p-3" style={{ animationDelay: "200ms" }}>
+      <section className="mb-8 fade-slide-in panel-paper p-3" style={{ animationDelay: '200ms' }}>
         <h2 className="mb-2 text-xl font-bold text-heading">{seasonId} NBA Standings</h2>
         <StatsTable
           columns={[
-            { key: "bref_abbrev", label: "Team" },
-            { key: "w", label: "W", align: "right" },
-            { key: "l", label: "L", align: "right" },
-            { key: "n_rtg", label: "NetRtg", align: "right" },
-            { key: "pace", label: "Pace", align: "right" },
+            { key: 'bref_abbrev', label: 'Team' },
+            { key: 'w', label: 'W', align: 'right' },
+            { key: 'l', label: 'L', align: 'right' },
+            { key: 'n_rtg', label: 'NetRtg', align: 'right' },
+            { key: 'pace', label: 'Pace', align: 'right' },
           ]}
           rows={standings}
           initialSort="w"
@@ -84,36 +89,28 @@ export default function Home() {
       </section>
 
       {/* Recent games section */}
-      <section className="fade-slide-in panel-paper p-3" style={{ animationDelay: "260ms" }}>
+      <section className="fade-slide-in panel-paper p-3" style={{ animationDelay: '260ms' }}>
         <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
         <div className={tableContainerClass}>
           <table className={tableClass}>
             <thead>
               <tr className={tableHeadRowClass}>
-                {[
-                  "Date",
-                  "Away",
-                  "Away PTS",
-                  "Home",
-                  "Home PTS",
-                  "Box Score",
-                ].map((h) => (
-                  <th key={h} className={tableHeaderCellClass("left")}>{h}</th>
+                {['Date', 'Away', 'Away PTS', 'Home', 'Home PTS', 'Box Score'].map(h => (
+                  <th key={h} className={tableHeaderCellClass('left')}>
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {games.map((g) => (
-                <tr
-                  key={g.game_id}
-                  className={tableBodyRowClass}
-                >
-                  <td className={tableCellClass("left")}>{g.game_date}</td>
-                  <td className={tableCellClass("left")}>{g.away_abbrev}</td>
-                  <td className={tableCellClass("right")}>{g.away_score ?? "-"}</td>
-                  <td className={tableCellClass("left")}>{g.home_abbrev}</td>
-                  <td className={tableCellClass("right")}>{g.home_score ?? "-"}</td>
-                  <td className={tableCellClass("left")}>
+              {games.map(g => (
+                <tr key={g.game_id} className={tableBodyRowClass}>
+                  <td className={tableCellClass('left')}>{g.game_date}</td>
+                  <td className={tableCellClass('left')}>{g.away_abbrev}</td>
+                  <td className={tableCellClass('right')}>{g.away_score ?? '-'}</td>
+                  <td className={tableCellClass('left')}>{g.home_abbrev}</td>
+                  <td className={tableCellClass('right')}>{g.home_score ?? '-'}</td>
+                  <td className={tableCellClass('left')}>
                     <Link className={tableLinkClass} href={`/games/${g.game_id}`}>
                       Box Score
                     </Link>

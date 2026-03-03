@@ -1,16 +1,16 @@
 /**
  * @fileoverview Sortable data table with CSV export functionality.
- * 
+ *
  * Provides a reusable table component for displaying statistical data
  * with client-side sorting and CSV export. Uses CSS custom properties
  * for consistent styling with the rest of the application.
- * 
+ *
  * @module @/components/stats-table
  */
 
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -19,7 +19,7 @@ import {
   tableHeadRowClass,
   tableHeaderButtonClass,
   tableHeaderCellClass,
-} from "@/lib/table-styles";
+} from '@/lib/table-styles';
 
 /**
  * Value types that can appear in table cells.
@@ -37,7 +37,7 @@ type Row = Record<string, RowValue>;
  */
 interface StatsTableProps {
   /** Column definitions with key, label, and optional alignment */
-  columns: Array<{ key: string; label: string; align?: "left" | "right" }>;
+  columns: Array<{ key: string; label: string; align?: 'left' | 'right' }>;
   /** Array of data rows to display */
   rows: Row[];
   /** Initial column to sort by (defaults to first column) */
@@ -56,15 +56,9 @@ interface StatsTableProps {
  * @param props - Component props
  * @returns The rendered stats table element
  */
-export function StatsTable({
-  columns,
-  rows,
-  initialSort,
-}: StatsTableProps) {
-  const [sortKey, setSortKey] = useState<string>(
-    initialSort ?? columns[0]?.key ?? "",
-  );
-  const [direction, setDirection] = useState<"asc" | "desc">("desc");
+export function StatsTable({ columns, rows, initialSort }: StatsTableProps) {
+  const [sortKey, setSortKey] = useState<string>(initialSort ?? columns[0]?.key ?? '');
+  const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
 
   /**
    * Sorted rows based on current sort key and direction.
@@ -82,11 +76,11 @@ export function StatsTable({
       if (bv == null) return -1;
 
       // Case-insensitive comparison for strings
-      const left = typeof av === "string" ? av.toLowerCase() : av;
-      const right = typeof bv === "string" ? bv.toLowerCase() : bv;
+      const left = typeof av === 'string' ? av.toLowerCase() : av;
+      const right = typeof bv === 'string' ? bv.toLowerCase() : bv;
 
-      if (left < right) return direction === "asc" ? -1 : 1;
-      if (left > right) return direction === "asc" ? 1 : -1;
+      if (left < right) return direction === 'asc' ? -1 : 1;
+      if (left > right) return direction === 'asc' ? 1 : -1;
       return 0;
     });
     return copy;
@@ -94,7 +88,7 @@ export function StatsTable({
 
   /**
    * Rows with generated React keys.
-   * 
+   *
    * Key generation strategy:
    * 1. Try to use natural ID fields (id, game_id, bref_abbrev)
    * 2. Fall back to concatenating all column values
@@ -107,11 +101,9 @@ export function StatsTable({
       // Try natural IDs first
       const primaryKey = row.id ?? row.game_id ?? row.bref_abbrev;
       // Fallback: concatenate all cell values
-      const fallbackKey = columns
-        .map((col) => `${row[col.key] ?? ""}`)
-        .join("|");
+      const fallbackKey = columns.map(col => `${row[col.key] ?? ''}`).join('|');
       const baseKey =
-        typeof primaryKey === "string" || typeof primaryKey === "number"
+        typeof primaryKey === 'string' || typeof primaryKey === 'number'
           ? `${primaryKey}`
           : `${fallbackKey}|${rowIndex}`;
 
@@ -121,15 +113,14 @@ export function StatsTable({
 
       return {
         row,
-        rowKey:
-          duplicateCount === 0 ? baseKey : `${baseKey}__dup${duplicateCount}`,
+        rowKey: duplicateCount === 0 ? baseKey : `${baseKey}__dup${duplicateCount}`,
       };
     });
   }, [columns, sorted]);
 
   /**
    * Exports the currently sorted data as a CSV file.
-   * 
+   *
    * CSV Format:
    * - Comma-separated values
    * - All fields wrapped in double quotes
@@ -138,29 +129,41 @@ export function StatsTable({
    * - Blob URL revoked after 250ms to free memory
    */
   const handleExportCsv = () => {
-    const header = columns.map((c) => c.label).join(",");
-    const lines = sorted.map((row) =>
+    // Sanitize CSV values: handle null/undefined, escape quotes, prevent formula injection
+    const sanitize = (value: unknown): string => {
+      // Convert null/undefined to empty string
+      if (value == null) return '';
+      let str = String(value);
+      // Escape quotes by doubling them (RFC 4180)
+      str = str.replaceAll('"', '""');
+      // Prefix with single quote to prevent CSV injection from formula triggers
+      if (/^[=+\-@]/.test(str)) {
+        str = "'" + str;
+      }
+      return str;
+    };
+
+    const header = columns.map(c => `"${sanitize(c.label)}"`).join(',');
+    const lines = sorted.map(row =>
       columns
-        .map((col) => {
+        .map(col => {
           const v = row[col.key];
-          // Escape quotes by doubling them (RFC 4180)
-          const str = v == null ? "" : String(v).replaceAll('"', '""');
-          return `"${str}"`;
+          return `"${sanitize(v)}"`;
         })
-        .join(","),
+        .join(',')
     );
-    const csvData = [header, ...lines].join("\n");
-    
+    const csvData = [header, ...lines].join('\n');
+
     // Create download via Blob and temporary anchor
-    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8' });
     const downloadUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = "table-export.csv";
+    link.download = 'table-export.csv';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Clean up blob URL after download starts
     setTimeout(() => URL.revokeObjectURL(downloadUrl), 250);
   };
@@ -177,22 +180,22 @@ export function StatsTable({
           Export CSV
         </button>
       </div>
-      
+
       {/* Data table */}
       <table className={tableClass}>
         <thead>
           <tr className={tableHeadRowClass}>
-            {columns.map((col) => (
+            {columns.map(col => (
               <th key={col.key} className={tableHeaderCellClass(col.align)}>
                 <button
                   onClick={() => {
                     if (sortKey === col.key) {
                       // Toggle direction if clicking same column
-                      setDirection((d) => (d === "asc" ? "desc" : "asc"));
+                      setDirection(d => (d === 'asc' ? 'desc' : 'asc'));
                     } else {
                       // New column: default to descending
                       setSortKey(col.key);
-                      setDirection("desc");
+                      setDirection('desc');
                     }
                   }}
                   className={tableHeaderButtonClass}
@@ -207,12 +210,9 @@ export function StatsTable({
           {keyedRows.map(({ row, rowKey }) => {
             return (
               <tr key={rowKey} className={tableBodyRowClass}>
-                {columns.map((col) => (
-                  <td
-                    key={`${rowKey}-${col.key}`}
-                    className={tableCellClass(col.align)}
-                  >
-                    {row[col.key] == null ? "-" : String(row[col.key])}
+                {columns.map(col => (
+                  <td key={`${rowKey}-${col.key}`} className={tableCellClass(col.align)}>
+                    {row[col.key] == null ? '-' : String(row[col.key])}
                   </td>
                 ))}
               </tr>

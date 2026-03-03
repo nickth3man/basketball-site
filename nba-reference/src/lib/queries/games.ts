@@ -1,6 +1,6 @@
 /**
  * @fileoverview Game data queries - retrieves box scores, play-by-play, and game details.
- * 
+ *
  * This module provides query functions for game data:
  * - Basic game information (date, teams, scores, status)
  * - Player box scores (traditional stats)
@@ -8,13 +8,13 @@
  * - Team box scores and Four Factors
  * - Play-by-play event streams
  * - Line score by period
- * 
+ *
  * All queries use the cached database layer (30s TTL) for performance.
- * 
+ *
  * @module @/lib/queries/games
  */
 
-import { getDb } from "@/lib/db";
+import { getDb } from '@/lib/db';
 
 /**
  * Retrieve basic game information for the specified game ID.
@@ -32,7 +32,7 @@ export function getGameById(gameId: string) {
        FROM fact_game g
        JOIN dim_team ht ON ht.team_id = g.home_team_id
        JOIN dim_team at ON at.team_id = g.away_team_id
-       WHERE g.game_id = ?`,
+       WHERE g.game_id = ?`
     )
     .get(gameId) as Record<string, string | number | null> | undefined;
 }
@@ -55,7 +55,7 @@ export function getGamePbpEvents(gameId: string, limit = 40) {
        WHERE game_id = ?
          AND (home_description IS NOT NULL OR visitor_description IS NOT NULL)
        ORDER BY period DESC, pc_time_string DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(gameId, limit) as Array<Record<string, string | number | null>>;
 }
@@ -98,7 +98,7 @@ export function getGamePlayerBox(gameId: string) {
        JOIN dim_player p ON p.player_id = pgl.player_id
        JOIN dim_team t ON t.team_id = pgl.team_id
        WHERE pgl.game_id = ?
-       ORDER BY t.abbreviation ASC, pgl.starter DESC, pgl.minutes_played DESC`,
+       ORDER BY t.abbreviation ASC, pgl.starter DESC, pgl.minutes_played DESC`
     )
     .all(gameId) as Array<Record<string, string | number | null>>;
 }
@@ -147,7 +147,7 @@ export function getGamePlayerAdvancedBox(gameId: string) {
        JOIN dim_player p ON p.player_id = pgl.player_id
        JOIN dim_team t ON t.team_id = pgl.team_id
        WHERE pgl.game_id = ?
-       ORDER BY t.abbreviation ASC, game_score DESC`,
+       ORDER BY t.abbreviation ASC, game_score DESC`
     )
     .all(gameId) as Array<Record<string, string | number | null>>;
 }
@@ -188,11 +188,11 @@ export function getGameTeamFourFactors(gameId: string) {
        -- Self-join to get opponent's rebounding stats for ORB%/DRB%
        JOIN team_game_log opp ON opp.game_id = tgl.game_id AND opp.team_id <> tgl.team_id
        WHERE tgl.game_id = ?
-       ORDER BY t.abbreviation ASC`,
+       ORDER BY t.abbreviation ASC`
     )
     .all(gameId) as Array<Record<string, number | string | null>>;
 
-  return rows.map((r) => {
+  return rows.map(r => {
     const fgm = Number(r.fgm ?? 0);
     const fga = Number(r.fga ?? 0);
     const fg3m = Number(r.fg3m ?? 0);
@@ -203,7 +203,7 @@ export function getGameTeamFourFactors(gameId: string) {
     const tov = Number(r.tov ?? 0);
     const oppOreb = Number(r.opp_oreb ?? 0);
     const oppDreb = Number(r.opp_dreb ?? 0);
-    
+
     // Estimated possessions for TOV% calculation
     const possessions = fga + 0.44 * fta + tov;
 
@@ -212,20 +212,13 @@ export function getGameTeamFourFactors(gameId: string) {
       // eFG%: Accounts for 3P being worth 1.5x a 2P
       efg_pct: fga > 0 ? Number(((fgm + 0.5 * fg3m) / fga).toFixed(3)) : null,
       // TOV%: Percentage of possessions ending in turnover
-      tov_pct:
-        possessions > 0 ? Number(((100 * tov) / possessions).toFixed(1)) : null,
+      tov_pct: possessions > 0 ? Number(((100 * tov) / possessions).toFixed(1)) : null,
       // ORB%: Percentage of available offensive rebounds grabbed
-      orb_pct:
-        oreb + oppDreb > 0
-          ? Number(((100 * oreb) / (oreb + oppDreb)).toFixed(1))
-          : null,
+      orb_pct: oreb + oppDreb > 0 ? Number(((100 * oreb) / (oreb + oppDreb)).toFixed(1)) : null,
       // FT/FGA: Free throws made per field goal attempt
       ft_fga: fga > 0 ? Number((ftm / fga).toFixed(3)) : null,
       // DRB%: Percentage of available defensive rebounds grabbed
-      drb_pct:
-        dreb + oppOreb > 0
-          ? Number(((100 * dreb) / (dreb + oppOreb)).toFixed(1))
-          : null,
+      drb_pct: dreb + oppOreb > 0 ? Number(((100 * dreb) / (dreb + oppOreb)).toFixed(1)) : null,
     };
   });
 }
@@ -245,40 +238,47 @@ export function getGameLineScore(gameId: string) {
        FROM fact_play_by_play
        WHERE game_id = ?
          AND score IS NOT NULL
-       ORDER BY period ASC, event_id ASC`,
+       ORDER BY period ASC, event_id ASC`
     )
     .all(gameId) as Array<{ period: number; score: string }>;
 
-  const byPeriod = new Map<number, { away: number; home: number }>();
-  let prevAway = 0;
-  let prevHome = 0;
+  const periodEndTotals = new Map<number, { away: number; home: number }>();
 
   for (const row of rows) {
     // Parse "away-home" score format (e.g., "45-52")
-    const parts = row.score.split("-");
+    const parts = row.score.split('-');
     if (parts.length !== 2) continue;
     const away = Number(parts[0]);
     const home = Number(parts[1]);
     if (Number.isNaN(away) || Number.isNaN(home)) continue;
 
-    // Calculate points scored in this period by subtracting previous totals
-    byPeriod.set(row.period, {
+    // Store the last cumulative score seen for each period
+    periodEndTotals.set(row.period, { away, home });
+  }
+
+  // Calculate period deltas from the cumulative totals
+  const result = [];
+  let prevAway = 0;
+  let prevHome = 0;
+
+  const sortedPeriods = Array.from(periodEndTotals.entries()).sort((a, b) => a[0] - b[0]);
+
+  for (const [period, { away, home }] of sortedPeriods) {
+    result.push({
+      period,
       away: away - prevAway,
       home: home - prevHome,
     });
-
     prevAway = away;
     prevHome = home;
   }
 
-  return Array.from(byPeriod.entries())
-    .map(([period, scores]) => ({ period, ...scores }))
-    .sort((a, b) => a.period - b.period);
+  return result;
 }
 
 /**
  * Retrieves team-level box score statistics.
- * 
+ *
  * @param gameId - Game ID
  * @returns Array of team box score records (typically 2: home and away)
  */
@@ -291,7 +291,7 @@ export function getTeamGameBox(gameId: string) {
        FROM team_game_log tgl
        JOIN dim_team t ON t.team_id = tgl.team_id
        WHERE tgl.game_id = ?
-       ORDER BY t.abbreviation`,
+       ORDER BY t.abbreviation`
     )
     .all(gameId) as Array<Record<string, string | number | null>>;
 }

@@ -1,15 +1,16 @@
 /**
  * @fileoverview Search API endpoint - handles entity search requests.
- * 
+ *
  * Provides a GET endpoint that accepts a query parameter and returns
  * matching players and teams. Validates minimum query length before
  * executing search to prevent unnecessary database queries.
- * 
+ *
  * @module @/app/api/search/route
  */
 
-import { searchEntities } from "@/lib/query/search";
-import { NextRequest, NextResponse } from "next/server";
+import { searchEntities } from '@/lib/query/search';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 /**
  * Handle GET requests to /api/search and return matching search results.
@@ -21,8 +22,8 @@ import { NextRequest, NextResponse } from "next/server";
  * @param req - Next.js request object containing the `q` query parameter
  * @returns An object with a `results` array of search entries (e.g. `{ type: string, id: string, label: string }`)
  */
-export function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
+export function GET(req: NextRequest): NextResponse {
+  const q = req.nextUrl.searchParams.get('q')?.trim() ?? '';
   if (q.length < 2) {
     return NextResponse.json({ results: [] });
   }

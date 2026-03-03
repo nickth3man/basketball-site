@@ -1,16 +1,16 @@
 /**
  * @fileoverview Directory queries - provides paginated entity listings.
- * 
+ *
  * This module provides queries for directory/listing pages:
  * - Player directory with active status
  * - Team directory with conference/division
- * 
+ *
  * Uses longer cache TTLs (60s) since directory data changes infrequently.
- * 
+ *
  * @module @/lib/query/directory
  */
 
-import { getCachedQueryMany } from "@/lib/db";
+import { getCachedQueryMany } from '@/lib/db';
 
 /**
  * Represents a player in the directory listing.
@@ -42,15 +42,15 @@ export type TeamDirectoryRow = {
 
 /**
  * Retrieves a paginated list of players for the directory.
- * 
+ *
  * Players are sorted by:
  * 1. Active status (active players first)
  * 2. Full name (alphabetical)
- * 
+ *
  * Only includes players with a valid bref_id (excludes incomplete records).
- * 
+ *
  * Cache TTL: 60s (player roster changes infrequently).
- * 
+ *
  * @param limit - Maximum number of players to return (default: 400)
  * @returns Array of player directory records
  * @example
@@ -66,18 +66,18 @@ export function getPlayerDirectory(limit = 400): PlayerDirectoryRow[] {
      ORDER BY is_active DESC, full_name ASC
      LIMIT ?`,
     [limit],
-    60_000,
+    60_000
   );
 }
 
 /**
  * Retrieves the complete list of teams for the directory.
- * 
+ *
  * Teams are sorted alphabetically by full name.
  * Returns all teams (no pagination needed for 30 NBA teams).
- * 
+ *
  * Cache TTL: 60s (team data rarely changes).
- * 
+ *
  * @returns Array of team directory records
  * @example
  * ```ts
@@ -91,6 +91,6 @@ export function getTeamDirectory(): TeamDirectoryRow[] {
      FROM dim_team
      ORDER BY full_name ASC`,
     [],
-    60_000,
+    60_000
   );
 }

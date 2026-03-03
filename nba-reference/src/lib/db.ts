@@ -1,18 +1,18 @@
 /**
  * @fileoverview Database module providing a singleton SQLite connection with automatic caching.
- * 
+ *
  * This module implements a database access layer with the following features:
  * - Singleton pattern for database connection management
  * - Automatic query result caching with configurable TTL (30s default)
  * - LRU (Least Recently Used) cache eviction when size limit is reached
  * - Read-only database access (WAL mode enabled for better concurrency)
  * - Environment-based database path configuration
- * 
+ *
  * @module @/lib/db
  */
 
-import Database from "better-sqlite3";
-import path from "node:path";
+import Database from 'better-sqlite3';
+import path from 'node:path';
 
 /** Singleton database instance - initialized on first access */
 let db: Database.Database | null = null;
@@ -42,7 +42,7 @@ type PreparePatchOptions = {
   readonly: boolean;
 };
 
-/** 
+/**
  * In-memory cache for query results.
  * Map iteration order is used to implement simple LRU behavior.
  */
@@ -160,16 +160,16 @@ function stripLeadingSqlComments(sql: string): string {
     }
 
     // Consume leading line comment.
-    if (remaining.startsWith("--")) {
-      const newlineIndex = remaining.indexOf("\n");
-      remaining = newlineIndex === -1 ? "" : remaining.slice(newlineIndex + 1);
+    if (remaining.startsWith('--')) {
+      const newlineIndex = remaining.indexOf('\n');
+      remaining = newlineIndex === -1 ? '' : remaining.slice(newlineIndex + 1);
       continue;
     }
 
     // Consume leading block comment.
-    if (remaining.startsWith("/*")) {
-      const endIndex = remaining.indexOf("*/", 2);
-      remaining = endIndex === -1 ? "" : remaining.slice(endIndex + 2);
+    if (remaining.startsWith('/*')) {
+      const endIndex = remaining.indexOf('*/', 2);
+      remaining = endIndex === -1 ? '' : remaining.slice(endIndex + 2);
       continue;
     }
 
@@ -189,13 +189,13 @@ function stripLeadingSqlComments(sql: string): string {
  */
 function isCacheableReadQuery(sql: string): boolean {
   const normalized = stripLeadingSqlComments(sql).toUpperCase();
-  return normalized.startsWith("SELECT");
+  return normalized.startsWith('SELECT');
 }
 
 /**
  * Monkey-patches the Database.prepare() method to add automatic caching.
  * Wraps statement.get() and statement.all() with cache lookups.
- * 
+ *
  * Safety constraints:
  * - Patch is active only for read-only database connections
  * - Even in read-only mode, only statements beginning with SELECT are cached
@@ -207,14 +207,11 @@ function isCacheableReadQuery(sql: string): boolean {
  * Cache keys are prefixed with operation type to avoid collisions:
  * - "stmt:get:" for single row queries
  * - "stmt:all:" for multi-row queries
- * 
+ *
  * @param database - better-sqlite3 Database instance to patch
  * @param options - Patch behavior options including readonly guard
  */
-function patchPrepareWithCache(
-  database: Database.Database,
-  options: PreparePatchOptions,
-): void {
+function patchPrepareWithCache(database: Database.Database, options: PreparePatchOptions): void {
   // Never patch statement methods in writable mode.
   if (!options.readonly) {
     return;
@@ -222,7 +219,7 @@ function patchPrepareWithCache(
 
   const originalPrepare = database.prepare.bind(database);
 
-  const wrappedPrepare: Database.Database["prepare"] = ((sql: string) => {
+  const wrappedPrepare: Database.Database['prepare'] = ((sql: string) => {
     const statement = originalPrepare(sql);
 
     // Cache only explicit SELECT statements.
@@ -250,7 +247,7 @@ function patchPrepareWithCache(
     }) as typeof statement.all;
 
     return statement;
-  }) as Database.Database["prepare"];
+  }) as Database.Database['prepare'];
 
   database.prepare = wrappedPrepare;
 }
@@ -266,7 +263,7 @@ function patchPrepareWithCache(
 function dbPath(): string {
   const envPath = process.env.DB_PATH;
   if (envPath) return envPath;
-  return path.join(process.cwd(), "nba_raw_data.db");
+  return path.join(process.cwd(), 'nba_raw_data.db');
 }
 
 /**
@@ -279,8 +276,10 @@ export function getDb(): Database.Database {
     const readonly = true;
     db = new Database(dbPath(), { readonly });
     patchPrepareWithCache(db, { readonly });
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
+    if (!readonly) {
+      db.pragma('journal_mode = WAL');
+    }
+    db.pragma('foreign_keys = ON');
   }
 
   return db;
@@ -295,11 +294,7 @@ export function getDb(): Database.Database {
  * @returns `T` or `undefined` — the first row returned by the query
  * @typeParam T - Expected row shape
  */
-export function getCachedQueryOne<T>(
-  sql: string,
-  params: unknown[],
-  ttlMs = 30_000,
-): T {
+export function getCachedQueryOne<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
   const key = `one:${buildQueryCacheKey(sql, params)}`;
   const cached = readCachedResult<T>(key);
   if (cached !== undefined) return cached;
@@ -319,11 +314,7 @@ export function getCachedQueryOne<T>(
  * @returns The query result; typically an array of rows conforming to `T`
  * @typeParam T - Expected shape of the returned rows
  */
-export function getCachedQueryMany<T>(
-  sql: string,
-  params: unknown[],
-  ttlMs = 30_000,
-): T {
+export function getCachedQueryMany<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
   const key = `many:${buildQueryCacheKey(sql, params)}`;
   const cached = readCachedResult<T>(key);
   if (cached !== undefined) return cached;
@@ -343,10 +334,8 @@ export function getCachedQueryMany<T>(
  */
 export function getLatestSeasonId(): string {
   const row = getDb()
-    .prepare(
-      "SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT 1",
-    )
+    .prepare('SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT 1')
     .get() as { season_id: string } | undefined;
 
-  return row?.season_id ?? "2025-26";
+  return row?.season_id ?? '2025-26';
 }

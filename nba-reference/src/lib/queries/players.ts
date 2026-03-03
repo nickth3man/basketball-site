@@ -1,6 +1,6 @@
 /**
  * @fileoverview Player data queries - retrieves comprehensive player statistics.
- * 
+ *
  * This module provides 18+ query functions for player data:
  * - Basic player information and metadata
  * - Season statistics (per-game, per-36, per-100 possessions)
@@ -10,13 +10,13 @@
  * - Career summaries and totals
  * - Game logs and single-game highs
  * - Salary history and awards
- * 
+ *
  * All queries use the cached database layer (30s TTL) for performance.
- * 
+ *
  * @module @/lib/queries/players
  */
 
-import { getDb } from "@/lib/db";
+import { getDb } from '@/lib/db';
 
 /**
  * Fetches a player's profile by Basketball-Reference ID.
@@ -46,7 +46,7 @@ export function getPlayerByBrefId(brefId: string) {
               height_cm, weight_kg, birth_date, birth_city, birth_country,
               college, draft_year, draft_round, draft_number, is_active, hof
        FROM dim_player
-       WHERE bref_id = ?`,
+       WHERE bref_id = ?`
     )
     .get(brefId) as
     | {
@@ -73,10 +73,10 @@ export function getPlayerByBrefId(brefId: string) {
 
 /**
  * Retrieves raw season totals for a player.
- * 
+ *
  * Returns counting stats (games, minutes, points, rebounds, etc.)
  * without any per-game calculations.
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of season total records, ordered by season (newest first)
@@ -89,18 +89,18 @@ export function getPlayerSeasonStats(brefId: string, limit = 25) {
        FROM fact_player_season_stats
        WHERE bref_player_id = ?
        ORDER BY season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves per-36-minutes statistics for a player.
- * 
+ *
  * Per-36 is a normalized metric that shows what a player's stats would be
  * if they played 36 minutes per game (approximate starter minutes).
  * Calculation: stat * 36 / minutes_played
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of per-36 stats, ordered by season (newest first)
@@ -120,20 +120,20 @@ export function getPlayerPer36Stats(brefId: string, limit = 25) {
        FROM fact_player_season_stats
        WHERE bref_player_id = ?
        ORDER BY season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves per-100-possessions statistics for a player.
- * 
+ *
  * Per-100 normalizes stats to a per-possession basis, enabling fair
- * comparison across different pace/era teams. 
+ * comparison across different pace/era teams.
  * Calculation: stat * 4800 / (minutes * team_pace)
  * - 4800 = 48 minutes * 100 possessions (standard game length)
  * - Team pace from fact_team_season, defaults to 100 if unavailable
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of per-100 stats, ordered by season (newest first)
@@ -162,17 +162,17 @@ export function getPlayerPer100Stats(brefId: string, limit = 25) {
         AND fts.bref_abbrev = pss.team_abbrev
        WHERE pss.bref_player_id = ?
        ORDER BY pss.season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves per-game statistics for a player.
- * 
+ *
  * Per-game stats are the most commonly viewed format, showing averages
  * per game played. Includes shooting percentages.
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of per-game stats, ordered by season (newest first)
@@ -195,21 +195,21 @@ export function getPlayerPerGameStats(brefId: string, limit = 25) {
        FROM fact_player_season_stats
        WHERE bref_player_id = ?
        ORDER BY season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves advanced statistics for a player.
- * 
+ *
  * Advanced metrics provide deeper performance analysis:
  * - PER: Player Efficiency Rating (league average = 15)
  * - TS%: True Shooting% (accounts for 3P and FT)
  * - USG%: Usage Rate (% of team plays used)
  * - WS: Win Shares (total contribution)
  * - BPM/VORP: Box Plus-Minus / Value Over Replacement Player
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of advanced stats, ordered by season (newest first)
@@ -224,20 +224,20 @@ export function getPlayerAdvancedSeasonStats(brefId: string, limit = 25) {
        FROM fact_player_advanced_season
        WHERE bref_player_id = ?
        ORDER BY season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves shooting breakdown statistics for a player.
- * 
+ *
  * Shows shot distribution by distance and accuracy:
  * - % of FGA from each distance zone (0-3ft, 3-10ft, 10-16ft, 16-3P, 3P)
  * - FG% from each zone
  * - Corner 3 stats (higher value shots)
  * - Dunk frequency
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of shooting stats, ordered by season (newest first)
@@ -254,20 +254,20 @@ export function getPlayerShootingSeasonStats(brefId: string, limit = 25) {
        FROM fact_player_shooting_season
        WHERE bref_player_id = ?
        ORDER BY season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves adjusted shooting statistics with league-relative metrics.
- * 
+ *
  * Adjusted shooting compares player efficiency to league average:
  * - eFG+ / TS+: 100 = league average, >100 = above average
  * - Calculated against league averages from team_game_log
- * 
+ *
  * This provides era-adjusted context for shooting efficiency.
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of adjusted shooting stats, ordered by season (newest first)
@@ -305,18 +305,18 @@ export function getPlayerAdjustedShootingStats(brefId: string, limit = 25) {
        ) lg ON lg.season_id = pss.season_id
        WHERE pss.bref_player_id = ?
        ORDER BY pss.season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves play-by-play derived statistics for a player.
- * 
+ *
  * PBP stats estimate position played (PG/SG/SF/PF/C percentages)
  * based on who they shared the court with.
  * Also includes turnover types and fouls drawn.
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of PBP stats, ordered by season (newest first)
@@ -332,14 +332,14 @@ export function getPlayerPbpSeasonStats(brefId: string, limit = 25) {
        FROM fact_player_pbp_season
        WHERE bref_player_id = ?
        ORDER BY season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(brefId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves a player's most recent games with basic box score stats.
- * 
+ *
  * @param playerId - Internal player ID (not bref_id)
  * @param limit - Maximum number of games to return (default: 20)
  * @returns Array of recent game records, ordered by date (newest first)
@@ -355,18 +355,18 @@ export function getPlayerRecentGames(playerId: string, limit = 20) {
        JOIN dim_team t ON t.team_id = pgl.team_id
        WHERE pgl.player_id = ?
        ORDER BY g.game_date DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(playerId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves a player's complete game log with calculated Game Score.
- * 
+ *
  * Game Score is a single-game productivity metric (similar to PER).
  * Formula based on John Hollinger's calculation:
  * PTS + 0.4*FG - 0.7*FGA - 0.4*(FTA-FTM) + 0.7*OREB + 0.3*DREB + STL + 0.7*AST + 0.7*BLK - 0.4*PF - TOV
- * 
+ *
  * @param playerId - Internal player ID (not bref_id)
  * @param limit - Maximum number of games to return (default: 100)
  * @returns Array of game log records with W/L result and Game Score
@@ -427,14 +427,14 @@ export function getPlayerFullGameLog(playerId: string, limit = 100) {
        JOIN dim_team opp ON opp.team_id = CASE WHEN g.home_team_id = pgl.team_id THEN g.away_team_id ELSE g.home_team_id END
        WHERE pgl.player_id = ?
        ORDER BY g.game_date DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(playerId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves a player's awards and honors.
- * 
+ *
  * @param playerId - Internal player ID (not bref_id)
  * @param limit - Maximum number of awards to return (default: 100)
  * @returns Array of award records, ordered by season (newest first)
@@ -446,7 +446,7 @@ export function getPlayerAwards(playerId: string, limit = 100) {
        FROM fact_player_award
        WHERE player_id = ?
        ORDER BY season_id DESC, award_name ASC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(playerId, limit) as Array<{
     season_id: string;
@@ -457,7 +457,7 @@ export function getPlayerAwards(playerId: string, limit = 100) {
 
 /**
  * Retrieves a player's salary history by season.
- * 
+ *
  * @param playerId - Internal player ID (not bref_id)
  * @param limit - Maximum number of salary records to return (default: 50)
  * @returns Array of salary records with team, ordered by season (newest first)
@@ -470,17 +470,17 @@ export function getPlayerSalaries(playerId: string, limit = 50) {
        JOIN dim_team dt ON dt.team_id = fs.team_id
        WHERE fs.player_id = ?
        ORDER BY fs.season_id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(playerId, limit) as Array<Record<string, number | string | null>>;
 }
 
 /**
  * Retrieves career summary statistics for a player.
- * 
+ *
  * Aggregates totals across all seasons and calculates per-game averages
  * and shooting percentages.
- * 
+ *
  * @param brefId - Basketball-Reference player ID
  * @returns Career totals and averages record
  */
@@ -499,7 +499,7 @@ export function getPlayerCareerSummary(brefId: string) {
           CASE WHEN SUM(x3pa) > 0 THEN ROUND(1.0 * SUM(x3p) / SUM(x3pa), 3) END AS fg3_pct,
           CASE WHEN SUM(fta) > 0 THEN ROUND(1.0 * SUM(ft) / SUM(fta), 3) END AS ft_pct
        FROM fact_player_season_stats
-       WHERE bref_player_id = ?`,
+       WHERE bref_player_id = ?`
     )
     .get(brefId) as Record<string, number | null>;
 }
@@ -530,7 +530,7 @@ export function getPlayerGameHighs(playerId: string) {
           MAX(pf) AS pf,
           MAX(plus_minus) AS plus_minus
        FROM player_game_log
-       WHERE player_id = ?`,
+       WHERE player_id = ?`
     )
     .get(playerId) as Record<string, number | null>;
 }
@@ -561,7 +561,7 @@ export function getPlayerCareerTotals(brefId: string) {
           SUM(pf) AS pf,
           SUM(pts) AS pts
        FROM fact_player_season_stats
-       WHERE bref_player_id = ?`,
+       WHERE bref_player_id = ?`
     )
     .get(brefId) as Record<string, number | null>;
 }
@@ -577,10 +577,7 @@ export function getPlayerCareerTotals(brefId: string) {
  * - `pts_pg`, `reb_pg`, `ast_pg`: per-game averages rounded to one decimal place
  * Only games with a non-null final score are included.
  */
-export function getPlayerVsOpponentStats(
-  playerId: string,
-  opponentTeamId: string,
-) {
+export function getPlayerVsOpponentStats(playerId: string, opponentTeamId: string) {
   return getDb()
     .prepare(
       `SELECT
@@ -595,11 +592,8 @@ export function getPlayerVsOpponentStats(
        JOIN fact_game fg ON fg.game_id = pgl.game_id
        WHERE pgl.player_id = ?
          -- Match games where opponent was home OR away team
-         AND (fg.home_team_id = ? OR fg.away_team_id = ?)
-         AND fg.home_score IS NOT NULL`,
+         AND ((fg.home_team_id = pgl.team_id AND fg.away_team_id = ?) OR (fg.away_team_id = pgl.team_id AND fg.home_team_id = ?))
+         AND fg.home_score IS NOT NULL`
     )
-    .get(playerId, opponentTeamId, opponentTeamId) as Record<
-    string,
-    number | null
-  >;
+    .get(playerId, opponentTeamId, opponentTeamId) as Record<string, number | null>;
 }

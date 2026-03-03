@@ -1,14 +1,14 @@
 /**
  * @fileoverview Global site header with navigation.
- * 
+ *
  * Provides the main navigation header displayed on all pages.
  * Uses sticky positioning to remain visible during scroll.
  * Includes gradient background and animated link hover effects.
- * 
+ *
  * @module @/components/site-header
  */
 
-import Link from "next/link";
+import Link from 'next/link';
 
 /**
  * Renders the global site header with logo and primary navigation.
@@ -28,31 +28,19 @@ export function SiteHeader() {
         >
           NBA Reference
         </Link>
-        
+
         {/* Main navigation */}
         <nav className="flex items-center gap-4 text-sm">
-          <Link
-            href="/players"
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href="/players" className="transition-colors duration-200 hover:text-white">
             Players
           </Link>
-          <Link
-            href="/teams"
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href="/teams" className="transition-colors duration-200 hover:text-white">
             Teams
           </Link>
-          <Link
-            href="/games"
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href="/games" className="transition-colors duration-200 hover:text-white">
             Games
           </Link>
-          <Link
-            href="/seasons"
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href="/seasons" className="transition-colors duration-200 hover:text-white">
             Seasons
           </Link>
         </nav>
