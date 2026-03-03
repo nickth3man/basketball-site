@@ -13,6 +13,7 @@
  * @module @/app/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { SearchBox } from '@/components/search-box';
 import { StatsTable } from '@/components/stats-table';
@@ -35,7 +36,7 @@ import {
  *
  * @returns The homepage JSX element containing header text, controls, a standings StatsTable, and a recent games table with box score links.
  */
-export default function Home() {
+export default function Home(): React.JSX.Element {
   const seasonId = getLatestSeasonId();
   const standings = getHomeStandings(30);
   const games = getRecentGames(12);
@@ -46,15 +47,12 @@ export default function Home() {
       <h1 className="mb-1 fade-slide-in text-3xl font-bold text-heading">
         Basketball Stats and History
       </h1>
-      <p className="mb-5 fade-slide-in text-sm text-muted" style={{ animationDelay: '80ms' }}>
+      <p className="mb-5 fade-slide-in text-sm text-muted [animation-delay:80ms]">
         Season {seasonId} standings, scores, and player/team lookup.
       </p>
 
       {/* Search and export controls */}
-      <div
-        className="mb-6 grid fade-slide-in gap-3 md:grid-cols-[2fr_1fr]"
-        style={{ animationDelay: '140ms' }}
-      >
+      <div className="mb-6 grid fade-slide-in gap-3 [animation-delay:140ms] md:grid-cols-[2fr_1fr]">
         <SearchBox />
         <div className="flex items-center gap-2 text-sm">
           <Link
@@ -73,7 +71,7 @@ export default function Home() {
       </div>
 
       {/* Standings section */}
-      <section className="mb-8 fade-slide-in panel-paper p-3" style={{ animationDelay: '200ms' }}>
+      <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">
         <h2 className="mb-2 text-xl font-bold text-heading">{seasonId} NBA Standings</h2>
         <StatsTable
           columns={[
@@ -89,7 +87,7 @@ export default function Home() {
       </section>
 
       {/* Recent games section */}
-      <section className="fade-slide-in panel-paper p-3" style={{ animationDelay: '260ms' }}>
+      <section className="fade-slide-in panel-paper p-3 [animation-delay:260ms]">
         <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
         <div className={tableContainerClass}>
           <table className={tableClass}>

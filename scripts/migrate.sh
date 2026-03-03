@@ -10,8 +10,8 @@
 #
 # Usage:
 #   cd nba-reference
-#   chmod +x scripts/migrate.sh
-#   ./scripts/migrate.sh
+#   chmod +x ../scripts/migrate.sh
+#   ../scripts/migrate.sh
 #
 # Prerequisites:
 #   - Run from the nba-reference/ directory

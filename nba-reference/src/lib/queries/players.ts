@@ -26,7 +26,27 @@ import { getDb } from '@/lib/db';
  * @param brefId - Basketball-Reference player ID (e.g., "jamesle01")
  * @returns The player record matching `brefId`, or `undefined` if not found
  */
-export function getPlayerByBrefId(brefId: string) {
+export function getPlayerByBrefId(brefId: string):
+  | {
+      player_id: string;
+      bref_id: string;
+      full_name: string;
+      first_name: string;
+      last_name: string;
+      position: string | null;
+      height_cm: number | null;
+      weight_kg: number | null;
+      birth_date: string | null;
+      birth_city: string | null;
+      birth_country: string | null;
+      college: string | null;
+      draft_year: number | null;
+      draft_round: number | null;
+      draft_number: number | null;
+      is_active: number;
+      hof: number;
+    }
+  | undefined {
   return getDb()
     .prepare(
       `SELECT player_id, bref_id, full_name, first_name, last_name,
@@ -81,7 +101,10 @@ export function getPlayerByBrefId(brefId: string) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of season total records, ordered by season (newest first)
  */
-export function getPlayerSeasonStats(brefId: string, limit = 25) {
+export function getPlayerSeasonStats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT season_id, team_abbrev, pos, age, g, gs, mp, fg, fga, x3p, x3pa,
@@ -105,7 +128,10 @@ export function getPlayerSeasonStats(brefId: string, limit = 25) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of per-36 stats, ordered by season (newest first)
  */
-export function getPlayerPer36Stats(brefId: string, limit = 25) {
+export function getPlayerPer36Stats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT season_id, team_abbrev, g, mp,
@@ -138,7 +164,10 @@ export function getPlayerPer36Stats(brefId: string, limit = 25) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of per-100 stats, ordered by season (newest first)
  */
-export function getPlayerPer100Stats(brefId: string, limit = 25) {
+export function getPlayerPer100Stats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT pss.season_id, pss.team_abbrev, pss.g,
@@ -177,7 +206,10 @@ export function getPlayerPer100Stats(brefId: string, limit = 25) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of per-game stats, ordered by season (newest first)
  */
-export function getPlayerPerGameStats(brefId: string, limit = 25) {
+export function getPlayerPerGameStats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT season_id, team_abbrev, pos, age, g, gs,
@@ -214,7 +246,10 @@ export function getPlayerPerGameStats(brefId: string, limit = 25) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of advanced stats, ordered by season (newest first)
  */
-export function getPlayerAdvancedSeasonStats(brefId: string, limit = 25) {
+export function getPlayerAdvancedSeasonStats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT season_id, team_abbrev, pos, age, g, mp,
@@ -242,7 +277,10 @@ export function getPlayerAdvancedSeasonStats(brefId: string, limit = 25) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of shooting stats, ordered by season (newest first)
  */
-export function getPlayerShootingSeasonStats(brefId: string, limit = 25) {
+export function getPlayerShootingSeasonStats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT season_id, team_abbrev, g, mp, avg_dist_fga,
@@ -272,7 +310,10 @@ export function getPlayerShootingSeasonStats(brefId: string, limit = 25) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of adjusted shooting stats, ordered by season (newest first)
  */
-export function getPlayerAdjustedShootingStats(brefId: string, limit = 25) {
+export function getPlayerAdjustedShootingStats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT pss.season_id,
@@ -321,7 +362,10 @@ export function getPlayerAdjustedShootingStats(brefId: string, limit = 25) {
  * @param limit - Maximum number of seasons to return (default: 25)
  * @returns Array of PBP stats, ordered by season (newest first)
  */
-export function getPlayerPbpSeasonStats(brefId: string, limit = 25) {
+export function getPlayerPbpSeasonStats(
+  brefId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT season_id, team_abbrev, g, mp,
@@ -344,7 +388,10 @@ export function getPlayerPbpSeasonStats(brefId: string, limit = 25) {
  * @param limit - Maximum number of games to return (default: 20)
  * @returns Array of recent game records, ordered by date (newest first)
  */
-export function getPlayerRecentGames(playerId: string, limit = 20) {
+export function getPlayerRecentGames(
+  playerId: string,
+  limit = 20
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT pgl.game_id, g.game_date, t.abbreviation as team_abbrev,
@@ -371,7 +418,10 @@ export function getPlayerRecentGames(playerId: string, limit = 20) {
  * @param limit - Maximum number of games to return (default: 100)
  * @returns Array of game log records with W/L result and Game Score
  */
-export function getPlayerFullGameLog(playerId: string, limit = 100) {
+export function getPlayerFullGameLog(
+  playerId: string,
+  limit = 100
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT pgl.game_id,
@@ -439,7 +489,10 @@ export function getPlayerFullGameLog(playerId: string, limit = 100) {
  * @param limit - Maximum number of awards to return (default: 100)
  * @returns Array of award records, ordered by season (newest first)
  */
-export function getPlayerAwards(playerId: string, limit = 100) {
+export function getPlayerAwards(
+  playerId: string,
+  limit = 100
+): Array<{ season_id: string; award_name: string; award_type: string }> {
   return getDb()
     .prepare(
       `SELECT season_id, award_name, award_type
@@ -462,7 +515,10 @@ export function getPlayerAwards(playerId: string, limit = 100) {
  * @param limit - Maximum number of salary records to return (default: 50)
  * @returns Array of salary records with team, ordered by season (newest first)
  */
-export function getPlayerSalaries(playerId: string, limit = 50) {
+export function getPlayerSalaries(
+  playerId: string,
+  limit = 50
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT fs.season_id, dt.abbreviation as team_abbrev, fs.salary
@@ -484,7 +540,7 @@ export function getPlayerSalaries(playerId: string, limit = 50) {
  * @param brefId - Basketball-Reference player ID
  * @returns Career totals and averages record
  */
-export function getPlayerCareerSummary(brefId: string) {
+export function getPlayerCareerSummary(brefId: string): Record<string, number | null> {
   return getDb()
     .prepare(
       `SELECT
@@ -510,7 +566,7 @@ export function getPlayerCareerSummary(brefId: string) {
  * @param playerId - Internal player ID (database identifier, not Basketball-Reference ID)
  * @returns A record with keys `mp`, `fg`, `fga`, `fg3`, `fg3a`, `ft`, `fta`, `pts`, `reb`, `ast`, `stl`, `blk`, `tov`, `pf`, and `plus_minus` mapping to the career single-game maximum for each stat, or `null` if no value exists.
  */
-export function getPlayerGameHighs(playerId: string) {
+export function getPlayerGameHighs(playerId: string): Record<string, number | null> {
   return getDb()
     .prepare(
       `SELECT
@@ -541,7 +597,7 @@ export function getPlayerGameHighs(playerId: string) {
  * @param brefId - Basketball-Reference player ID
  * @returns A record mapping stat names (`g`, `mp`, `fg`, `fga`, `x3p`, `x3pa`, `ft`, `fta`, `reb`, `ast`, `stl`, `blk`, `tov`, `pf`, `pts`) to their summed totals; values may be `null` if no data exists
  */
-export function getPlayerCareerTotals(brefId: string) {
+export function getPlayerCareerTotals(brefId: string): Record<string, number | null> {
   return getDb()
     .prepare(
       `SELECT
@@ -577,7 +633,10 @@ export function getPlayerCareerTotals(brefId: string) {
  * - `pts_pg`, `reb_pg`, `ast_pg`: per-game averages rounded to one decimal place
  * Only games with a non-null final score are included.
  */
-export function getPlayerVsOpponentStats(playerId: string, opponentTeamId: string) {
+export function getPlayerVsOpponentStats(
+  playerId: string,
+  opponentTeamId: string
+): Record<string, number | null> {
   return getDb()
     .prepare(
       `SELECT

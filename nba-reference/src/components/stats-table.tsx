@@ -10,6 +10,7 @@
 
 'use client';
 
+import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import {
   tableBodyRowClass,
@@ -56,7 +57,7 @@ interface StatsTableProps {
  * @param props - Component props
  * @returns The rendered stats table element
  */
-export function StatsTable({ columns, rows, initialSort }: StatsTableProps) {
+export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX.Element {
   const [sortKey, setSortKey] = useState<string>(initialSort ?? columns[0]?.key ?? '');
   const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -99,7 +100,7 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps) {
 
     return sorted.map((row, rowIndex) => {
       // Try natural IDs first
-      const primaryKey = row.id ?? row.game_id ?? row.bref_abbrev;
+      const primaryKey = row['id'] ?? row['game_id'] ?? row['bref_abbrev'];
       // Fallback: concatenate all cell values
       const fallbackKey = columns.map(col => `${row[col.key] ?? ''}`).join('|');
       const baseKey =
@@ -128,12 +129,12 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps) {
    * - Download triggered via temporary anchor element
    * - Blob URL revoked after 250ms to free memory
    */
-  const handleExportCsv = () => {
+  const handleExportCsv = (): void => {
     // Sanitize CSV values: handle null/undefined, escape quotes, prevent formula injection
     const sanitize = (value: unknown): string => {
       // Convert null/undefined to empty string
       if (value == null) return '';
-      let str = String(value);
+      let str = typeof value === 'string' || typeof value === 'number' ? String(value) : '';
       // Escape quotes by doubling them (RFC 4180)
       str = str.replaceAll('"', '""');
       // Prefix with single quote to prevent CSV injection from formula triggers
@@ -165,7 +166,9 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps) {
     document.body.removeChild(link);
 
     // Clean up blob URL after download starts
-    setTimeout(() => URL.revokeObjectURL(downloadUrl), 250);
+    setTimeout(() => {
+      URL.revokeObjectURL(downloadUrl);
+    }, 250);
   };
 
   return (

@@ -12,6 +12,7 @@
  * @module @/app/seasons/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { getSeasons } from '@/lib/queries';
 import {
@@ -30,7 +31,7 @@ import {
  *
  * @returns The JSX element for the Seasons directory page
  */
-export default function SeasonsPage() {
+export default function SeasonsPage(): React.JSX.Element {
   const seasons = getSeasons(40);
 
   return (

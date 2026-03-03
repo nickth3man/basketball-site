@@ -11,6 +11,7 @@
  * @module @/app/players/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { getPlayerDirectory } from '@/lib/query/directory';
 import {
@@ -29,7 +30,7 @@ import {
  *
  * @returns The page JSX containing the players table
  */
-export default function PlayersPage() {
+export default function PlayersPage(): React.JSX.Element {
   const players = getPlayerDirectory(400);
 
   return (
@@ -53,7 +54,9 @@ export default function PlayersPage() {
                   </Link>
                 </td>
                 <td className={tableCellClass('left')}>{p.position ?? '-'}</td>
-                <td className={tableCellClass('left')}>{p.is_active ? 'Active' : 'Retired'}</td>
+                <td className={tableCellClass('left')}>
+                  {p.is_active === 1 ? 'Active' : 'Retired'}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -1,11 +1,15 @@
 {
-  // Editor formatting
+  // ============================================
+  // EDITOR FORMATTING - STRICT ENFORCEMENT
+  // ============================================
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnPaste": false,
   "editor.formatOnType": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
 
-  // Language-specific formatters
+  // ============================================
+  // LANGUAGE-SPECIFIC FORMATTERS
+  // ============================================
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -31,7 +35,9 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
-  // ESLint settings
+  // ============================================
+  // ESLINT INTEGRATION - STRICT AUTO-FIX
+  // ============================================
   "eslint.enable": true,
   "eslint.format.enable": false,
   "eslint.validate": [
@@ -45,18 +51,30 @@
       "mode": "auto"
     }
   ],
+  "eslint.useFlatConfig": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "never"
   },
+  "editor.codeActionsOnSaveTimeout": 3000,
 
-  // TypeScript settings
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  // ============================================
+  // TYPESCRIPT - STRICT WORKSPACE VERSION
+  // ============================================
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "js/ts.preferences.importModuleSpecifier": "relative",
+  "js/ts.preferences.quoteStyle": "single",
   "typescript.preferences.includePackageTypeInDeclarationImports": true,
+  "js/ts.tsc.autoDetect": "off",
+  "js/ts.format.enable": false,
+  "js/ts.validate.enabled": true,
+  "js/ts.suggest.autoImports": true,
+  "typescript.suggest.includeCompletionsForModuleExports": true,
 
-  // Tailwind CSS settings
+  // ============================================
+  // TAILWIND CSS
+  // ============================================
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
     "typescriptreact": "javascript"
@@ -70,12 +88,24 @@
   ],
   "tailwindCSS.emmetCompletions": true,
   "tailwindCSS.experimental.classRegex": [
-    ["clsx\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)", "'|\"|`"],
-    ["cn\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)", "'|\"|`"],
-    ["cva\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)", "'|\"|`"]
+    ["clsx\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)"],
+    ["cn\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)"],
+    ["cva\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)"]
   ],
 
-  // Editor behavior
+  // ============================================
+  // CSS - DISABLE BUILT-IN VALIDATOR FOR TAILWIND
+  // ============================================
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+
+  // ============================================
+  // EDITOR BEHAVIOR - STRICT CONSISTENCY
+  // ============================================
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
@@ -85,8 +115,13 @@
   "editor.quickSuggestions": {
     "strings": true
   },
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.trimAutoWhitespace": true,
 
-  // File settings
+  // ============================================
+  // FILE SETTINGS
+  // ============================================
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
@@ -101,7 +136,9 @@
     "**/tsconfig.tsbuildinfo": true
   },
 
-  // Search settings
+  // ============================================
+  // SEARCH SETTINGS
+  // ============================================
   "search.exclude": {
     "**/node_modules": true,
     "**/.next": true,
@@ -111,14 +148,20 @@
     "**/*.db": true
   },
 
-  // Prettier settings (match project config)
+  // ============================================
+  // PRETTIER SETTINGS
+  // ============================================
   "prettier.configPath": ".prettierrc.json",
   "prettier.ignorePath": ".prettierignore",
 
-  // Git settings
+  // ============================================
+  // GIT SETTINGS
+  // ============================================
   "git.ignoreLimitWarning": true,
 
-  // Explorer settings
+  // ============================================
+  // EXPLORER SETTINGS
+  // ============================================
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
     "*.ts": "${capture}.test.ts, ${capture}.test.tsx",
@@ -128,5 +171,21 @@
     "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
     "tsconfig.json": "tsconfig.*.json",
     "next.config.ts": "next-env.d.ts"
-  }
+  },
+
+  // ============================================
+  // ERROR & PROBLEMS
+  // ============================================
+  "problems.decorations.enabled": true,
+  "js/ts.reportStyleChecksAsWarnings": false,
+
+  // ============================================
+  // DEBUGGING
+  // ============================================
+  "debug.javascript.autoAttachFilter": "smart",
+
+  // ============================================
+  // EXTENSION SETTINGS
+  // ============================================
+  "extensions.ignoreRecommendations": false
 }

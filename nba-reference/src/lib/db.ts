@@ -21,12 +21,12 @@ let db: Database.Database | null = null;
  * Cache entry structure for query results.
  * Uses expiration timestamp for TTL-based invalidation.
  */
-type CacheEntry = {
+interface CacheEntry {
   /** Unix timestamp (ms) when this entry expires */
   expiresAt: number;
   /** Cached query result value */
   value: unknown;
-};
+}
 
 /** Maximum number of cached query results to prevent unbounded memory growth */
 const MAX_QUERY_CACHE_SIZE = 500;
@@ -34,13 +34,13 @@ const MAX_QUERY_CACHE_SIZE = 500;
 /**
  * Runtime options for statement-level cache patching.
  */
-type PreparePatchOptions = {
+interface PreparePatchOptions {
   /**
    * Whether the database connection is read-only.
    * Statement-level caching is disabled when false to avoid stale reads after mutations.
    */
   readonly: boolean;
-};
+}
 
 /**
  * In-memory cache for query results.
@@ -105,7 +105,7 @@ function evictLeastRecentlyUsedEntryIfNeeded(): void {
     return;
   }
   // Evict the oldest entry (first inserted / least recently used due to re-insertion on access)
-  const firstKey = queryResultCache.keys().next().value as string | undefined;
+  const firstKey = queryResultCache.keys().next().value;
   if (firstKey !== undefined) {
     queryResultCache.delete(firstKey);
   }
@@ -150,7 +150,7 @@ function writeCachedResult<T>(key: string, value: T, ttlMs: number): T {
 function stripLeadingSqlComments(sql: string): string {
   let remaining = sql;
 
-  while (true) {
+  for (;;) {
     const trimmedStart = remaining.trimStart();
     remaining = trimmedStart;
 
@@ -261,8 +261,8 @@ function patchPrepareWithCache(database: Database.Database, options: PreparePatc
  * @returns The database file path; when `DB_PATH` is unset, an absolute path to `nba_raw_data.db`
  */
 function dbPath(): string {
-  const envPath = process.env.DB_PATH;
-  if (envPath) return envPath;
+  const envPath = process.env['DB_PATH'];
+  if (envPath !== undefined) return envPath;
   return path.join(process.cwd(), 'nba_raw_data.db');
 }
 
@@ -276,9 +276,6 @@ export function getDb(): Database.Database {
     const readonly = true;
     db = new Database(dbPath(), { readonly });
     patchPrepareWithCache(db, { readonly });
-    if (!readonly) {
-      db.pragma('journal_mode = WAL');
-    }
     db.pragma('foreign_keys = ON');
   }
 

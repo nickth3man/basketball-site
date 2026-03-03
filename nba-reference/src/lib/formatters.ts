@@ -27,7 +27,7 @@
  * formatPct(NaN)     // "-"
  * ```
  */
-export function formatPct(value: string | number | null | undefined) {
+export function formatPct(value: string | number | null | undefined): string {
   if (value == null) return '-';
   const n = Number(value);
   if (Number.isNaN(n)) return '-';
@@ -40,7 +40,7 @@ export function formatPct(value: string | number | null | undefined) {
  * @param value - Numeric value or numeric string representing an amount
  * @returns The formatted currency string (e.g., "$45,000,000"), or "-" for null, undefined, or NaN
  */
-export function formatMoney(value: string | number | null | undefined) {
+export function formatMoney(value: string | number | null | undefined): string {
   if (value == null) return '-';
   const n = Number(value);
   if (Number.isNaN(n)) return '-';
@@ -67,7 +67,7 @@ export function formatMoney(value: string | number | null | undefined) {
  * formatSignedNumber(null) // "-"
  * ```
  */
-export function formatSignedNumber(value: number | null | undefined) {
+export function formatSignedNumber(value: number | null | undefined): string {
   if (value == null) return '-';
   return value > 0 ? `+${value}` : String(value);
 }

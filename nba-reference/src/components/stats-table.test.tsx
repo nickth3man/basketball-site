@@ -75,10 +75,12 @@ describe('StatsTable', () => {
    */
   it('exports CSV data through Blob download', () => {
     vi.useFakeTimers();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const createObjectURL = vi.fn((_blob: Blob | MediaSource) => 'blob:mock-url');
     const revokeObjectURL = vi.fn();
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
 
     vi.stubGlobal('URL', {
       createObjectURL,

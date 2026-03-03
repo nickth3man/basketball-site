@@ -17,6 +17,7 @@ import { getCachedQueryMany, getCachedQueryOne, getLatestSeasonId } from '@/lib/
  * Represents a team standing row for the homepage table.
  */
 export interface TeamStandingRow {
+  [key: string]: string | number | null;
   /** Season ID (e.g., "2024-25") */
   season_id: string;
   /** Team abbreviation */
@@ -29,12 +30,13 @@ export interface TeamStandingRow {
   n_rtg: number | null;
   /** Possessions per 48 minutes */
   pace: number | null;
-};
+}
 
 /**
  * Represents a recent game row for the homepage table.
  */
 export interface RecentGameRow {
+  [key: string]: string | number | null;
   /** Game ID */
   game_id: string;
   /** Game date (YYYY-MM-DD format) */
@@ -47,7 +49,7 @@ export interface RecentGameRow {
   home_score: number | null;
   /** Away team final score (null if not completed) */
   away_score: number | null;
-};
+}
 
 /**
  * Retrieves team standings for the most recent season with team data.

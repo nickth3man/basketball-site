@@ -12,6 +12,7 @@
  * @module @/app/games/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { getRecentGames } from '@/lib/query/home';
 import {
@@ -31,7 +32,7 @@ import {
  *
  * @returns The Games page JSX element containing the table of recent games
  */
-export default function GamesPage() {
+export default function GamesPage(): React.JSX.Element {
   const games = getRecentGames(200);
 
   return (

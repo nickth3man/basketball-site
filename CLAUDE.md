@@ -27,7 +27,6 @@ npm run ci             # Full pipeline: type-check → lint → format:check →
 ```
 
 To run a single test file:
-
 ```bash
 npm run test -- src/lib/db.test.ts
 ```
@@ -52,7 +51,6 @@ Presentation (app/, components/) → Application (lib/queries/, lib/query/) → 
 ```
 
 **Key modules:**
-
 - `src/lib/db.ts` — Singleton `better-sqlite3` connection; auto-patches `prepare()` to add 30s LRU cache for all SELECT queries. Exports `getDb()`, `getCachedQueryOne<T>()`, `getCachedQueryMany<T>()`, `getLatestSeasonId()`.
 - `src/lib/queries/` — Domain query modules (`players.ts`, `teams.ts`, `games.ts`, `seasons.ts`); re-exported from `index.ts` for backward compatibility.
 - `src/lib/query/` — Feature-specific queries (`home.ts`, `search.ts`, `directory.ts`) used by pages and API routes directly.
@@ -76,7 +74,6 @@ Presentation (app/, components/) → Application (lib/queries/, lib/query/) → 
 ## TypeScript Strictness
 
 The project uses maximum TypeScript/ESLint strictness. Key rules that commonly cause issues:
-
 - No `any` types (`@typescript-eslint/no-explicit-any: error`)
 - All functions must declare return types (`explicit-function-return-type: error`)
 - No implicit boolean coercion — use `=== null`, `=== undefined`, `.length > 0`, etc. (`strict-boolean-expressions: error`)

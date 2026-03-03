@@ -76,7 +76,7 @@ export const tableLinkClass =
  * <th className={tableHeaderCellClass("right")}>PTS</th>
  * ```
  */
-export function tableHeaderCellClass(align?: 'left' | 'right') {
+export function tableHeaderCellClass(align?: 'left' | 'right'): string {
   return cn('border border-line px-2 py-1', align === 'right' ? 'text-right' : 'text-left');
 }
 
@@ -93,7 +93,7 @@ export function tableHeaderCellClass(align?: 'left' | 'right') {
  * <td className={tableCellClass("right")}>{player.pts}</td>
  * ```
  */
-export function tableCellClass(align?: 'left' | 'right') {
+export function tableCellClass(align?: 'left' | 'right'): string {
   return cn(
     'border border-line-soft px-2 py-1',
     align === 'right' ? 'text-right tabular-nums' : 'text-left'

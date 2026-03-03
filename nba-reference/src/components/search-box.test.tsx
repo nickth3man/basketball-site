@@ -37,7 +37,7 @@ describe('SearchBox', () => {
    */
   it('updates input value on change', () => {
     render(<SearchBox />);
-    const input = screen.getByPlaceholderText(/Search players or teams/i) as HTMLInputElement;
+    const input = screen.getByPlaceholderText<HTMLInputElement>(/Search players or teams/i);
     fireEvent.change(input, { target: { value: 'LeBron' } });
     expect(input.value).toBe('LeBron');
   });
@@ -49,9 +49,10 @@ describe('SearchBox', () => {
   it('fetches results after debounce when q.length >= 2', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({
-        results: [{ type: 'player', id: 'lebron-james', label: 'LeBron James' }],
-      }),
+      json: (): Promise<{ results: Array<{ type: string; id: string; label: string }> }> =>
+        Promise.resolve({
+          results: [{ type: 'player', id: 'lebron-james', label: 'LeBron James' }],
+        }),
     });
 
     render(<SearchBox />);
@@ -88,9 +89,10 @@ describe('SearchBox', () => {
   it('renders team results with correct link', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({
-        results: [{ type: 'team', id: 'LAL', label: 'Lakers' }],
-      }),
+      json: (): Promise<{ results: Array<{ type: string; id: string; label: string }> }> =>
+        Promise.resolve({
+          results: [{ type: 'team', id: 'LAL', label: 'Lakers' }],
+        }),
     });
 
     render(<SearchBox />);
@@ -133,7 +135,7 @@ describe('SearchBox', () => {
    * Verifies that pending requests are canceled when the component unmounts
    * or when the query changes (via AbortController).
    */
-  it('cancels pending requests on cleanup', async () => {
+  it('cancels pending requests on cleanup', () => {
     // Track AbortController instances to verify abort is called
     const abortSpy = vi.fn();
     const originalAbortController = global.AbortController;
@@ -145,7 +147,7 @@ describe('SearchBox', () => {
     })) as unknown as typeof AbortController;
 
     const { unmount } = render(<SearchBox />);
-    const input = screen.getByPlaceholderText(/Search players or teams/i);
+    const input = screen.getByPlaceholderText<HTMLInputElement>(/Search players or teams/i);
 
     // Trigger a search to create an AbortController
     fireEvent.change(input, { target: { value: 'LeBron' } });

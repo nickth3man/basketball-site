@@ -10,20 +10,21 @@
 
 'use client';
 
+import type { JSX } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 /**
  * Represents a single search result item.
  */
-type SearchResult = {
+interface SearchResult {
   /** Entity type: "player" or "team" */
   type: 'player' | 'team';
   /** Entity ID (player bref_id or team abbreviation) */
   id: string;
   /** Display name for the result */
   label: string;
-};
+}
 
 /**
  * Search box component with debounced API calls.
@@ -46,10 +47,20 @@ type SearchResult = {
  * <SearchBox />
  * ```
  */
-export function SearchBox() {
+export function SearchBox(): JSX.Element {
   const [q, setQ] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const showResults = q.trim().length >= 2 && results.length > 0;
+
+  // Debounced search function
+  const debouncedSearch = useCallback(async (query: string, signal: AbortSignal) => {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+      signal,
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { results: SearchResult[] };
+    setResults(data.results);
+  }, []);
 
   useEffect(() => {
     // Don't search for very short queries
@@ -61,13 +72,8 @@ export function SearchBox() {
     const controller = new AbortController();
 
     // Debounce: wait 200ms after user stops typing
-    const timer = setTimeout(async () => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
-        signal: controller.signal,
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as { results: SearchResult[] };
-      setResults(data.results ?? []);
+    const timer = setTimeout(() => {
+      void debouncedSearch(q, controller.signal);
     }, 200);
 
     // Cleanup: cancel timer and abort fetch on unmount or query change
@@ -75,14 +81,16 @@ export function SearchBox() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q]);
+  }, [q, debouncedSearch]);
 
   return (
     <div className="relative">
       {/* Search input with focus states */}
       <input
         value={q}
-        onChange={e => setQ(e.target.value)}
+        onChange={e => {
+          setQ(e.target.value);
+        }}
         placeholder="Search players or teams"
         className="w-full rounded border border-line bg-white px-3 py-2 text-sm text-ink shadow-input transition-all duration-200 placeholder:text-placeholder focus:border-focus-border focus:ring-2 focus:ring-focus-ring focus:outline-none"
       />

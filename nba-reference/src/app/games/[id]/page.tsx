@@ -13,6 +13,7 @@
  * @module @/app/games/[id]/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
 import {
@@ -38,7 +39,11 @@ import { notFound } from 'next/navigation';
  * @param params - Route params promise that resolves to an object with the `id` of the game
  * @returns The game detail page JSX element for the specified game
  */
-export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function GamePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<React.JSX.Element> {
   const { id } = await params;
 
   // Primary game lookup - 404 if not found
@@ -54,27 +59,27 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   const pbp = getGamePbpEvents(id, 50);
 
   // Separate players by team for display
-  const awayTeam = String(game.away_abbrev ?? '');
-  const homeTeam = String(game.home_abbrev ?? '');
-  const awayPlayers = players.filter(p => String(p.team) === awayTeam);
-  const homePlayers = players.filter(p => String(p.team) === homeTeam);
-  const awayAdvanced = playerAdvanced.filter(p => String(p.team) === awayTeam);
-  const homeAdvanced = playerAdvanced.filter(p => String(p.team) === homeTeam);
+  const awayTeam = String(game['away_abbrev'] ?? '');
+  const homeTeam = String(game['home_abbrev'] ?? '');
+  const awayPlayers = players.filter(p => String(p['team']) === awayTeam);
+  const homePlayers = players.filter(p => String(p['team']) === homeTeam);
+  const awayAdvanced = playerAdvanced.filter(p => String(p['team']) === awayTeam);
+  const homeAdvanced = playerAdvanced.filter(p => String(p['team']) === homeTeam);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
-        <Link href="/">Home</Link> / <Link href="/games">Games</Link> / {game.game_id}
+        <Link href="/">Home</Link> / <Link href="/games">Games</Link> / {game['game_id']}
       </div>
 
       {/* Game header */}
       <h1 className="mb-2 text-3xl font-bold">
-        {game.away_name} at {game.home_name}
+        {game['away_name']} at {game['home_name']}
       </h1>
       <p className="mb-4 text-sm text-muted-strong">
-        {game.game_date} | Final: {game.away_abbrev} {game.away_score} - {game.home_abbrev}{' '}
-        {game.home_score}
+        {game['game_date']} | Final: {game['away_abbrev']} {game['away_score']} -{' '}
+        {game['home_abbrev']} {game['home_score']}
       </p>
 
       {/* Line Score by Period */}
@@ -83,8 +88,8 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         <StatsTable
           columns={[
             { key: 'period', label: 'Period', align: 'right' },
-            { key: 'away', label: `${game.away_abbrev}`, align: 'right' },
-            { key: 'home', label: `${game.home_abbrev}`, align: 'right' },
+            { key: 'away', label: String(game['away_abbrev'] ?? ''), align: 'right' },
+            { key: 'home', label: String(game['home_abbrev'] ?? ''), align: 'right' },
           ]}
           rows={lineScore}
           initialSort="period"
@@ -146,7 +151,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           ]}
           rows={awayPlayers.map(p => ({
             ...p,
-            starter: Number(p.starter) === 1 ? '*' : '',
+            starter: Number(p['starter']) === 1 ? '*' : '',
           }))}
           initialSort="pts"
         />
@@ -169,7 +174,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           ]}
           rows={homePlayers.map(p => ({
             ...p,
-            starter: Number(p.starter) === 1 ? '*' : '',
+            starter: Number(p['starter']) === 1 ? '*' : '',
           }))}
           initialSort="pts"
         />
@@ -216,8 +221,8 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           columns={[
             { key: 'period', label: 'Q', align: 'right' },
             { key: 'pc_time_string', label: 'Time' },
-            { key: 'visitor_description', label: `${game.away_abbrev} Event` },
-            { key: 'home_description', label: `${game.home_abbrev} Event` },
+            { key: 'visitor_description', label: `${String(game['away_abbrev'] ?? '')} Event` },
+            { key: 'home_description', label: `${String(game['home_abbrev'] ?? '')} Event` },
             { key: 'score', label: 'Score' },
           ]}
           rows={pbp}

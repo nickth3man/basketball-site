@@ -21,7 +21,9 @@ import { getDb } from '@/lib/db';
  * @param limit - Maximum number of seasons to return (default: 30)
  * @returns Array of season records with ID and year range, ordered by start year (newest first)
  */
-export function getSeasons(limit = 30): { season_id: string; start_year: number; end_year: number }[] {
+export function getSeasons(
+  limit = 30
+): Array<{ season_id: string; start_year: number; end_year: number }> {
   return getDb()
     .prepare(
       `SELECT season_id, start_year, end_year
@@ -29,7 +31,7 @@ export function getSeasons(limit = 30): { season_id: string; start_year: number;
        ORDER BY start_year DESC
        LIMIT ?`
     )
-    .all(limit) as { season_id: string; start_year: number; end_year: number }[];
+    .all(limit) as Array<{ season_id: string; start_year: number; end_year: number }>;
 }
 
 /**
@@ -40,7 +42,9 @@ export function getSeasons(limit = 30): { season_id: string; start_year: number;
  * @param seasonId - Season identifier (for example, "2024-25")
  * @returns An array of records for each team containing: `bref_abbrev` (team abbreviation), `w` (wins), `l` (losses), `srs` (Simple Rating System), `o_rtg` (offensive rating), `d_rtg` (defensive rating), `n_rtg` (net rating), and `pace`. Numeric fields may be `null`.
  */
-export function getSeasonStandings(seasonId: string): Record<string, string | number | null>[] {
+export function getSeasonStandings(
+  seasonId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT bref_abbrev, w, l, srs, o_rtg, d_rtg, n_rtg, pace
@@ -48,7 +52,7 @@ export function getSeasonStandings(seasonId: string): Record<string, string | nu
        WHERE season_id = ?
        ORDER BY w DESC, l ASC`
     )
-    .all(seasonId) as Record<string, string | number | null>[];
+    .all(seasonId) as Array<Record<string, string | number | null>>;
 }
 
 /**
@@ -60,7 +64,10 @@ export function getSeasonStandings(seasonId: string): Record<string, string | nu
  * @param limit - Maximum number of leaders to return (default: 25)
  * @returns Array of records with fields: `bref_id` (player Basketball-Reference id), `full_name`, `team` (team abbreviation), `g` (games played), `pts` (total points), `pts_pg` (points per game, rounded to one decimal)
  */
-export function getSeasonScoringLeaders(seasonId: string, limit = 25): Record<string, string | number | null>[] {
+export function getSeasonScoringLeaders(
+  seasonId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT t.abbreviation) as team,
@@ -77,7 +84,7 @@ export function getSeasonScoringLeaders(seasonId: string, limit = 25): Record<st
        ORDER BY pts_pg DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
 /**
@@ -89,7 +96,10 @@ export function getSeasonScoringLeaders(seasonId: string, limit = 25): Record<st
  * @param limit - Maximum number of leaders to return
  * @returns Array of records with `bref_id`, `full_name`, `team`, `g` (games), `reb` (total rebounds), and `reb_pg` (rebounds per game)
  */
-export function getSeasonReboundLeaders(seasonId: string, limit = 25): Record<string, string | number | null>[] {
+export function getSeasonReboundLeaders(
+  seasonId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT p.bref_id, p.full_name, t.abbreviation as team,
@@ -106,7 +116,7 @@ export function getSeasonReboundLeaders(seasonId: string, limit = 25): Record<st
        ORDER BY reb_pg DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
 /**
@@ -124,7 +134,10 @@ export function getSeasonReboundLeaders(seasonId: string, limit = 25): Record<st
  *  - `ast`: Total assists (integer)
  *  - `ast_pg`: Assists per game rounded to one decimal place (number)
  */
-export function getSeasonAssistLeaders(seasonId: string, limit = 25): Record<string, string | number | null>[] {
+export function getSeasonAssistLeaders(
+  seasonId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT p.bref_id, p.full_name, t.abbreviation as team,
@@ -141,7 +154,7 @@ export function getSeasonAssistLeaders(seasonId: string, limit = 25): Record<str
        ORDER BY ast_pg DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
 /**
@@ -181,7 +194,10 @@ export function getSeasonLeagueSummary(seasonId: string): Record<string, number 
  * @param limit - Maximum number of games to return (default: 50)
  * @returns Array of game records, ordered by date (newest first)
  */
-export function getSeasonRecentGames(seasonId: string, limit = 50): Record<string, string | number | null>[] {
+export function getSeasonRecentGames(
+  seasonId: string,
+  limit = 50
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT g.game_id, g.game_date,
@@ -198,5 +214,5 @@ export function getSeasonRecentGames(seasonId: string, limit = 50): Record<strin
        ORDER BY g.game_date DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }

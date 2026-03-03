@@ -33,9 +33,11 @@ import type { NextRequest } from 'next/server';
  * // "LeBron","25"
  * ```
  */
-function toCsv(rows: Record<string, string | number | null>[]): string {
+function toCsv(rows: Array<Record<string, string | number | null>>): string {
   if (rows.length === 0) return '';
-  const headers = Object.keys(rows[0]);
+  const firstRow = rows[0];
+  if (firstRow === undefined) return '';
+  const headers = Object.keys(firstRow);
   const out = [headers.join(',')];
 
   for (const row of rows) {
@@ -70,15 +72,15 @@ export function GET(
   { params }: { params: Promise<{ type: string }> }
 ): Promise<Response> {
   return params.then(({ type }) => {
-    let rows: Record<string, string | number | null>[] = [];
+    let rows: Array<Record<string, string | number | null>> = [];
 
     if (type === 'standings')
-      rows = getHomeStandings(30) as Record<string, string | number | null>[];
+      rows = getHomeStandings(30) as Array<Record<string, string | number | null>>;
     if (type === 'games')
-      rows = getRecentGames(100) as Record<string, string | number | null>[];
+      rows = getRecentGames(100) as Array<Record<string, string | number | null>>;
     if (type === 'search') {
       const q = req.nextUrl.searchParams.get('q') ?? '';
-      rows = searchEntities(q) as Record<string, string | number | null>[];
+      rows = searchEntities(q) as Array<Record<string, string | number | null>>;
     }
 
     const csv = toCsv(rows);

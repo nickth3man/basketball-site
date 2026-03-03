@@ -21,6 +21,7 @@
  * @module @/app/players/[id]/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { StatsTable } from '@/components/stats-table';
@@ -51,7 +52,11 @@ import { notFound } from 'next/navigation';
  * @param params - Promise resolving to route params containing the player's bref `id`
  * @returns The rendered player detail page JSX
  */
-export default async function PlayerPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PlayerPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<React.JSX.Element> {
   const { id } = await params;
 
   // Primary player lookup - 404 if not found
@@ -117,7 +122,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
               alt={`Photo of ${player.full_name}`}
               width={130}
               height={170}
-              className="h-[170px] w-[130px] border border-image-line object-cover"
+              className="h-42.5 w-32.5 border border-image-line object-cover"
             />
           </div>
 
@@ -129,19 +134,28 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
               <div>Birth: {player.birth_date ?? '-'}</div>
               <div>
                 Birthplace:{' '}
-                {[player.birth_city, player.birth_country].filter(Boolean).join(', ') || '-'}
+                {((): string => {
+                  const parts = [player.birth_city, player.birth_country].filter(
+                    (s): s is string => s !== null && s.length > 0
+                  );
+                  return parts.length > 0 ? parts.join(', ') : '-';
+                })()}
               </div>
               <div>College: {player.college ?? '-'}</div>
-              <div>Height: {player.height_cm ? `${Math.round(player.height_cm)} cm` : '-'}</div>
-              <div>Weight: {player.weight_kg ? `${Math.round(player.weight_kg)} kg` : '-'}</div>
+              <div>
+                Height: {player.height_cm !== null ? `${Math.round(player.height_cm)} cm` : '-'}
+              </div>
+              <div>
+                Weight: {player.weight_kg !== null ? `${Math.round(player.weight_kg)} kg` : '-'}
+              </div>
               <div>
                 Draft:{' '}
-                {player.draft_year
+                {player.draft_year != null
                   ? `${player.draft_year} R${player.draft_round ?? '?'} P${player.draft_number ?? '?'}`
                   : '-'}
               </div>
-              <div>Status: {player.is_active ? 'Active' : 'Inactive'}</div>
-              <div>Hall of Fame: {player.hof ? 'Yes' : 'No'}</div>
+              <div>Status: {player.is_active === 1 ? 'Active' : 'Inactive'}</div>
+              <div>Hall of Fame: {player.hof === 1 ? 'Yes' : 'No'}</div>
             </div>
           </div>
 
@@ -150,19 +164,25 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
             <div className="mb-2 font-bold tracking-wide text-crumb uppercase">Career Summary</div>
             <div className="grid grid-cols-2 gap-y-1">
               <span>G</span>
-              <span className="text-right tabular-nums">{summary.g ?? '-'}</span>
+              <span className="text-right tabular-nums">{summary['g'] ?? '-'}</span>
               <span>PTS/G</span>
-              <span className="text-right tabular-nums">{summary.pts_pg ?? '-'}</span>
+              <span className="text-right tabular-nums">{summary['pts_pg'] ?? '-'}</span>
               <span>REB/G</span>
-              <span className="text-right tabular-nums">{summary.reb_pg ?? '-'}</span>
+              <span className="text-right tabular-nums">{summary['reb_pg'] ?? '-'}</span>
               <span>AST/G</span>
-              <span className="text-right tabular-nums">{summary.ast_pg ?? '-'}</span>
+              <span className="text-right tabular-nums">{summary['ast_pg'] ?? '-'}</span>
               <span>FG%</span>
-              <span className="text-right tabular-nums">{formatPct(summary.fg_pct)}</span>
+              <span className="text-right tabular-nums">
+                {formatPct(summary['fg_pct'] as number | null)}
+              </span>
               <span>3P%</span>
-              <span className="text-right tabular-nums">{formatPct(summary.fg3_pct)}</span>
+              <span className="text-right tabular-nums">
+                {formatPct(summary['fg3_pct'] as number | null)}
+              </span>
               <span>FT%</span>
-              <span className="text-right tabular-nums">{formatPct(summary.ft_pct)}</span>
+              <span className="text-right tabular-nums">
+                {formatPct(summary['ft_pct'] as number | null)}
+              </span>
             </div>
           </div>
         </div>
@@ -463,7 +483,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
               ]}
               rows={fullGameLog.map(row => ({
                 ...row,
-                is_home: Number(row.is_home) === 1 ? 'Home' : 'Away',
+                is_home: Number(row['is_home']) === 1 ? 'Home' : 'Away',
               }))}
               initialSort="game_date"
             />
@@ -494,7 +514,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
               ]}
               rows={salaries.map(row => ({
                 ...row,
-                salary_fmt: formatMoney(row.salary as number | null),
+                salary_fmt: formatMoney(row['salary'] as number | null),
               }))}
               initialSort="season_id"
             />
@@ -505,49 +525,49 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
             <h2 className="mb-2 text-xl font-bold">Game Highs</h2>
             <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                MP: <span className="font-bold tabular-nums">{highs.mp ?? '-'}</span>
+                MP: <span className="font-bold tabular-nums">{highs['mp'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FG: <span className="font-bold tabular-nums">{highs.fg ?? '-'}</span>
+                FG: <span className="font-bold tabular-nums">{highs['fg'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FGA: <span className="font-bold tabular-nums">{highs.fga ?? '-'}</span>
+                FGA: <span className="font-bold tabular-nums">{highs['fga'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                3P: <span className="font-bold tabular-nums">{highs.fg3 ?? '-'}</span>
+                3P: <span className="font-bold tabular-nums">{highs['fg3'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                3PA: <span className="font-bold tabular-nums">{highs.fg3a ?? '-'}</span>
+                3PA: <span className="font-bold tabular-nums">{highs['fg3a'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FT: <span className="font-bold tabular-nums">{highs.ft ?? '-'}</span>
+                FT: <span className="font-bold tabular-nums">{highs['ft'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FTA: <span className="font-bold tabular-nums">{highs.fta ?? '-'}</span>
+                FTA: <span className="font-bold tabular-nums">{highs['fta'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                PTS: <span className="font-bold tabular-nums">{highs.pts ?? '-'}</span>
+                PTS: <span className="font-bold tabular-nums">{highs['pts'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                REB: <span className="font-bold tabular-nums">{highs.reb ?? '-'}</span>
+                REB: <span className="font-bold tabular-nums">{highs['reb'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                AST: <span className="font-bold tabular-nums">{highs.ast ?? '-'}</span>
+                AST: <span className="font-bold tabular-nums">{highs['ast'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                STL: <span className="font-bold tabular-nums">{highs.stl ?? '-'}</span>
+                STL: <span className="font-bold tabular-nums">{highs['stl'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                BLK: <span className="font-bold tabular-nums">{highs.blk ?? '-'}</span>
+                BLK: <span className="font-bold tabular-nums">{highs['blk'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                TOV: <span className="font-bold tabular-nums">{highs.tov ?? '-'}</span>
+                TOV: <span className="font-bold tabular-nums">{highs['tov'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                PF: <span className="font-bold tabular-nums">{highs.pf ?? '-'}</span>
+                PF: <span className="font-bold tabular-nums">{highs['pf'] ?? '-'}</span>
               </div>
               <div className="rounded border border-line-subtle bg-row-alt p-2">
-                +/-: <span className="font-bold tabular-nums">{highs.plus_minus ?? '-'}</span>
+                +/-: <span className="font-bold tabular-nums">{highs['plus_minus'] ?? '-'}</span>
               </div>
             </div>
           </section>
