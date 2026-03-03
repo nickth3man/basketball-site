@@ -1,12 +1,54 @@
-import { getDb, getLatestSeasonId } from "@/lib/db";
+/**
+ * @fileoverview Team data queries - retrieves team information, rosters, and statistics.
+ *
+ * This module provides query functions for team data:
+ * - Basic team information (name, city, conference, division)
+ * - Current roster with player stats
+ * - Season-by-season team statistics
+ * - Recent game results
+ * - Four Factors comparison (team vs opponent)
+ * - Per-game averages and player leaders
+ * - Season navigation (prev/next season)
+ *
+ * All queries use the cached database layer (30s TTL) for performance.
+ *
+ * @module @/lib/queries/teams
+ */
 
+import { getDb, getLatestSeasonId } from '@/lib/db';
+
+/**
+ * Clamps a limit value to a safe positive integer range.
+ *
+ * @param limit - The raw limit value to clamp
+ * @param fallback - Default value if limit is invalid (NaN, not finite, etc.)
+ * @param max - Maximum allowed value (hard ceiling)
+ * @returns A safe integer between 1 and max
+ */
+function clampPositiveLimit(limit: number, fallback: number, max: number): number {
+  if (!Number.isFinite(limit)) return fallback;
+  const n = Math.trunc(limit);
+  if (n < 1) return 1;
+  if (n > max) return max;
+  return n;
+}
+
+/**
+ * Retrieves team information by abbreviation.
+ *
+ * Matches against either the standard abbreviation (e.g., "LAL") or
+ * the Basketball-Reference abbreviation.
+ *
+ * @param abbrev - Team abbreviation (e.g., "LAL", "NYK")
+ * @returns Team record or undefined if not found
+ */
 export function getTeamByAbbrev(abbrev: string) {
   return getDb()
     .prepare(
       `SELECT team_id, abbreviation, full_name, city, nickname,
               conference, division, arena_name, founded_year
        FROM dim_team
-       WHERE abbreviation = ? OR bref_abbrev = ?`,
+       WHERE abbreviation = ? OR bref_abbrev = ?`
     )
     .get(abbrev, abbrev) as
     | {
@@ -23,6 +65,14 @@ export function getTeamByAbbrev(abbrev: string) {
     | undefined;
 }
 
+/**
+ * Retrieve the current roster for a team.
+ *
+ * Determines the most recent season with roster data for the team; if none exists, falls back to the latest season ID from the database.
+ *
+ * @param teamId - Internal team ID
+ * @returns An array of player records for the roster. Each record contains `bref_id`, `full_name`, `position`, `height_cm`, `weight_kg`, and `birth_date` (values may be `null` where unknown)
+ */
 export function getTeamRoster(teamId: string) {
   const latestRosterSeason = getDb()
     .prepare(
@@ -30,7 +80,7 @@ export function getTeamRoster(teamId: string) {
        FROM fact_roster
        WHERE team_id = ?
        ORDER BY season_id DESC
-       LIMIT 1`,
+       LIMIT 1`
     )
     .get(teamId) as { season_id: string } | undefined;
   const seasonId = latestRosterSeason?.season_id ?? getLatestSeasonId();
@@ -41,11 +91,17 @@ export function getTeamRoster(teamId: string) {
        FROM fact_roster r
        JOIN dim_player p ON p.player_id = r.player_id
        WHERE r.team_id = ? AND r.season_id = ?
-       ORDER BY p.last_name ASC`,
+       ORDER BY p.last_name ASC`
     )
     .all(teamId, seasonId) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Retrieve the current roster for a team including per-game season statistics.
+ *
+ * @param teamId - Internal team identifier
+ * @returns An array of roster records; each record contains player identifiers and profile fields (`bref_id`, `full_name`, `position`, `height_cm`, `weight_kg`, `birth_date`), season games played (`g`), and per-game averages (`pts_pg`, `reb_pg`, `ast_pg`) which are numbers or `null` when not available
+ */
 export function getTeamRosterWithStats(teamId: string) {
   const latestRosterSeason = getDb()
     .prepare(
@@ -53,7 +109,7 @@ export function getTeamRosterWithStats(teamId: string) {
        FROM fact_roster
        WHERE team_id = ?
        ORDER BY season_id DESC
-       LIMIT 1`,
+       LIMIT 1`
     )
     .get(teamId) as { season_id: string } | undefined;
   const seasonId = latestRosterSeason?.season_id ?? getLatestSeasonId();
@@ -77,11 +133,25 @@ export function getTeamRosterWithStats(teamId: string) {
         AND fs.season_id = r.season_id
         AND fs.team_abbrev IN (SELECT abbreviation FROM dim_team WHERE team_id = r.team_id)
        WHERE r.team_id = ? AND r.season_id = ?
-       ORDER BY COALESCE(pts_pg, -999) DESC, p.last_name ASC`,
+       ORDER BY COALESCE(pts_pg, -999) DESC, p.last_name ASC`
     )
     .all(teamId, seasonId) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Retrieves Four Factors comparison for the team's most recent season.
+ *
+ * The Four Factors are key metrics for team success:
+ * - eFG%: Effective Field Goal% (accounts for 3P value)
+ * - TOV%: Turnover Rate (possessions ending in TO)
+ * - ORB%: Offensive Rebound% (possessions extended)
+ * - FT/FGA: Free Throw Rate (getting to the line)
+ *
+ * Returns both team and opponent values for comparison.
+ *
+ * @param teamAbbrev - Team abbreviation (e.g., "LAL")
+ * @returns Four factors record or undefined
+ */
 export function getTeamFourFactorsComparison(teamAbbrev: string) {
   return getDb()
     .prepare(
@@ -97,11 +167,21 @@ export function getTeamFourFactorsComparison(teamAbbrev: string) {
        FROM fact_team_season
        WHERE bref_abbrev = ?
        ORDER BY season_id DESC
-       LIMIT 1`,
+       LIMIT 1`
     )
     .get(teamAbbrev) as Record<string, string | number | null> | undefined;
 }
 
+/**
+ * Retrieve season-by-season statistics for a team.
+ *
+ * Provides up to the most recent 20 seasons of team data, including wins, losses,
+ * margin of victory, offensive/defensive/net ratings, pace, true shooting percentage,
+ * effective field goal percentage, and turnover percentage.
+ *
+ * @param teamAbbrev - Team abbreviation (e.g., "LAL")
+ * @returns An array of season records ordered newest first, each containing fields such as `season_id`, `w`, `l`, `mov`, `o_rtg`, `d_rtg`, `n_rtg`, `pace`, `ts_pct`, `e_fg_pct`, and `tov_pct`
+ */
 export function getTeamSeasonStats(teamAbbrev: string) {
   return getDb()
     .prepare(
@@ -110,29 +190,46 @@ export function getTeamSeasonStats(teamAbbrev: string) {
        FROM fact_team_season
        WHERE bref_abbrev = ?
        ORDER BY season_id DESC
-       LIMIT 20`,
+       LIMIT 20`
     )
     .all(teamAbbrev) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Finds the previous and next seasons relative to a given season.
+ *
+ * Used for season navigation links on team detail pages.
+ *
+ * @param teamAbbrev - Team abbreviation (e.g., "LAL")
+ * @param seasonId - Season ID to find neighbors for (e.g., "2024-25")
+ * @returns Object with prev/next season IDs or null
+ */
 export function getTeamSeasonNeighbors(teamAbbrev: string, seasonId: string) {
   const seasons = getDb()
     .prepare(
       `SELECT DISTINCT season_id
        FROM fact_team_season
        WHERE bref_abbrev = ?
-       ORDER BY season_id DESC`,
+       ORDER BY season_id DESC`
     )
     .all(teamAbbrev) as Array<{ season_id: string }>;
 
-  const idx = seasons.findIndex((s) => s.season_id === seasonId);
+  const idx = seasons.findIndex(s => s.season_id === seasonId);
   return {
-    prev:
-      idx >= 0 && idx + 1 < seasons.length ? seasons[idx + 1].season_id : null,
+    prev: idx >= 0 && idx + 1 < seasons.length ? seasons[idx + 1].season_id : null,
     next: idx > 0 ? seasons[idx - 1].season_id : null,
   };
 }
 
+/**
+ * Retrieve the most recent season summary for a team.
+ *
+ * The record includes season metadata and team metrics such as wins, losses,
+ * margin of victory, rating metrics, pace, efficiency percentages, arena, and attendance.
+ *
+ * @param teamAbbrev - Team abbreviation (e.g., "LAL")
+ * @returns The most recent season summary containing `season_id`, `w`, `l`, `mov`, `srs`, `o_rtg`, `d_rtg`, `n_rtg`, `pace`, `ts_pct`, `e_fg_pct`, `tov_pct`, `arena`, `attend`, and `attend_g`, or `undefined` if no record exists
+ */
 export function getTeamCurrentSeasonSummary(teamAbbrev: string) {
   return getDb()
     .prepare(
@@ -141,20 +238,38 @@ export function getTeamCurrentSeasonSummary(teamAbbrev: string) {
        FROM fact_team_season
        WHERE bref_abbrev = ?
        ORDER BY season_id DESC
-       LIMIT 1`,
+       LIMIT 1`
     )
     .get(teamAbbrev) as Record<string, string | number | null> | undefined;
 }
 
+/**
+ * Retrieves recent completed games for a team.
+ *
+ * Calculates win/loss result and scores from the team's perspective
+ * (team_score = this team's score, opp_score = opponent's score).
+ * Handles both home and away games.
+ *
+ * @param teamId - Internal team ID
+ * @param limit - Maximum number of games to return (default: 20)
+ * @returns Array of game records with result, ordered by date (newest first)
+ */
 export function getTeamRecentGames(teamId: string, limit = 20) {
+  const safeLimit = clampPositiveLimit(limit, 20, 100);
   return getDb()
     .prepare(
       `SELECT g.game_id, g.game_date,
+              -- 1 if this team was home, 0 if away (for display purposes)
               CASE WHEN g.home_team_id = ? THEN 1 ELSE 0 END AS is_home,
+              -- Team abbreviation (changes based on home/away)
               CASE WHEN g.home_team_id = ? THEN ht.abbreviation ELSE at.abbreviation END AS team_abbrev,
+              -- Opponent abbreviation
               CASE WHEN g.home_team_id = ? THEN at.abbreviation ELSE ht.abbreviation END AS opp_abbrev,
+              -- This team's score
               CASE WHEN g.home_team_id = ? THEN g.home_score ELSE g.away_score END AS team_score,
+              -- Opponent's score
               CASE WHEN g.home_team_id = ? THEN g.away_score ELSE g.home_score END AS opp_score,
+              -- Calculate W/L from this team's perspective
               CASE
                 WHEN (CASE WHEN g.home_team_id = ? THEN g.home_score ELSE g.away_score END) >
                      (CASE WHEN g.home_team_id = ? THEN g.away_score ELSE g.home_score END)
@@ -171,7 +286,7 @@ export function getTeamRecentGames(teamId: string, limit = 20) {
          AND g.home_score IS NOT NULL
          AND g.away_score IS NOT NULL
        ORDER BY g.game_date DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(
       teamId,
@@ -185,10 +300,16 @@ export function getTeamRecentGames(teamId: string, limit = 20) {
       teamId,
       teamId,
       teamId,
-      limit,
+      safeLimit
     ) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Get per-game averages for the team's most recent season with game data.
+ *
+ * @param teamId - Internal team identifier
+ * @returns An object containing per-game averages: `pts`, `reb`, `ast`, `stl`, `blk`, `tov`, `fg3m`, `fg3a`, `fg_pct`, and `ft_pct` (each a number or `null`), or `undefined` if the team has no games for any season
+ */
 export function getTeamPerGameAverages(teamId: string) {
   const latestGameSeason = getDb()
     .prepare(
@@ -196,7 +317,7 @@ export function getTeamPerGameAverages(teamId: string) {
        FROM fact_game fg
        WHERE fg.home_team_id = ? OR fg.away_team_id = ?
        ORDER BY fg.game_date DESC
-       LIMIT 1`,
+       LIMIT 1`
     )
     .get(teamId, teamId) as { season_id: string } | undefined;
 
@@ -218,19 +339,29 @@ export function getTeamPerGameAverages(teamId: string) {
           ROUND(AVG(CASE WHEN tgl.fta > 0 THEN 1.0 * tgl.ftm / tgl.fta END), 3) AS ft_pct
        FROM team_game_log tgl
        JOIN fact_game fg ON fg.game_id = tgl.game_id
-       WHERE tgl.team_id = ? AND fg.season_id = ?`,
+       WHERE tgl.team_id = ? AND fg.season_id = ?`
     )
     .get(teamId, seasonId) as Record<string, number | null>;
 }
 
+/**
+ * Get the team's top scoring leaders for the most recent season in which the team has game data.
+ *
+ * Players must have played at least 10 games; results are ordered by points per game and limited by `limit`.
+ *
+ * @param teamId - Internal team identifier used to filter player game logs
+ * @param limit - Maximum number of leaders to return (default: 8)
+ * @returns Array of leader records with fields: `bref_id`, `full_name`, `g`, `pts`, `reb`, `ast`, `pts_pg`, `reb_pg`, `ast_pg`
+ */
 export function getTeamPlayerLeaders(teamId: string, limit = 8) {
+  const safeLimit = clampPositiveLimit(limit, 8, 100);
   const latestGameSeason = getDb()
     .prepare(
       `SELECT fg.season_id
        FROM fact_game fg
        WHERE fg.home_team_id = ? OR fg.away_team_id = ?
        ORDER BY fg.game_date DESC
-       LIMIT 1`,
+       LIMIT 1`
     )
     .get(teamId, teamId) as { season_id: string } | undefined;
 
@@ -253,11 +384,9 @@ export function getTeamPlayerLeaders(teamId: string, limit = 8) {
        WHERE pgl.team_id = ?
          AND fg.season_id = ?
        GROUP BY dp.player_id
-       HAVING COUNT(*) >= 10
+       HAVING COUNT(*) >= 10  -- Minimum games threshold
        ORDER BY pts_pg DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
-    .all(teamId, seasonId, limit) as Array<
-    Record<string, string | number | null>
-  >;
+    .all(teamId, seasonId, safeLimit) as Array<Record<string, string | number | null>>;
 }

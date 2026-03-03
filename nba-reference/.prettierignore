@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+
+# Build output
+.next
+out
+build
+dist
+
+# Generated files
+*.min.js
+*.min.css
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Database files
+*.db
+
+# Public assets
+public/
+
+# Test coverage
+coverage/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# VS Code
+.vscode/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,132 @@
+{
+  // Editor formatting
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
+
+  // Language-specific formatters
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ESLint settings
+  "eslint.enable": true,
+  "eslint.format.enable": false,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+
+  // TypeScript settings
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.includePackageTypeInDeclarationImports": true,
+
+  // Tailwind CSS settings
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "ngClass",
+    ".*ClassName",
+    ".*Styles"
+  ],
+  "tailwindCSS.emmetCompletions": true,
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)", "'|\"|`"],
+    ["cn\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)", "'|\"|`"],
+    ["cva\\(([^)]*)\\)", "'|\"|`([^']*|[^\"]*|[^`]*)", "'|\"|`"]
+  ],
+
+  // Editor behavior
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.rulers": [100],
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 100,
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+
+  // File settings
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/coverage": true,
+    "**/*.log": true,
+    "**/*.db-shm": true,
+    "**/*.db-wal": true,
+    "**/tsconfig.tsbuildinfo": true
+  },
+
+  // Search settings
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/out": true,
+    "**/build": true,
+    "**/*.code-search": true,
+    "**/*.db": true
+  },
+
+  // Prettier settings (match project config)
+  "prettier.configPath": ".prettierrc.json",
+  "prettier.ignorePath": ".prettierignore",
+
+  // Git settings
+  "git.ignoreLimitWarning": true,
+
+  // Explorer settings
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.test.ts, ${capture}.test.tsx",
+    "*.tsx": "${capture}.test.ts, ${capture}.test.tsx",
+    ".prettierrc.json": ".prettierignore",
+    ".eslintrc.*": ".eslintignore",
+    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
+    "tsconfig.json": "tsconfig.*.json",
+    "next.config.ts": "next-env.d.ts"
+  }
+}

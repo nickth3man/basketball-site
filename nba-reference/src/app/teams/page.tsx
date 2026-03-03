@@ -1,5 +1,18 @@
-import Link from "next/link";
-import { getTeamDirectory } from "@/lib/query/directory";
+/**
+ * @fileoverview Teams directory page - lists all NBA teams.
+ *
+ * Displays a list of all NBA teams with:
+ * - Team name and abbreviation
+ * - Conference (East/West)
+ * - Division
+ *
+ * Teams are sorted alphabetically by full name.
+ *
+ * @module @/app/teams/page
+ */
+
+import Link from 'next/link';
+import { getTeamDirectory } from '@/lib/query/directory';
 import {
   tableCellClass,
   tableClass,
@@ -7,8 +20,15 @@ import {
   tableHeadRowClass,
   tableHeaderCellClass,
   tableLinkClass,
-} from "@/lib/table-styles";
+} from '@/lib/table-styles';
 
+/**
+ * Render the Teams directory page.
+ *
+ * Displays a table of NBA teams where each row shows the team's full name (with abbreviation), conference, and division, and links the team name to its detail page.
+ *
+ * @returns The Teams directory page JSX element
+ */
 export default function TeamsPage() {
   const teams = getTeamDirectory();
 
@@ -19,29 +39,21 @@ export default function TeamsPage() {
         <table className={tableClass}>
           <thead>
             <tr className={tableHeadRowClass}>
-              <th className={tableHeaderCellClass("left")}>Team</th>
-              <th className={tableHeaderCellClass("left")}>Conf</th>
-              <th className={tableHeaderCellClass("left")}>Div</th>
+              <th className={tableHeaderCellClass('left')}>Team</th>
+              <th className={tableHeaderCellClass('left')}>Conf</th>
+              <th className={tableHeaderCellClass('left')}>Div</th>
             </tr>
           </thead>
           <tbody>
             {teams.map((t, i) => (
-              <tr
-                key={t.abbreviation}
-                className={i % 2 === 0 ? "bg-white" : "bg-row-alt"}
-              >
-                <td className={tableCellClass("left")}>
-                  <Link
-                    className={tableLinkClass}
-                    href={`/teams/${t.abbreviation}`}
-                  >
+              <tr key={t.abbreviation} className={i % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+                <td className={tableCellClass('left')}>
+                  <Link className={tableLinkClass} href={`/teams/${t.abbreviation}`}>
                     {t.full_name} ({t.abbreviation})
                   </Link>
                 </td>
-                <td className={tableCellClass("left")}>
-                  {t.conference ?? "-"}
-                </td>
-                <td className={tableCellClass("left")}>{t.division ?? "-"}</td>
+                <td className={tableCellClass('left')}>{t.conference ?? '-'}</td>
+                <td className={tableCellClass('left')}>{t.division ?? '-'}</td>
               </tr>
             ))}
           </tbody>
