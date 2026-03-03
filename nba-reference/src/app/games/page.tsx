@@ -1,3 +1,17 @@
+/**
+ * @fileoverview Games page - displays recent game results.
+ * 
+ * Shows a table of recent games with:
+ * - Game date
+ * - Away team and score
+ * - Home team and score
+ * - Link to box score detail page
+ * 
+ * Displays up to 200 recent completed games.
+ * 
+ * @module @/app/games/page
+ */
+
 import Link from "next/link";
 import { getRecentGames } from "@/lib/query/home";
 import {
@@ -9,6 +23,14 @@ import {
   tableLinkClass,
 } from "@/lib/table-styles";
 
+/**
+ * Games page component.
+ * 
+ * Fetches recent games from the cached query and displays
+ * them in a table with links to individual game pages.
+ * 
+ * @returns Games page JSX
+ */
 export default function GamesPage() {
   const games = getRecentGames(200);
 

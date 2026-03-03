@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Teams directory page - lists all NBA teams.
+ * 
+ * Displays a list of all NBA teams with:
+ * - Team name and abbreviation
+ * - Conference (East/West)
+ * - Division
+ * 
+ * Teams are sorted alphabetically by full name.
+ * 
+ * @module @/app/teams/page
+ */
+
 import Link from "next/link";
 import { getTeamDirectory } from "@/lib/query/directory";
 import {
@@ -9,6 +22,14 @@ import {
   tableLinkClass,
 } from "@/lib/table-styles";
 
+/**
+ * Teams directory page component.
+ * 
+ * Fetches all teams from the directory query and displays
+ * them in a simple table format with links to detail pages.
+ * 
+ * @returns Teams directory page JSX
+ */
 export default function TeamsPage() {
   const teams = getTeamDirectory();
 

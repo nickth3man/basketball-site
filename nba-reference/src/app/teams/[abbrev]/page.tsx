@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Team detail page - comprehensive team statistics dashboard.
+ * 
+ * Displays team information including:
+ * - Team profile (name, conference, division, arena, record)
+ * - Per-game averages (PTS, REB, AST, STL, BLK, TOV, etc.)
+ * - Recent games with W/L results
+ * - Current roster with player stats
+ * - Four Factors comparison (team vs opponent)
+ * - Season-by-season team statistics
+ * - Player statistical leaders
+ * 
+ * Uses sticky sidebar navigation for easy section access.
+ * 
+ * @module @/app/teams/[abbrev]/page
+ */
+
 import Link from "next/link";
 import { StatsTable } from "@/components/stats-table";
 import {
@@ -13,15 +30,34 @@ import {
 import { formatSignedNumber } from "@/lib/formatters";
 import { notFound } from "next/navigation";
 
+/**
+ * Team detail page component.
+ * 
+ * Fetches comprehensive team data:
+ * 1. Basic team info (404 if not found)
+ * 2. Roster with per-game stats
+ * 3. Season history (20 seasons)
+ * 4. Current season summary
+ * 5. Four Factors comparison
+ * 6. Recent games (20)
+ * 7. Per-game averages
+ * 8. Player leaders
+ * 
+ * @param params - Promise resolving to route params containing team abbreviation
+ * @returns Team detail page JSX
+ */
 export default async function TeamPage({
   params,
 }: {
   params: Promise<{ abbrev: string }>;
 }) {
   const { abbrev } = await params;
+  
+  // Primary team lookup - normalize to uppercase for matching
   const team = getTeamByAbbrev(abbrev.toUpperCase());
   if (!team) notFound();
 
+  // Fetch all team data in parallel
   const roster = getTeamRosterWithStats(team.team_id);
   const seasonStats = getTeamSeasonStats(team.abbreviation);
   const current = getTeamCurrentSeasonSummary(team.abbreviation);
@@ -30,9 +66,11 @@ export default async function TeamPage({
   const averages = getTeamPerGameAverages(team.team_id);
   const leaders = getTeamPlayerLeaders(team.team_id, 12);
 
+  // Determine which season label to display
   const seasonLabel =
     current?.season_id ?? seasonStats[0]?.season_id ?? "Current";
 
+  // Navigation anchors for sticky sidebar
   const anchors = [
     { id: "summary", label: "Summary" },
     { id: "recent-games", label: "Recent Games" },
@@ -45,11 +83,13 @@ export default async function TeamPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
+      {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/teams">Teams</Link> /{" "}
         {team.abbreviation}
       </div>
 
+      {/* Team profile header */}
       <section
         id="summary"
         className="mb-5 border border-line bg-paper-soft p-4"
@@ -59,6 +99,7 @@ export default async function TeamPage({
         </div>
         <h1 className="mb-2 text-3xl font-bold">{team.full_name}</h1>
 
+        {/* Team metadata grid */}
         <div className="grid gap-2 text-sm text-muted-strong md:grid-cols-3">
           <div>Conference: {team.conference ?? "-"}</div>
           <div>Division: {team.division ?? "-"}</div>
@@ -75,6 +116,7 @@ export default async function TeamPage({
           <div>SRS: {formatSignedNumber(current?.srs as number | null)}</div>
         </div>
 
+        {/* Per-game averages display */}
         {averages ? (
           <div className="mt-3 grid gap-2 border border-line-soft bg-white p-3 text-xs sm:grid-cols-5 lg:grid-cols-10">
             <div>
@@ -141,7 +183,9 @@ export default async function TeamPage({
         ) : null}
       </section>
 
+      {/* Main content with sticky sidebar */}
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+        {/* Sticky navigation sidebar */}
         <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
           <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">
             On this page
@@ -159,7 +203,9 @@ export default async function TeamPage({
           </nav>
         </aside>
 
+        {/* Statistics sections */}
         <div className="space-y-8">
+          {/* Recent Games */}
           <section id="recent-games">
             <h2 className="mb-2 text-xl font-bold">Recent Games</h2>
             <StatsTable
@@ -180,6 +226,7 @@ export default async function TeamPage({
             />
           </section>
 
+          {/* Current Roster */}
           <section id="roster">
             <h2 className="mb-2 text-xl font-bold">Roster</h2>
             <StatsTable
@@ -199,6 +246,7 @@ export default async function TeamPage({
             />
           </section>
 
+          {/* Four Factors Comparison */}
           <section id="four-factors">
             <h2 className="mb-2 text-xl font-bold">
               Four Factors (Team vs Opponent)
@@ -225,6 +273,7 @@ export default async function TeamPage({
                         side: "Opponent",
                         efg_pct: fourFactors.opp_e_fg_pct,
                         tov_pct: fourFactors.opp_tov_pct,
+                        // Calculate opponent ORB% from team DRB%
                         orb_pct:
                           fourFactors.drb_pct == null
                             ? null
@@ -238,6 +287,7 @@ export default async function TeamPage({
             />
           </section>
 
+          {/* Team Season Stats */}
           <section id="team-stats">
             <h2 className="mb-2 text-xl font-bold">Team Misc / Efficiency</h2>
             <StatsTable
@@ -260,6 +310,7 @@ export default async function TeamPage({
             />
           </section>
 
+          {/* Player Leaders */}
           <section id="leaders">
             <h2 className="mb-2 text-xl font-bold">
               Player Leaders (Current Season)
@@ -278,6 +329,7 @@ export default async function TeamPage({
             />
           </section>
 
+          {/* Season History */}
           <section id="history">
             <h2 className="mb-2 text-xl font-bold">Season History</h2>
             <StatsTable

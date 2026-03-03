@@ -1,3 +1,17 @@
+/**
+ * @fileoverview Season detail page - displays season statistics and leaders.
+ * 
+ * Shows comprehensive season information:
+ * - League summary (league-wide averages)
+ * - Team standings with key metrics
+ * - Statistical leaders (scoring, rebounding, assists)
+ * - Recent games from the season
+ * 
+ * Returns 404 if season has no standings data (indicating invalid season ID).
+ * 
+ * @module @/app/seasons/[year]/page
+ */
+
 import Link from "next/link";
 import { StatsTable } from "@/components/stats-table";
 import {
@@ -10,15 +24,30 @@ import {
 } from "@/lib/queries";
 import { notFound } from "next/navigation";
 
+/**
+ * Season detail page component.
+ * 
+ * Fetches season data:
+ * 1. Standings (404 if empty - invalid season)
+ * 2. Statistical leaders (scoring, rebounding, assists)
+ * 3. League-wide summary averages
+ * 4. Recent games from the season
+ * 
+ * @param params - Promise resolving to route params containing season year/ID
+ * @returns Season detail page JSX
+ */
 export default async function SeasonPage({
   params,
 }: {
   params: Promise<{ year: string }>;
 }) {
   const { year } = await params;
+  
+  // Primary standings lookup - 404 if no data (invalid season)
   const standings = getSeasonStandings(year);
   if (standings.length === 0) notFound();
 
+  // Fetch additional season data in parallel
   const leaders = getSeasonScoringLeaders(year, 30);
   const reboundLeaders = getSeasonReboundLeaders(year, 30);
   const assistLeaders = getSeasonAssistLeaders(year, 30);
@@ -27,12 +56,14 @@ export default async function SeasonPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
+      {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/seasons">Seasons</Link> /{" "}
         {year}
       </div>
       <h1 className="mb-3 text-3xl font-bold">{year} NBA Season</h1>
 
+      {/* League Summary Section */}
       <section className="mb-8 border border-line-mid bg-paper-soft p-3 text-sm">
         <h2 className="mb-2 text-lg font-bold">League Summary</h2>
         <div className="grid gap-2 sm:grid-cols-5">
@@ -69,6 +100,7 @@ export default async function SeasonPage({
         </div>
       </section>
 
+      {/* Standings Section */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Standings</h2>
         <StatsTable
@@ -87,6 +119,7 @@ export default async function SeasonPage({
         />
       </section>
 
+      {/* Scoring Leaders Section */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Scoring Leaders</h2>
         <StatsTable
@@ -102,6 +135,7 @@ export default async function SeasonPage({
         />
       </section>
 
+      {/* Rebound Leaders Section */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Rebound Leaders</h2>
         <StatsTable
@@ -117,6 +151,7 @@ export default async function SeasonPage({
         />
       </section>
 
+      {/* Assist Leaders Section */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Assist Leaders</h2>
         <StatsTable
@@ -132,6 +167,7 @@ export default async function SeasonPage({
         />
       </section>
 
+      {/* Recent Games Section */}
       <section>
         <h2 className="mb-2 text-xl font-bold">Recent Games</h2>
         <StatsTable

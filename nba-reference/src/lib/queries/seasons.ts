@@ -1,5 +1,26 @@
+/**
+ * @fileoverview Season data queries - retrieves league-wide season information.
+ * 
+ * This module provides query functions for season-level data:
+ * - Season list with year ranges
+ * - Season standings (all teams)
+ * - Statistical leaders (scoring, rebounding, assists)
+ * - League summary averages
+ * - Recent games for a season
+ * 
+ * All queries use the cached database layer (30s TTL) for performance.
+ * 
+ * @module @/lib/queries/seasons
+ */
+
 import { getDb } from "@/lib/db";
 
+/**
+ * Retrieves a list of NBA seasons.
+ * 
+ * @param limit - Maximum number of seasons to return (default: 30)
+ * @returns Array of season records with ID and year range, ordered by start year (newest first)
+ */
 export function getSeasons(limit = 30) {
   return getDb()
     .prepare(
@@ -15,6 +36,15 @@ export function getSeasons(limit = 30) {
   }>;
 }
 
+/**
+ * Retrieves the final standings for a season.
+ * 
+ * Sorted by wins (descending) then losses (ascending).
+ * Includes key metrics: SRS (Simple Rating System), ratings, and pace.
+ * 
+ * @param seasonId - Season ID (e.g., "2024-25")
+ * @returns Array of team standing records
+ */
 export function getSeasonStandings(seasonId: string) {
   return getDb()
     .prepare(
@@ -26,6 +56,16 @@ export function getSeasonStandings(seasonId: string) {
     .all(seasonId) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Retrieves the top scoring leaders for a season.
+ * 
+ * Players are ranked by points per game (minimum 10 games played).
+ * Returns both per-game and total points for context.
+ * 
+ * @param seasonId - Season ID (e.g., "2024-25")
+ * @param limit - Maximum number of leaders to return (default: 25)
+ * @returns Array of scoring leader records
+ */
 export function getSeasonScoringLeaders(seasonId: string, limit = 25) {
   return getDb()
     .prepare(
@@ -39,13 +79,22 @@ export function getSeasonScoringLeaders(seasonId: string, limit = 25) {
        JOIN dim_team t ON t.team_id = pgl.team_id
        WHERE fg.season_id = ?
        GROUP BY p.player_id, t.abbreviation
-       HAVING COUNT(*) >= 10
+       HAVING COUNT(*) >= 10  -- Minimum games threshold
        ORDER BY pts_pg DESC
        LIMIT ?`,
     )
     .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Retrieves the top rebounding leaders for a season.
+ * 
+ * Players are ranked by rebounds per game (minimum 10 games played).
+ * 
+ * @param seasonId - Season ID (e.g., "2024-25")
+ * @param limit - Maximum number of leaders to return (default: 25)
+ * @returns Array of rebounding leader records
+ */
 export function getSeasonReboundLeaders(seasonId: string, limit = 25) {
   return getDb()
     .prepare(
@@ -59,13 +108,22 @@ export function getSeasonReboundLeaders(seasonId: string, limit = 25) {
        JOIN dim_team t ON t.team_id = pgl.team_id
        WHERE fg.season_id = ?
        GROUP BY p.player_id, t.abbreviation
-       HAVING COUNT(*) >= 10
+       HAVING COUNT(*) >= 10  -- Minimum games threshold
        ORDER BY reb_pg DESC
        LIMIT ?`,
     )
     .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Retrieves the top assist leaders for a season.
+ * 
+ * Players are ranked by assists per game (minimum 10 games played).
+ * 
+ * @param seasonId - Season ID (e.g., "2024-25")
+ * @param limit - Maximum number of leaders to return (default: 25)
+ * @returns Array of assist leader records
+ */
 export function getSeasonAssistLeaders(seasonId: string, limit = 25) {
   return getDb()
     .prepare(
@@ -79,13 +137,22 @@ export function getSeasonAssistLeaders(seasonId: string, limit = 25) {
        JOIN dim_team t ON t.team_id = pgl.team_id
        WHERE fg.season_id = ?
        GROUP BY p.player_id, t.abbreviation
-       HAVING COUNT(*) >= 10
+       HAVING COUNT(*) >= 10  -- Minimum games threshold
        ORDER BY ast_pg DESC
        LIMIT ?`,
     )
     .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
+/**
+ * Retrieves league-wide averages for a season.
+ * 
+ * Calculates average team stats per game across all regular season games.
+ * Useful for understanding league-wide trends and comparing teams.
+ * 
+ * @param seasonId - Season ID (e.g., "2024-25")
+ * @returns League summary record with per-game averages
+ */
 export function getSeasonLeagueSummary(seasonId: string) {
   return getDb()
     .prepare(
@@ -101,6 +168,15 @@ export function getSeasonLeagueSummary(seasonId: string) {
     .get(seasonId) as Record<string, number | null>;
 }
 
+/**
+ * Retrieves recent completed games for a season.
+ * 
+ * Only returns games with final scores (home_score and away_score not null).
+ * 
+ * @param seasonId - Season ID (e.g., "2024-25")
+ * @param limit - Maximum number of games to return (default: 50)
+ * @returns Array of game records, ordered by date (newest first)
+ */
 export function getSeasonRecentGames(seasonId: string, limit = 50) {
   return getDb()
     .prepare(

@@ -1,3 +1,18 @@
+/**
+ * @fileoverview Game detail page - displays box score and play-by-play.
+ * 
+ * Shows comprehensive game information:
+ * - Game header (teams, date, final score)
+ * - Line score by period (quarter-by-quarter scoring)
+ * - Team box score totals
+ * - Four Factors comparison
+ * - Player box scores (home and away teams separately)
+ * - Advanced player stats (eFG%, TS%, Game Score)
+ * - Play-by-play event stream
+ * 
+ * @module @/app/games/[id]/page
+ */
+
 import Link from "next/link";
 import { StatsTable } from "@/components/stats-table";
 import {
@@ -11,15 +26,35 @@ import {
 } from "@/lib/queries";
 import { notFound } from "next/navigation";
 
+/**
+ * Game detail page component.
+ * 
+ * Fetches all game data:
+ * 1. Basic game info (404 if not found)
+ * 2. Team box scores
+ * 3. Player box scores (both teams)
+ * 4. Advanced player stats
+ * 5. Line score by period
+ * 6. Four Factors
+ * 7. Play-by-play events
+ * 
+ * Separates home and away players for display.
+ * 
+ * @param params - Promise resolving to route params containing game ID
+ * @returns Game detail page JSX
+ */
 export default async function GamePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  
+  // Primary game lookup - 404 if not found
   const game = getGameById(id);
   if (!game) notFound();
 
+  // Fetch all game data in parallel
   const box = getTeamGameBox(id);
   const players = getGamePlayerBox(id);
   const playerAdvanced = getGamePlayerAdvancedBox(id);
@@ -27,6 +62,7 @@ export default async function GamePage({
   const fourFactors = getGameTeamFourFactors(id);
   const pbp = getGamePbpEvents(id, 50);
 
+  // Separate players by team for display
   const awayTeam = String(game.away_abbrev ?? "");
   const homeTeam = String(game.home_abbrev ?? "");
   const awayPlayers = players.filter((p) => String(p.team) === awayTeam);
@@ -40,10 +76,13 @@ export default async function GamePage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
+      {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/games">Games</Link> /{" "}
         {game.game_id}
       </div>
+      
+      {/* Game header */}
       <h1 className="mb-2 text-3xl font-bold">
         {game.away_name} at {game.home_name}
       </h1>
@@ -52,6 +91,7 @@ export default async function GamePage({
         {game.home_abbrev} {game.home_score}
       </p>
 
+      {/* Line Score by Period */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Line Score by Period</h2>
         <StatsTable
@@ -65,6 +105,7 @@ export default async function GamePage({
         />
       </section>
 
+      {/* Team Box Score */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Team Box Score</h2>
         <StatsTable
@@ -85,6 +126,7 @@ export default async function GamePage({
         />
       </section>
 
+      {/* Four Factors */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Four Factors</h2>
         <StatsTable
@@ -101,6 +143,7 @@ export default async function GamePage({
         />
       </section>
 
+      {/* Away Team Player Box */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">{awayTeam} Player Box Score</h2>
         <StatsTable
@@ -123,6 +166,7 @@ export default async function GamePage({
         />
       </section>
 
+      {/* Home Team Player Box */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">{homeTeam} Player Box Score</h2>
         <StatsTable
@@ -145,6 +189,7 @@ export default async function GamePage({
         />
       </section>
 
+      {/* Away Team Advanced Box */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">{awayTeam} Advanced Box</h2>
         <StatsTable
@@ -161,6 +206,7 @@ export default async function GamePage({
         />
       </section>
 
+      {/* Home Team Advanced Box */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">{homeTeam} Advanced Box</h2>
         <StatsTable
@@ -177,6 +223,7 @@ export default async function GamePage({
         />
       </section>
 
+      {/* Play-by-Play */}
       <section>
         <h2 className="mb-2 text-xl font-bold">Play-by-Play (Recent)</h2>
         <StatsTable

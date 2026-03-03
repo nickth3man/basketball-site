@@ -1,8 +1,23 @@
+/**
+ * @fileoverview Unit tests for the StatsTable component.
+ * 
+ * Tests the sortable data table functionality:
+ * - Basic rendering of data rows
+ * - Column header click sorting (ascending/descending toggle)
+ * - CSV export via Blob download
+ * - Proper handling of different data types
+ * 
+ * Uses Vitest with fake timers for blob cleanup verification.
+ * 
+ * @module @/components/stats-table.test
+ */
+
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { StatsTable } from "./stats-table";
 
 describe("StatsTable", () => {
+  // Test data
   const columns = [
     { key: "name", label: "Name" },
     { key: "pts", label: "Points", align: "right" as const },
@@ -12,6 +27,9 @@ describe("StatsTable", () => {
     { name: "Steph", pts: 30 },
   ];
 
+  /**
+   * Verifies that the table renders with all data visible.
+   */
   it("renders the table correctly", () => {
     render(<StatsTable columns={columns} rows={rows} />);
     expect(screen.getByText("LeBron")).toBeInTheDocument();
@@ -20,6 +38,12 @@ describe("StatsTable", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
   });
 
+  /**
+   * Verifies sorting functionality:
+   * - Initial sort defaults to first column descending
+   * - Clicking a header toggles sort direction
+   * - Clicking a different column changes sort key
+   */
   it("sorts rows by clicking header", () => {
     // Initial sort defaults to columns[0].key ("name") and direction "desc"
     render(<StatsTable columns={columns} rows={rows} />);
@@ -42,6 +66,13 @@ describe("StatsTable", () => {
     expect(tableRows[1]).toHaveTextContent("LeBron"); // 25
   });
 
+  /**
+   * Verifies CSV export functionality:
+   * - Creates a Blob with correct MIME type
+   * - Uses URL.createObjectURL for download
+   * - Triggers anchor click for download
+   * - Cleans up blob URL after delay
+   */
   it("exports CSV data through Blob download", () => {
     vi.useFakeTimers();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

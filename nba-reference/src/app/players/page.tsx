@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Players directory page - lists all players alphabetically.
+ * 
+ * Displays a paginated list of NBA players with:
+ * - Player name (link to detail page)
+ * - Position
+ * - Active/Retired status
+ * 
+ * Players are sorted with active players first, then alphabetically.
+ * 
+ * @module @/app/players/page
+ */
+
 import Link from "next/link";
 import { getPlayerDirectory } from "@/lib/query/directory";
 import {
@@ -9,6 +22,14 @@ import {
   tableLinkClass,
 } from "@/lib/table-styles";
 
+/**
+ * Players directory page component.
+ * 
+ * Fetches up to 400 players from the directory query.
+ * Uses a simple HTML table for lightweight rendering.
+ * 
+ * @returns Players directory page JSX
+ */
 export default function PlayersPage() {
   const players = getPlayerDirectory(400);
 

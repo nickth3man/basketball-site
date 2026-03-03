@@ -1,3 +1,17 @@
+/**
+ * @fileoverview Seasons directory page - lists all NBA seasons.
+ * 
+ * Displays a chronological list of NBA seasons with:
+ * - Season ID (e.g., "2024-25")
+ * - Start year
+ * - End year
+ * 
+ * Seasons are ordered by start year (newest first) with links
+ * to individual season detail pages.
+ * 
+ * @module @/app/seasons/page
+ */
+
 import Link from "next/link";
 import { getSeasons } from "@/lib/queries";
 import {
@@ -9,6 +23,14 @@ import {
   tableLinkClass,
 } from "@/lib/table-styles";
 
+/**
+ * Seasons directory page component.
+ * 
+ * Fetches up to 40 seasons and displays them in a table
+ * with links to season detail pages.
+ * 
+ * @returns Seasons directory page JSX
+ */
 export default function SeasonsPage() {
   const seasons = getSeasons(40);
 

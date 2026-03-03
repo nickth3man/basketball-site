@@ -1,3 +1,26 @@
+/**
+ * @fileoverview Player detail page - comprehensive player statistics dashboard.
+ * 
+ * This is the most complex page in the application, displaying 14+ data sections:
+ * - Player bio (photo, position, birth info, draft, etc.)
+ * - Career summary stats card
+ * - Awards and honors
+ * - Per-game, per-36, per-100 possession stats
+ * - Season totals and advanced metrics
+ * - Shooting breakdowns (distance, zones, assisted %)
+ * - Adjusted shooting (league-relative metrics)
+ * - Play-by-play derived stats (position estimates)
+ * - Full game log with Game Score
+ * - Awards history
+ * - Salary history
+ * - Career game highs
+ * 
+ * Data is fetched server-side in parallel for optimal performance.
+ * Uses sticky navigation sidebar for section jumping.
+ * 
+ * @module @/app/players/[id]/page
+ */
+
 import Link from "next/link";
 import Image from "next/image";
 import { StatsTable } from "@/components/stats-table";
@@ -20,15 +43,32 @@ import {
 import { formatMoney, formatPct } from "@/lib/formatters";
 import { notFound } from "next/navigation";
 
+/**
+ * Player detail page component.
+ * 
+ * Fetches comprehensive player data in parallel:
+ * 1. Basic player info (404 if not found)
+ * 2. All stat varieties (per-game, per-36, per-100, totals, advanced)
+ * 3. Shooting data (traditional and adjusted)
+ * 4. Play-by-play derived stats
+ * 5. Game log, awards, salaries, career summary, game highs
+ * 
+ * @param params - Promise resolving to route params containing player ID
+ * @returns Player detail page JSX
+ */
 export default async function PlayerPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  
+  // Primary player lookup - 404 if not found
   const player = getPlayerByBrefId(id);
   if (!player) notFound();
 
+  // Fetch all player statistics in parallel
+  // Each query is cached (30s TTL) for subsequent page loads
   const perGameStats = getPlayerPerGameStats(id, 25);
   const per36Stats = getPlayerPer36Stats(id, 25);
   const per100Stats = getPlayerPer100Stats(id, 25);
@@ -43,15 +83,17 @@ export default async function PlayerPage({
   const summary = getPlayerCareerSummary(id);
   const highs = getPlayerGameHighs(player.player_id);
 
+  // Aggregate awards by name for display badges
   const awardCounts = Object.entries(
     awards.reduce<Record<string, number>>((acc, award) => {
       acc[award.award_name] = (acc[award.award_name] ?? 0) + 1;
       return acc;
     }, {}),
   )
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8);
+    .sort((a, b) => b[1] - a[1]) // Sort by count (descending)
+    .slice(0, 8); // Show top 8 award types
 
+  // Navigation anchors for sticky sidebar
   const anchorSections = [
     { id: "per-game", label: "Per Game" },
     { id: "per-36", label: "Per 36 Min" },
@@ -69,13 +111,16 @@ export default async function PlayerPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
+      {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/players">Players</Link> /{" "}
         {player.full_name}
       </div>
 
+      {/* Player bio header section */}
       <section className="mb-5 border border-line bg-paper-soft p-4">
         <div className="grid gap-4 md:grid-cols-[140px_1fr_260px]">
+          {/* Player headshot from Basketball-Reference CDN */}
           <div>
             <Image
               src={`https://www.basketball-reference.com/req/202106291/images/headshots/${player.bref_id}.jpg`}
@@ -86,6 +131,7 @@ export default async function PlayerPage({
             />
           </div>
 
+          {/* Basic player info grid */}
           <div>
             <h1 className="mb-2 text-3xl font-bold">{player.full_name}</h1>
             <div className="grid gap-1 text-sm text-muted-strong sm:grid-cols-2">
@@ -117,6 +163,7 @@ export default async function PlayerPage({
             </div>
           </div>
 
+          {/* Career summary stats card */}
           <div className="border border-line-mid bg-white p-3 text-xs">
             <div className="mb-2 font-bold uppercase tracking-wide text-crumb">
               Career Summary
@@ -155,6 +202,7 @@ export default async function PlayerPage({
         </div>
       </section>
 
+      {/* Awards badges section (only shown if player has awards) */}
       {awardCounts.length > 0 ? (
         <section className="mb-5 border border-line-mid bg-white p-3">
           <h2 className="mb-2 text-lg font-bold">
@@ -173,7 +221,9 @@ export default async function PlayerPage({
         </section>
       ) : null}
 
+      {/* Main content with sticky sidebar navigation */}
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+        {/* Sticky navigation sidebar */}
         <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
           <div className="mb-2 text-xs font-bold uppercase tracking-wide text-crumb">
             On this page
@@ -191,7 +241,9 @@ export default async function PlayerPage({
           </nav>
         </aside>
 
+        {/* Statistics sections */}
         <div className="space-y-8">
+          {/* Per Game Stats */}
           <section id="per-game" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Per Game</h2>
             <StatsTable
@@ -217,6 +269,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Per 36 Minutes Stats */}
           <section id="per-36" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Per 36 Minutes</h2>
             <StatsTable
@@ -237,6 +290,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Season Totals */}
           <section id="totals" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Totals</h2>
             <StatsTable
@@ -265,6 +319,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Per 100 Possessions Stats */}
           <section id="per-100" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Per 100 Possessions</h2>
             <StatsTable
@@ -290,6 +345,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Advanced Stats */}
           <section id="advanced" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Advanced</h2>
             <StatsTable
@@ -323,6 +379,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Shooting Stats (Distance Breakdown) */}
           <section id="shooting" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Shooting</h2>
             <StatsTable
@@ -352,6 +409,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Adjusted Shooting (League-Relative) */}
           <section id="adjusted-shooting" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Adjusted Shooting</h2>
             <StatsTable
@@ -374,6 +432,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Play-by-Play Derived Stats */}
           <section id="pbp" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Play-by-Play</h2>
             <StatsTable
@@ -410,6 +469,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Full Game Log */}
           <section id="game-log" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Game Log</h2>
             <StatsTable
@@ -445,6 +505,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Awards History */}
           <section id="awards" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Awards History</h2>
             <StatsTable
@@ -458,6 +519,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Salary History */}
           <section id="salaries" className="scroll-mt-4">
             <h2 className="mb-2 text-xl font-bold">Salaries</h2>
             <StatsTable
@@ -474,6 +536,7 @@ export default async function PlayerPage({
             />
           </section>
 
+          {/* Career Game Highs */}
           <section
             id="highs"
             className="scroll-mt-4 border border-line-mid bg-white p-3"

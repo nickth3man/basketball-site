@@ -1,3 +1,18 @@
+/**
+ * @fileoverview Homepage component - displays standings and recent games.
+ * 
+ * The main landing page showing:
+ * - Site title and description
+ * - Search box for players/teams
+ * - Export buttons for standings and games data
+ * - Current season standings table
+ * - Recent games list
+ * 
+ * Data is fetched server-side using cached queries for optimal performance.
+ * 
+ * @module @/app/page
+ */
+
 import Link from "next/link";
 import { SearchBox } from "@/components/search-box";
 import { StatsTable } from "@/components/stats-table";
@@ -13,6 +28,18 @@ import {
   tableLinkClass,
 } from "@/lib/table-styles";
 
+/**
+ * Homepage server component.
+ * 
+ * Fetches data at request time with caching:
+ * - Latest season ID for header
+ * - Top 30 team standings
+ * - 12 most recent completed games
+ * 
+ * Uses staggered animation delays for visual polish.
+ * 
+ * @returns Homepage JSX with standings and games sections
+ */
 export default function Home() {
   const seasonId = getLatestSeasonId();
   const standings = getHomeStandings(30);
@@ -20,11 +47,13 @@ export default function Home() {
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
+      {/* Page header */}
       <h1 className="fade-slide-in mb-1 text-3xl font-bold text-heading">Basketball Stats and History</h1>
       <p className="fade-slide-in mb-5 text-sm text-muted" style={{ animationDelay: "80ms" }}>
         Season {seasonId} standings, scores, and player/team lookup.
       </p>
 
+      {/* Search and export controls */}
       <div className="fade-slide-in mb-6 grid gap-3 md:grid-cols-[2fr_1fr]" style={{ animationDelay: "140ms" }}>
         <SearchBox />
         <div className="flex items-center gap-2 text-sm">
@@ -43,6 +72,7 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Standings section */}
       <section className="fade-slide-in panel-paper mb-8 p-3" style={{ animationDelay: "200ms" }}>
         <h2 className="mb-2 text-xl font-bold text-heading">{seasonId} NBA Standings</h2>
         <StatsTable
@@ -58,6 +88,7 @@ export default function Home() {
         />
       </section>
 
+      {/* Recent games section */}
       <section className="fade-slide-in panel-paper p-3" style={{ animationDelay: "260ms" }}>
         <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
         <div className={tableContainerClass}>
