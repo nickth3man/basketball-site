@@ -46,16 +46,16 @@ export default function PlayersPage(): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {players.map((p, i) => (
-              <tr key={p.bref_id} className={i % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+            {players.map((player, playerIndex) => (
+              <tr key={player.bref_id} className={playerIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/players/${p.bref_id}`}>
-                    {p.full_name}
+                  <Link className={tableLinkClass} href={`/players/${player.bref_id}`}>
+                    {player.full_name}
                   </Link>
                 </td>
-                <td className={tableCellClass('left')}>{p.position ?? '-'}</td>
+                <td className={tableCellClass('left')}>{player.position ?? '-'}</td>
                 <td className={tableCellClass('left')}>
-                  {p.is_active === 1 ? 'Active' : 'Retired'}
+                  {player.is_active === 1 ? 'Active' : 'Retired'}
                 </td>
               </tr>
             ))}

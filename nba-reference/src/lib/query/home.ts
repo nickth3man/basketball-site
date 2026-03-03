@@ -13,6 +13,19 @@
 
 import { getCachedQueryMany, getCachedQueryOne, getLatestSeasonId } from '@/lib/db';
 
+function getLatestSeasonWithTeamData(): string {
+  const latestWithTeamData = getCachedQueryOne<{ season_id: string } | undefined>(
+    'SELECT season_id FROM fact_team_season ORDER BY season_id DESC LIMIT 1',
+    [],
+    60_000
+  );
+  return latestWithTeamData?.season_id ?? getLatestSeasonId();
+}
+
+export function getHomeSeasonId(): string {
+  return getLatestSeasonWithTeamData();
+}
+
 /**
  * Represents a team standing row for the homepage table.
  */
@@ -68,12 +81,7 @@ export interface RecentGameRow {
  * ```
  */
 export function getHomeStandings(limit = 15): TeamStandingRow[] {
-  const latestWithTeamData = getCachedQueryOne<{ season_id: string } | undefined>(
-    'SELECT season_id FROM fact_team_season ORDER BY season_id DESC LIMIT 1',
-    [],
-    60_000
-  );
-  const seasonId = latestWithTeamData?.season_id ?? getLatestSeasonId();
+  const seasonId = getLatestSeasonWithTeamData();
 
   return getCachedQueryMany<TeamStandingRow[]>(
     `SELECT season_id, bref_abbrev, w, l, n_rtg, pace

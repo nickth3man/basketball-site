@@ -18,31 +18,38 @@ describe('GET /api/export/[type]', () => {
    * Checks for 200 status code.
    */
   it('returns standings data', async () => {
-    const req = new NextRequest('http://localhost/api/export/standings');
+    const request = new NextRequest('http://localhost/api/export/standings');
     const params = Promise.resolve({ type: 'standings' });
-    const res = await GET(req, { params });
-    expect(res.status).toBe(200);
+    const response = await GET(request, { params });
+    expect(response.status).toBe(200);
   });
 
   /**
    * Verifies that the response includes proper CSV content type headers.
    */
   it('returns CSV content type', async () => {
-    const req = new NextRequest('http://localhost/api/export/standings');
+    const request = new NextRequest('http://localhost/api/export/standings');
     const params = Promise.resolve({ type: 'standings' });
-    const res = await GET(req, { params });
-    expect(res.headers.get('Content-Type')).toContain('text/csv');
+    const response = await GET(request, { params });
+    expect(response.headers.get('Content-Type')).toContain('text/csv');
   });
 
   /**
    * Verifies that the response includes content disposition for download.
    */
   it('returns content disposition header', async () => {
-    const req = new NextRequest('http://localhost/api/export/standings');
+    const request = new NextRequest('http://localhost/api/export/standings');
     const params = Promise.resolve({ type: 'standings' });
-    const res = await GET(req, { params });
-    const disposition = res.headers.get('Content-Disposition');
+    const response = await GET(request, { params });
+    const disposition = response.headers.get('Content-Disposition');
     expect(disposition).toContain('attachment');
     expect(disposition).toContain('standings.csv');
+  });
+
+  it('returns 400 for unsupported export type', async () => {
+    const request = new NextRequest('http://localhost/api/export/unknown');
+    const params = Promise.resolve({ type: 'unknown' });
+    const response = await GET(request, { params });
+    expect(response.status).toBe(400);
   });
 });

@@ -9,6 +9,7 @@
  */
 
 import { searchEntities } from '@/lib/query/search';
+import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -23,10 +24,13 @@ import { NextResponse } from 'next/server';
  * @returns An object with a `results` array of search entries (e.g. `{ type: string, id: string, label: string }`)
  */
 export function GET(req: NextRequest): NextResponse {
-  const q = req.nextUrl.searchParams.get('q')?.trim() ?? '';
-  if (q.length < 2) {
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
+  if (query.length < 2) {
     return NextResponse.json({ results: [] });
   }
 
-  return NextResponse.json({ results: searchEntities(q) });
+  return NextResponse.json({ results: searchEntities(query) });
 }

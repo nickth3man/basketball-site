@@ -41,8 +41,9 @@ import {
   getPlayerPbpSeasonStats,
   getPlayerPer36Stats,
 } from '@/lib/queries';
-import { formatMoney, formatPct } from '@/lib/formatters';
+import { formatPercentage, formatUsd } from '@/lib/formatters';
 import { notFound } from 'next/navigation';
+import { validateBrefId } from '@/lib/validation';
 
 /**
  * Render the player detail page showing a comprehensive dashboard of a player's biography, season and per-game statistics, shooting and advanced metrics, play-by-play derived stats, game log, awards, salary history, career summary, and game highs.
@@ -58,6 +59,9 @@ export default async function PlayerPage({
   params: Promise<{ id: string }>;
 }): Promise<React.JSX.Element> {
   const { id } = await params;
+
+  // Validate the player ID format before querying
+  validateBrefId(id);
 
   // Primary player lookup - 404 if not found
   const player = getPlayerByBrefId(id);
@@ -86,7 +90,7 @@ export default async function PlayerPage({
       return acc;
     }, {})
   )
-    .sort((a, b) => b[1] - a[1]) // Sort by count (descending)
+    .sort((leftAward, rightAward) => rightAward[1] - leftAward[1]) // Sort by count (descending)
     .slice(0, 8); // Show top 8 award types
 
   // Navigation anchors for sticky sidebar
@@ -136,7 +140,7 @@ export default async function PlayerPage({
                 Birthplace:{' '}
                 {((): string => {
                   const parts = [player.birth_city, player.birth_country].filter(
-                    (s): s is string => s !== null && s.length > 0
+                    (part): part is string => part !== null && part.length > 0
                   );
                   return parts.length > 0 ? parts.join(', ') : '-';
                 })()}
@@ -173,15 +177,15 @@ export default async function PlayerPage({
               <span className="text-right tabular-nums">{summary['ast_pg'] ?? '-'}</span>
               <span>FG%</span>
               <span className="text-right tabular-nums">
-                {formatPct(summary['fg_pct'] as number | null)}
+                {formatPercentage(summary['fg_pct'] as number | null)}
               </span>
               <span>3P%</span>
               <span className="text-right tabular-nums">
-                {formatPct(summary['fg3_pct'] as number | null)}
+                {formatPercentage(summary['fg3_pct'] as number | null)}
               </span>
               <span>FT%</span>
               <span className="text-right tabular-nums">
-                {formatPct(summary['ft_pct'] as number | null)}
+                {formatPercentage(summary['ft_pct'] as number | null)}
               </span>
             </div>
           </div>
@@ -481,9 +485,9 @@ export default async function PlayerPage({
                 { key: 'gmsc', label: 'GmSc', align: 'right' },
                 { key: 'plus_minus', label: '+/-', align: 'right' },
               ]}
-              rows={fullGameLog.map(row => ({
-                ...row,
-                is_home: Number(row['is_home']) === 1 ? 'Home' : 'Away',
+              rows={fullGameLog.map(gameLogRow => ({
+                ...gameLogRow,
+                is_home: Number(gameLogRow['is_home']) === 1 ? 'Home' : 'Away',
               }))}
               initialSort="game_date"
             />
@@ -512,9 +516,9 @@ export default async function PlayerPage({
                 { key: 'team_abbrev', label: 'Team' },
                 { key: 'salary_fmt', label: 'Salary', align: 'right' },
               ]}
-              rows={salaries.map(row => ({
-                ...row,
-                salary_fmt: formatMoney(row['salary'] as number | null),
+              rows={salaries.map(salaryRow => ({
+                ...salaryRow,
+                salary_fmt: formatUsd(salaryRow['salary'] as number | null),
               }))}
               initialSort="season_id"
             />

@@ -51,15 +51,15 @@ export default function GamesPage(): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {games.map((g, i) => (
-              <tr key={g.game_id} className={i % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
-                <td className={tableCellClass('left')}>{g.game_date}</td>
-                <td className={tableCellClass('left')}>{g.away_abbrev}</td>
-                <td className={tableCellClass('right')}>{g.away_score ?? '-'}</td>
-                <td className={tableCellClass('left')}>{g.home_abbrev}</td>
-                <td className={tableCellClass('right')}>{g.home_score ?? '-'}</td>
+            {games.map((game, gameIndex) => (
+              <tr key={game.game_id} className={gameIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+                <td className={tableCellClass('left')}>{game.game_date}</td>
+                <td className={tableCellClass('left')}>{game.away_abbrev}</td>
+                <td className={tableCellClass('right')}>{game.away_score ?? '-'}</td>
+                <td className={tableCellClass('left')}>{game.home_abbrev}</td>
+                <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/games/${g.game_id}`}>
+                  <Link className={tableLinkClass} href={`/games/${game.game_id}`}>
                     Box
                   </Link>
                 </td>

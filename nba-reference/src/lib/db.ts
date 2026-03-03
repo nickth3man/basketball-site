@@ -334,5 +334,13 @@ export function getLatestSeasonId(): string {
     .prepare('SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT 1')
     .get() as { season_id: string } | undefined;
 
-  return row?.season_id ?? '2025-26';
+  if (row !== undefined && row.season_id.length > 0) {
+    return row.season_id;
+  }
+
+  // Calculate current NBA season dynamically (NBA season: Oct-June)
+  // Use the year of October (start of season)
+  const now = new Date();
+  const year = now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${year}-${(year + 1).toString().slice(-2)}`;
 }

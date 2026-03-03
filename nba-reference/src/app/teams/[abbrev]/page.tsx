@@ -30,6 +30,7 @@ import {
 } from '@/lib/queries';
 import { formatSignedNumber } from '@/lib/formatters';
 import { notFound } from 'next/navigation';
+import { validateTeamAbbrev } from '@/lib/validation';
 
 /**
  * Render the team detail dashboard for the team identified by the route abbreviation.
@@ -43,6 +44,9 @@ export default async function TeamPage({
   params: Promise<{ abbrev: string }>;
 }): Promise<JSX.Element> {
   const { abbrev } = await params;
+
+  // Validate team abbreviation format before querying
+  validateTeamAbbrev(abbrev.toUpperCase());
 
   // Primary team lookup - normalize to uppercase for matching
   const team = getTeamByAbbrev(abbrev.toUpperCase());
@@ -143,13 +147,13 @@ export default async function TeamPage({
             On this page
           </div>
           <nav className="space-y-1 text-sm">
-            {anchors.map(a => (
+            {anchors.map(anchor => (
               <a
-                key={a.id}
-                href={`#${a.id}`}
+                key={anchor.id}
+                href={`#${anchor.id}`}
                 className="block rounded px-2 py-1 hover:bg-nav-hover"
               >
-                {a.label}
+                {anchor.label}
               </a>
             ))}
           </nav>
@@ -170,9 +174,9 @@ export default async function TeamPage({
                 { key: 'opp_score', label: 'Opp', align: 'right' },
                 { key: 'game_id', label: 'Game ID' },
               ]}
-              rows={recentGames.map(r => ({
-                ...r,
-                is_home: Number(r['is_home']) === 1 ? 'Home' : 'Away',
+              rows={recentGames.map(recentGame => ({
+                ...recentGame,
+                is_home: Number(recentGame['is_home']) === 1 ? 'Home' : 'Away',
               }))}
               initialSort="game_date"
             />

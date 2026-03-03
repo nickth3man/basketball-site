@@ -34,3 +34,32 @@ This repository contains a full-stack basketball statistics website, built with 
    ```
 
 For more comprehensive setup instructions regarding the frontend, please refer to the [nba-reference/README.md](nba-reference/README.md).
+
+## Database Migration Strategy
+
+The application uses a **read-only database** model. The SQLite database (`db/nba_raw_data.db`) contains pre-populated NBA statistics and is not modified by the application at runtime.
+
+### Data Updates
+
+When updating the database with new season data:
+
+1. **Backup the current database** before making changes
+2. **Use a separate ETL process** (outside this application) to populate new data
+3. **Verify data integrity** before committing changes
+4. **Commit the updated `.db` file** to Git LFS
+
+### Schema Changes
+
+If schema modifications are required:
+
+1. **Version the schema** with migration scripts in `scripts/migrations/`
+2. **Use a migration tool** such as:
+   - [Prisma](https://www.prisma.io/) — Type-safe ORM with migration support
+   - [Drizzle](https://orm.drizzle.team/) — Lightweight TypeScript ORM
+   - [Flyway](https://flywaydb.org/) — SQL-based migrations
+3. **Test migrations** against a copy of the database before applying to production
+4. **Document schema changes** in commit messages and CHANGELOG
+
+### No Runtime Migrations
+
+This application does **not** perform database migrations at runtime. All schema changes must be applied during the data update process before deployment.

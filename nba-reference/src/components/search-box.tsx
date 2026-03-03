@@ -37,9 +37,9 @@ interface SearchResult {
  * - Direct links to entity pages
  *
  * State Management:
- * - `q`: Current input value
+ * - `query`: Current input value
  * - `results`: Fetched search results
- * - `showResults`: Whether to display dropdown (true when q >= 2 chars and results exist)
+ * - `showResults`: Whether to display dropdown (true when query >= 2 chars and results exist)
  *
  * @returns React component for the search box
  * @example
@@ -48,13 +48,13 @@ interface SearchResult {
  * ```
  */
 export function SearchBox(): JSX.Element {
-  const [q, setQ] = useState('');
+  const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
-  const showResults = q.trim().length >= 2 && results.length > 0;
+  const showResults = query.trim().length >= 2 && results.length > 0;
 
   // Debounced search function
-  const debouncedSearch = useCallback(async (query: string, signal: AbortSignal) => {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+  const debouncedSearch = useCallback(async (searchQuery: string, signal: AbortSignal) => {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
       signal,
     });
     if (!res.ok) return;
@@ -64,7 +64,7 @@ export function SearchBox(): JSX.Element {
 
   useEffect(() => {
     // Don't search for very short queries
-    if (q.trim().length < 2) {
+    if (query.trim().length < 2) {
       return;
     }
 
@@ -73,7 +73,7 @@ export function SearchBox(): JSX.Element {
 
     // Debounce: wait 200ms after user stops typing
     const timer = setTimeout(() => {
-      void debouncedSearch(q, controller.signal);
+      void debouncedSearch(query, controller.signal);
     }, 200);
 
     // Cleanup: cancel timer and abort fetch on unmount or query change
@@ -81,15 +81,15 @@ export function SearchBox(): JSX.Element {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q, debouncedSearch]);
+  }, [query, debouncedSearch]);
 
   return (
     <div className="relative">
       {/* Search input with focus states */}
       <input
-        value={q}
-        onChange={e => {
-          setQ(e.target.value);
+        value={query}
+        onChange={event => {
+          setQuery(event.target.value);
         }}
         placeholder="Search players or teams"
         className="w-full rounded border border-line bg-white px-3 py-2 text-sm text-ink shadow-input transition-all duration-200 placeholder:text-placeholder focus:border-focus-border focus:ring-2 focus:ring-focus-ring focus:outline-none"
@@ -98,15 +98,15 @@ export function SearchBox(): JSX.Element {
       {/* Results dropdown - only shown when we have results */}
       {showResults ? (
         <div className="absolute z-20 mt-1 w-full fade-slide-in overflow-hidden rounded border border-line bg-white shadow-popover">
-          {results.map(r => (
+          {results.map(result => (
             <Link
-              key={`${r.type}-${r.id}`}
-              href={r.type === 'player' ? `/players/${r.id}` : `/teams/${r.id}`}
+              key={`${result.type}-${result.id}`}
+              href={result.type === 'player' ? `/players/${result.id}` : `/teams/${result.id}`}
               className="block border-b border-dropdown-line px-3 py-2 text-sm transition-colors duration-150 last:border-b-0 hover:bg-paper-soft"
             >
               {/* Type badge (player/team) */}
-              <span className="mr-2 text-xs text-label uppercase">{r.type}</span>
-              {r.label}
+              <span className="mr-2 text-xs text-label uppercase">{result.type}</span>
+              {result.label}
             </Link>
           ))}
         </div>

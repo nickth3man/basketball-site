@@ -615,7 +615,7 @@ graph LR
 | ------------------- | ---------------------------------- | ------------------------------------ |
 | Query functions     | `get<Entity>[By<Field>][<Action>]` | `getPlayerByBrefId`, `getTeamRoster` |
 | Search functions    | `search<Entities>`                 | `searchEntities`, `searchPlayers`    |
-| Formatter functions | `format<DataType>`                 | `formatPct`, `formatMoney`           |
+| Formatter functions | `format<DataType>`                 | `formatPercentage`, `formatUsd`      |
 | Event handlers      | `handle<Event>`                    | `handleSearch`, `handleSubmit`       |
 | React components    | `<PascalCase>`                     | `SearchBox`, `StatsTable`            |
 
@@ -688,15 +688,15 @@ src/app/api/
 ```typescript
 // src/lib/formatters.test.ts
 import { describe, it, expect } from 'vitest';
-import { formatPct, formatMoney } from './formatters';
+import { formatPercentage, formatUsd } from './formatters';
 
-describe('formatPct', () => {
+describe('formatPercentage', () => {
   it('formats decimal as 3-digit percentage', () => {
-    expect(formatPct(0.456)).toBe('0.456');
+    expect(formatPercentage(0.456)).toBe('0.456');
   });
 
   it('returns dash for null values', () => {
-    expect(formatPct(null)).toBe('-');
+    expect(formatPercentage(null)).toBe('-');
   });
 });
 ```
@@ -880,7 +880,7 @@ import { getHomeStandings } from '@/lib/query/home';
 import { getDb } from '@/lib/db';
 
 // Formatters
-import { formatPct, formatMoney } from '@/lib/formatters';
+import { formatPercentage, formatUsd } from '@/lib/formatters';
 
 // Components
 import { SearchBox } from '@/components/search-box';

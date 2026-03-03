@@ -19,11 +19,11 @@ import { StatsTable } from '@/components/stats-table';
 import {
   getGameById,
   getGameLineScore,
-  getGamePlayerAdvancedBox,
+  getGamePlayerAdvancedBoxScore,
   getGamePbpEvents,
-  getGamePlayerBox,
+  getGamePlayerBoxScore,
   getGameTeamFourFactors,
-  getTeamGameBox,
+  getGameTeamBoxScores,
 } from '@/lib/queries';
 import { notFound } from 'next/navigation';
 
@@ -51,9 +51,9 @@ export default async function GamePage({
   if (!game) notFound();
 
   // Fetch all game data in parallel
-  const box = getTeamGameBox(id);
-  const players = getGamePlayerBox(id);
-  const playerAdvanced = getGamePlayerAdvancedBox(id);
+  const box = getGameTeamBoxScores(id);
+  const players = getGamePlayerBoxScore(id);
+  const playerAdvanced = getGamePlayerAdvancedBoxScore(id);
   const lineScore = getGameLineScore(id);
   const fourFactors = getGameTeamFourFactors(id);
   const pbp = getGamePbpEvents(id, 50);
@@ -61,10 +61,10 @@ export default async function GamePage({
   // Separate players by team for display
   const awayTeam = String(game['away_abbrev'] ?? '');
   const homeTeam = String(game['home_abbrev'] ?? '');
-  const awayPlayers = players.filter(p => String(p['team']) === awayTeam);
-  const homePlayers = players.filter(p => String(p['team']) === homeTeam);
-  const awayAdvanced = playerAdvanced.filter(p => String(p['team']) === awayTeam);
-  const homeAdvanced = playerAdvanced.filter(p => String(p['team']) === homeTeam);
+  const awayPlayers = players.filter(player => String(player['team']) === awayTeam);
+  const homePlayers = players.filter(player => String(player['team']) === homeTeam);
+  const awayAdvanced = playerAdvanced.filter(player => String(player['team']) === awayTeam);
+  const homeAdvanced = playerAdvanced.filter(player => String(player['team']) === homeTeam);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -149,9 +149,9 @@ export default async function GamePage({
             { key: 'blk', label: 'BLK', align: 'right' },
             { key: 'plus_minus', label: '+/-', align: 'right' },
           ]}
-          rows={awayPlayers.map(p => ({
-            ...p,
-            starter: Number(p['starter']) === 1 ? '*' : '',
+          rows={awayPlayers.map(player => ({
+            ...player,
+            starter: Number(player['starter']) === 1 ? '*' : '',
           }))}
           initialSort="pts"
         />
@@ -172,9 +172,9 @@ export default async function GamePage({
             { key: 'blk', label: 'BLK', align: 'right' },
             { key: 'plus_minus', label: '+/-', align: 'right' },
           ]}
-          rows={homePlayers.map(p => ({
-            ...p,
-            starter: Number(p['starter']) === 1 ? '*' : '',
+          rows={homePlayers.map(player => ({
+            ...player,
+            starter: Number(player['starter']) === 1 ? '*' : '',
           }))}
           initialSort="pts"
         />

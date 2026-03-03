@@ -130,8 +130,8 @@ database.
 - **`src/lib/utils.ts`** — `cn()` combines `clsx` + `tailwind-merge` for safe
   Tailwind class merging. Always use `cn()` instead of template strings for
   conditional class names.
-- **`src/lib/formatters.ts`** — Three formatters: `formatPct()` (3-decimal
-  FG%/3P%/FT%), `formatMoney()` (USD with `Intl.NumberFormat`),
+- **`src/lib/formatters.ts`** — Three formatters: `formatPercentage()`
+  (3-decimal FG%/3P%/FT%), `formatUsd()` (USD with `Intl.NumberFormat`),
   `formatSignedNumber()` (explicit +/- prefix).
 - **`src/lib/table-styles.ts`** — Centralized Tailwind classes for table
   cell/header/body consistency.

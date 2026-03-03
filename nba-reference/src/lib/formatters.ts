@@ -21,17 +21,17 @@
  * @returns Formatted percentage string (e.g., "0.452") or "-"
  * @example
  * ```ts
- * formatPct(0.452)   // "0.452"
- * formatPct("0.452") // "0.452"
- * formatPct(null)    // "-"
- * formatPct(NaN)     // "-"
+ * formatPercentage(0.452)   // "0.452"
+ * formatPercentage("0.452") // "0.452"
+ * formatPercentage(null)    // "-"
+ * formatPercentage(NaN)     // "-"
  * ```
  */
-export function formatPct(value: string | number | null | undefined): string {
+export function formatPercentage(value: string | number | null | undefined): string {
   if (value == null) return '-';
-  const n = Number(value);
-  if (Number.isNaN(n)) return '-';
-  return n.toFixed(3);
+  const numericValue = Number(value);
+  if (Number.isNaN(numericValue)) return '-';
+  return numericValue.toFixed(3);
 }
 
 /**
@@ -40,15 +40,15 @@ export function formatPct(value: string | number | null | undefined): string {
  * @param value - Numeric value or numeric string representing an amount
  * @returns The formatted currency string (e.g., "$45,000,000"), or "-" for null, undefined, or NaN
  */
-export function formatMoney(value: string | number | null | undefined): string {
+export function formatUsd(value: string | number | null | undefined): string {
   if (value == null) return '-';
-  const n = Number(value);
-  if (Number.isNaN(n)) return '-';
+  const numericValue = Number(value);
+  if (Number.isNaN(numericValue)) return '-';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
-  }).format(n);
+  }).format(numericValue);
 }
 
 /**

@@ -22,10 +22,10 @@ describe('GET /api/search', () => {
    * This prevents unnecessary database queries for single characters.
    */
   it('returns empty results for short queries', async () => {
-    const req = new NextRequest('http://localhost/api/search?q=a');
-    const res = GET(req);
-    const json = (await res.json()) as SearchResponse;
-    expect(json.results).toEqual([]);
+    const request = new NextRequest('http://localhost/api/search?q=a');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+    expect(payload.results).toEqual([]);
   });
 
   /**
@@ -33,9 +33,9 @@ describe('GET /api/search', () => {
    * The actual content depends on the database state.
    */
   it('returns results for valid query', async () => {
-    const req = new NextRequest('http://localhost/api/search?q=james');
-    const res = GET(req);
-    const json = (await res.json()) as SearchResponse;
-    expect(Array.isArray(json.results)).toBe(true);
+    const request = new NextRequest('http://localhost/api/search?q=james');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+    expect(Array.isArray(payload.results)).toBe(true);
   });
 });

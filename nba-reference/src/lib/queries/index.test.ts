@@ -27,7 +27,7 @@ import {
   getPlayerGameHighs,
   getPlayerSeasonStats,
   getTeamByAbbrev,
-  getTeamGameBox,
+  getGameTeamBoxScores,
   getTeamRoster,
   getTeamSeasonStats,
 } from './index';
@@ -145,7 +145,7 @@ describe('query helpers', () => {
     const game = getGameById('0022300001') ?? getGameById('0022400001');
     expect(game).toBeTruthy();
     if (game === undefined) return;
-    const box = getTeamGameBox(game['game_id'] as string);
+    const box = getGameTeamBoxScores(game['game_id'] as string);
     expect(Array.isArray(box)).toBe(true);
     expect(box.length).toBeGreaterThan(0);
   });

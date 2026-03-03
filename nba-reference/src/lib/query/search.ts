@@ -36,7 +36,7 @@ export interface SearchEntityResult {
 export function searchEntities(query: string): SearchEntityResult[] {
   const normalized = query.trim().toLowerCase();
   if (normalized.length < 2) return [];
-  const q = `%${normalized}%`;
+  const likeQuery = `%${normalized}%`;
 
   // Search players by name (cached for 5s)
   const players = getCachedQueryMany<Array<{ type: 'player'; id: string; label: string }>>(
@@ -44,7 +44,7 @@ export function searchEntities(query: string): SearchEntityResult[] {
      FROM dim_player
      WHERE bref_id IS NOT NULL AND LOWER(full_name) LIKE ?
      LIMIT 10`,
-    [q],
+    [likeQuery],
     5_000
   );
 
@@ -54,7 +54,7 @@ export function searchEntities(query: string): SearchEntityResult[] {
      FROM dim_team
      WHERE LOWER(full_name) LIKE ? OR LOWER(abbreviation) LIKE ?
      LIMIT 10`,
-    [q, q],
+    [likeQuery, likeQuery],
     5_000
   );
 

@@ -111,4 +111,9 @@ describe('StatsTable', () => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
   });
+
+  it('renders safely with no columns', () => {
+    render(<StatsTable columns={[]} rows={rows} />);
+    expect(screen.queryByRole('button', { name: /Export CSV/i })).not.toBeInTheDocument();
+  });
 });

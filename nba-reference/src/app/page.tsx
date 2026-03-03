@@ -17,8 +17,7 @@ import type React from 'react';
 import Link from 'next/link';
 import { SearchBox } from '@/components/search-box';
 import { StatsTable } from '@/components/stats-table';
-import { getLatestSeasonId } from '@/lib/db';
-import { getHomeStandings, getRecentGames } from '@/lib/query/home';
+import { getHomeSeasonId, getHomeStandings, getRecentGames } from '@/lib/query/home';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -37,7 +36,7 @@ import {
  * @returns The homepage JSX element containing header text, controls, a standings StatsTable, and a recent games table with box score links.
  */
 export default function Home(): React.JSX.Element {
-  const seasonId = getLatestSeasonId();
+  const seasonId = getHomeSeasonId();
   const standings = getHomeStandings(30);
   const games = getRecentGames(12);
 
@@ -93,23 +92,23 @@ export default function Home(): React.JSX.Element {
           <table className={tableClass}>
             <thead>
               <tr className={tableHeadRowClass}>
-                {['Date', 'Away', 'Away PTS', 'Home', 'Home PTS', 'Box Score'].map(h => (
-                  <th key={h} className={tableHeaderCellClass('left')}>
-                    {h}
+                {['Date', 'Away', 'Away PTS', 'Home', 'Home PTS', 'Box Score'].map(header => (
+                  <th key={header} className={tableHeaderCellClass('left')}>
+                    {header}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {games.map(g => (
-                <tr key={g.game_id} className={tableBodyRowClass}>
-                  <td className={tableCellClass('left')}>{g.game_date}</td>
-                  <td className={tableCellClass('left')}>{g.away_abbrev}</td>
-                  <td className={tableCellClass('right')}>{g.away_score ?? '-'}</td>
-                  <td className={tableCellClass('left')}>{g.home_abbrev}</td>
-                  <td className={tableCellClass('right')}>{g.home_score ?? '-'}</td>
+              {games.map(game => (
+                <tr key={game.game_id} className={tableBodyRowClass}>
+                  <td className={tableCellClass('left')}>{game.game_date}</td>
+                  <td className={tableCellClass('left')}>{game.away_abbrev}</td>
+                  <td className={tableCellClass('right')}>{game.away_score ?? '-'}</td>
+                  <td className={tableCellClass('left')}>{game.home_abbrev}</td>
+                  <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
                   <td className={tableCellClass('left')}>
-                    <Link className={tableLinkClass} href={`/games/${g.game_id}`}>
+                    <Link className={tableLinkClass} href={`/games/${game.game_id}`}>
                       Box Score
                     </Link>
                   </td>

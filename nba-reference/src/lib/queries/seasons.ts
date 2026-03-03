@@ -21,7 +21,7 @@ import { getDb } from '@/lib/db';
  * @param limit - Maximum number of seasons to return (default: 30)
  * @returns Array of season records with ID and year range, ordered by start year (newest first)
  */
-export function getSeasons(
+export function getSeasonList(
   limit = 30
 ): Array<{ season_id: string; start_year: number; end_year: number }> {
   return getDb()

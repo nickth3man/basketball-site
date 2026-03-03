@@ -27,10 +27,10 @@ import { getDb, getLatestSeasonId } from '@/lib/db';
  */
 function clampPositiveLimit(limit: number, fallback: number, max: number): number {
   if (!Number.isFinite(limit)) return fallback;
-  const n = Math.trunc(limit);
-  if (n < 1) return 1;
-  if (n > max) return max;
-  return n;
+  const truncatedLimit = Math.trunc(limit);
+  if (truncatedLimit < 1) return 1;
+  if (truncatedLimit > max) return max;
+  return truncatedLimit;
 }
 
 /**
@@ -235,10 +235,13 @@ export function getTeamSeasonNeighbors(
     )
     .all(teamAbbrev) as Array<{ season_id: string }>;
 
-  const idx = seasons.findIndex(s => s.season_id === seasonId);
+  const seasonIndex = seasons.findIndex(season => season.season_id === seasonId);
   return {
-    prev: idx >= 0 && idx + 1 < seasons.length ? (seasons[idx + 1]?.season_id ?? null) : null,
-    next: idx > 0 ? (seasons[idx - 1]?.season_id ?? null) : null,
+    prev:
+      seasonIndex >= 0 && seasonIndex + 1 < seasons.length
+        ? (seasons[seasonIndex + 1]?.season_id ?? null)
+        : null,
+    next: seasonIndex > 0 ? (seasons[seasonIndex - 1]?.season_id ?? null) : null,
   };
 }
 

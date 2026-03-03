@@ -46,15 +46,18 @@ export default function TeamsPage(): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {teams.map((t, i) => (
-              <tr key={t.abbreviation} className={i % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+            {teams.map((team, teamIndex) => (
+              <tr
+                key={team.abbreviation}
+                className={teamIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
+              >
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/teams/${t.abbreviation}`}>
-                    {t.full_name} ({t.abbreviation})
+                  <Link className={tableLinkClass} href={`/teams/${team.abbreviation}`}>
+                    {team.full_name} ({team.abbreviation})
                   </Link>
                 </td>
-                <td className={tableCellClass('left')}>{t.conference ?? '-'}</td>
-                <td className={tableCellClass('left')}>{t.division ?? '-'}</td>
+                <td className={tableCellClass('left')}>{team.conference ?? '-'}</td>
+                <td className={tableCellClass('left')}>{team.division ?? '-'}</td>
               </tr>
             ))}
           </tbody>
