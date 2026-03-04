@@ -15,6 +15,7 @@
  * @module @/app/teams/[abbrev]/page
  */
 
+import type { JSX } from 'react';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
 import {
@@ -29,6 +30,7 @@ import {
 } from '@/lib/queries';
 import { formatSignedNumber } from '@/lib/formatters';
 import { notFound } from 'next/navigation';
+import { validateTeamAbbrev } from '@/lib/validation';
 
 /**
  * Render the team detail dashboard for the team identified by the route abbreviation.
@@ -36,8 +38,15 @@ import { notFound } from 'next/navigation';
  * @param params - Promise resolving to route params containing the `abbrev` route parameter
  * @returns The JSX element for the team's detail page
  */
-export default async function TeamPage({ params }: { params: Promise<{ abbrev: string }> }) {
+export default async function TeamPage({
+  params,
+}: {
+  params: Promise<{ abbrev: string }>;
+}): Promise<JSX.Element> {
   const { abbrev } = await params;
+
+  // Validate team abbreviation format before querying
+  validateTeamAbbrev(abbrev.toUpperCase());
 
   // Primary team lookup - normalize to uppercase for matching
   const team = getTeamByAbbrev(abbrev.toUpperCase());
@@ -53,7 +62,7 @@ export default async function TeamPage({ params }: { params: Promise<{ abbrev: s
   const leaders = getTeamPlayerLeaders(team.team_id, 12);
 
   // Determine which season label to display
-  const seasonLabel = current?.season_id ?? seasonStats[0]?.season_id ?? 'Current';
+  const seasonLabel = current?.['season_id'] ?? seasonStats[0]?.['season_id'] ?? 'Current';
 
   // Navigation anchors for sticky sidebar
   const anchors = [
@@ -82,49 +91,49 @@ export default async function TeamPage({ params }: { params: Promise<{ abbrev: s
         <div className="grid gap-2 text-sm text-muted-strong md:grid-cols-3">
           <div>Conference: {team.conference ?? '-'}</div>
           <div>Division: {team.division ?? '-'}</div>
-          <div>Arena: {current?.arena ?? team.arena_name ?? '-'}</div>
+          <div>Arena: {current?.['arena'] ?? team.arena_name ?? '-'}</div>
           <div>
-            Record: {current?.w ?? '-'}-{current?.l ?? '-'}
+            Record: {current?.['w'] ?? '-'}-{current?.['l'] ?? '-'}
           </div>
-          <div>Net Rtg: {formatSignedNumber(current?.n_rtg as number | null)}</div>
-          <div>Pace: {current?.pace ?? '-'}</div>
-          <div>Off Rtg: {current?.o_rtg ?? '-'}</div>
-          <div>Def Rtg: {current?.d_rtg ?? '-'}</div>
-          <div>SRS: {formatSignedNumber(current?.srs as number | null)}</div>
+          <div>Net Rtg: {formatSignedNumber(current?.['n_rtg'] as number | null)}</div>
+          <div>Pace: {current?.['pace'] ?? '-'}</div>
+          <div>Off Rtg: {current?.['o_rtg'] ?? '-'}</div>
+          <div>Def Rtg: {current?.['d_rtg'] ?? '-'}</div>
+          <div>SRS: {formatSignedNumber(current?.['srs'] as number | null)}</div>
         </div>
 
         {/* Per-game averages display */}
         {averages ? (
           <div className="mt-3 grid gap-2 border border-line-soft bg-white p-3 text-xs sm:grid-cols-5 lg:grid-cols-10">
             <div>
-              PTS/G: <span className="font-bold tabular-nums">{averages.pts ?? '-'}</span>
+              PTS/G: <span className="font-bold tabular-nums">{averages['pts'] ?? '-'}</span>
             </div>
             <div>
-              REB/G: <span className="font-bold tabular-nums">{averages.reb ?? '-'}</span>
+              REB/G: <span className="font-bold tabular-nums">{averages['reb'] ?? '-'}</span>
             </div>
             <div>
-              AST/G: <span className="font-bold tabular-nums">{averages.ast ?? '-'}</span>
+              AST/G: <span className="font-bold tabular-nums">{averages['ast'] ?? '-'}</span>
             </div>
             <div>
-              STL/G: <span className="font-bold tabular-nums">{averages.stl ?? '-'}</span>
+              STL/G: <span className="font-bold tabular-nums">{averages['stl'] ?? '-'}</span>
             </div>
             <div>
-              BLK/G: <span className="font-bold tabular-nums">{averages.blk ?? '-'}</span>
+              BLK/G: <span className="font-bold tabular-nums">{averages['blk'] ?? '-'}</span>
             </div>
             <div>
-              TOV/G: <span className="font-bold tabular-nums">{averages.tov ?? '-'}</span>
+              TOV/G: <span className="font-bold tabular-nums">{averages['tov'] ?? '-'}</span>
             </div>
             <div>
-              3PM/G: <span className="font-bold tabular-nums">{averages.fg3m ?? '-'}</span>
+              3PM/G: <span className="font-bold tabular-nums">{averages['fg3m'] ?? '-'}</span>
             </div>
             <div>
-              3PA/G: <span className="font-bold tabular-nums">{averages.fg3a ?? '-'}</span>
+              3PA/G: <span className="font-bold tabular-nums">{averages['fg3a'] ?? '-'}</span>
             </div>
             <div>
-              FG%: <span className="font-bold tabular-nums">{averages.fg_pct ?? '-'}</span>
+              FG%: <span className="font-bold tabular-nums">{averages['fg_pct'] ?? '-'}</span>
             </div>
             <div>
-              FT%: <span className="font-bold tabular-nums">{averages.ft_pct ?? '-'}</span>
+              FT%: <span className="font-bold tabular-nums">{averages['ft_pct'] ?? '-'}</span>
             </div>
           </div>
         ) : null}
@@ -138,13 +147,13 @@ export default async function TeamPage({ params }: { params: Promise<{ abbrev: s
             On this page
           </div>
           <nav className="space-y-1 text-sm">
-            {anchors.map(a => (
+            {anchors.map(anchor => (
               <a
-                key={a.id}
-                href={`#${a.id}`}
+                key={anchor.id}
+                href={`#${anchor.id}`}
                 className="block rounded px-2 py-1 hover:bg-nav-hover"
               >
-                {a.label}
+                {anchor.label}
               </a>
             ))}
           </nav>
@@ -165,9 +174,9 @@ export default async function TeamPage({ params }: { params: Promise<{ abbrev: s
                 { key: 'opp_score', label: 'Opp', align: 'right' },
                 { key: 'game_id', label: 'Game ID' },
               ]}
-              rows={recentGames.map(r => ({
-                ...r,
-                is_home: Number(r.is_home) === 1 ? 'Home' : 'Away',
+              rows={recentGames.map(recentGame => ({
+                ...recentGame,
+                is_home: Number(recentGame['is_home']) === 1 ? 'Home' : 'Away',
               }))}
               initialSort="game_date"
             />
@@ -209,21 +218,21 @@ export default async function TeamPage({ params }: { params: Promise<{ abbrev: s
                   ? [
                       {
                         side: 'Team',
-                        efg_pct: fourFactors.e_fg_pct,
-                        tov_pct: fourFactors.tov_pct,
-                        orb_pct: fourFactors.orb_pct,
-                        ft_fga: fourFactors.ft_fga,
+                        efg_pct: fourFactors['e_fg_pct'] ?? null,
+                        tov_pct: fourFactors['tov_pct'] ?? null,
+                        orb_pct: fourFactors['orb_pct'] ?? null,
+                        ft_fga: fourFactors['ft_fga'] ?? null,
                       },
                       {
                         side: 'Opponent',
-                        efg_pct: fourFactors.opp_e_fg_pct,
-                        tov_pct: fourFactors.opp_tov_pct,
+                        efg_pct: fourFactors['opp_e_fg_pct'] ?? null,
+                        tov_pct: fourFactors['opp_tov_pct'] ?? null,
                         // Calculate opponent ORB% from team DRB%
                         orb_pct:
-                          fourFactors.drb_pct == null
+                          fourFactors['drb_pct'] == null
                             ? null
-                            : Number(100) - Number(fourFactors.drb_pct),
-                        ft_fga: fourFactors.opp_ft_fga,
+                            : 100 - Number(fourFactors['drb_pct']),
+                        ft_fga: fourFactors['opp_ft_fga'] ?? null,
                       },
                     ]
                   : []

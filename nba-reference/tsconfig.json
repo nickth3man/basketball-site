@@ -1,31 +1,78 @@
 {
   "compilerOptions": {
+    // ============================================
+    // TARGET & MODULE
+    // ============================================
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    // ============================================
+    // STRICT TYPE CHECKING - ALL FLAGS ENABLED
+    // ============================================
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
+    // ============================================
+    // ADDITIONAL STRICT FLAGS (Beyond strict: true)
+    // ============================================
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    // ============================================
+    // UNUSED CODE DETECTION
+    // ============================================
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // ============================================
+    // MODULE & IMPORT BEHAVIOR
+    // ============================================
+    "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    // ============================================
+    // EMIT & OUTPUT
+    // ============================================
+    "noEmit": true,
     "incremental": true,
+    "tsBuildInfoFile": ".next/cache/tsbuildinfo.json",
+    // ============================================
+    // JSX & REACT
+    // ============================================
+    "jsx": "react-jsx",
+    // ============================================
+    // PATH MAPPING
+    // ============================================
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "baseUrl": ".",
+    // ============================================
+    // PERFORMANCE & SAFETY
+    // ============================================
+    "skipLibCheck": true,
+    "allowArbitraryExtensions": false,
+    // ============================================
+    // NEXT.JS SPECIFIC
+    // ============================================
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "allowJs": false
   },
   "include": [
     "next-env.d.ts",

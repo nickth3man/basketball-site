@@ -1,60 +1,66 @@
 # NBA-REFERENCE KNOWLEDGE BASE
 
-**Generated:** 2026-03-03 01:50:35 EST
-**Commit:** 969b9c1
-**Branch:** main
-
 ## OVERVIEW
 
-Primary Next.js 16 app package. All daily engineering work (dev, build, test, lint) happens here.
+Next.js App Router frontend for read-only basketball statistics backed by
+SQLite. This directory is the primary implementation surface for features,
+pages, API routes, and query logic.
 
 ## STRUCTURE
 
 ```text
 nba-reference/
-|- src/                    # App routes, components, data layer
-|- docs/                   # Plans and architecture notes
-|- public/                 # Static assets
-|- reference_screenshots/  # Visual parity references
-|- package.json
-|- ARCHITECTURE.md
+├── src/app/                 # Routes, layouts, API endpoints
+├── src/components/          # Shared UI components
+├── src/lib/                 # Data access and query orchestration
+├── vitest.config.ts         # Test configuration
+├── eslint.config.mjs        # Lint rules
+└── AGENTS.md                # This file (mirrors CLAUDE.md)
 ```
 
 ## WHERE TO LOOK
 
-| Task                      | Location          | Notes                                            |
-| ------------------------- | ----------------- | ------------------------------------------------ |
-| Route UI/pages            | `src/app/`        | App Router pages and dynamic routes              |
-| API endpoints             | `src/app/api/`    | Search and export endpoints                      |
-| Shared UI                 | `src/components/` | `StatsTable`, `SearchBox`, `SiteHeader`          |
-| Data access               | `src/lib/`        | DB wrapper, query modules, formatters            |
-| Query architecture intent | `ARCHITECTURE.md` | Includes dependency rules and anti-pattern notes |
+| Task                     | Location                                                 | Notes                                            |
+| ------------------------ | -------------------------------------------------------- | ------------------------------------------------ |
+| New pages/routes         | `src/app/`                                               | Server components by default                     |
+| API handlers             | `src/app/api/**/route.ts`                                | Route tests in sibling `__tests__/`              |
+| Query/data work          | `src/lib/`                                               | See `src/lib/AGENTS.md` for detailed constraints |
+| Shared presentational UI | `src/components/`                                        | Reuse table/header/search patterns               |
+| Type/lint/test behavior  | `tsconfig.json`, `eslint.config.mjs`, `vitest.config.ts` | Strict TS + ESLint enforced                      |
 
 ## CONVENTIONS
 
-- Use `@/*` imports (maps to `src/*`).
-- Vitest tests are matched by `src/**/*.test.{ts,tsx}`.
-- Image allowlist is explicit in `next.config.ts` (`www.basketball-reference.com`).
-- Tailwind CSS v4 + eslint flat config are baseline toolchain assumptions.
+- Layer direction is fixed: Presentation/API -> Application query layer ->
+  Infrastructure DB layer.
+- Pages are server components unless interactivity requires explicit
+  `"use client"`.
+- Dynamic route params in pages are `Promise<{...}>` and must be awaited.
+- Query and DB reads are centralized in `src/lib/`; route/page files should not
+  embed raw SQL.
+- Tests are colocated (`*.test.ts`, `*.test.tsx`) or in route-local `__tests__/`
+  folders.
 
-## ANTI-PATTERNS (PACKAGE)
+## ANTI-PATTERNS (THIS APP)
 
-- Do not run app commands from repo root; use `nba-reference/`.
-- Do not commit runtime artifacts (`.next/`, `coverage/`, WAL files).
-- Do not assume `ARCHITECTURE.md` migration sections are fully completed; validate against current tree.
+- Never write to SQLite at runtime; app is read-only.
+- Never import across layers in reverse direction.
+- Never bypass strict TS rules with loose typing.
 
 ## COMMANDS
 
 ```bash
 npm run dev
-npm run lint
-npm test
-npm run test:watch
 npm run build
-npm start
+npm run test
+npm run type-check
+npm run lint
+npm run ci
 ```
 
 ## NOTES
 
-- `scripts/` currently exists but is empty.
-- DB path fallback is `process.cwd()/nba_raw_data.db`; running commands here aligns with that default.
+- DB path resolution order: `DB_PATH`, then local `nba_raw_data.db` in this
+  directory.
+- Root docs are mirrored (`AGENTS.md` <-> `CLAUDE.md`) via
+  `bash ../scripts/sync-claude-agents.sh` from this directory or
+  `bash scripts/sync-claude-agents.sh` from repo root.

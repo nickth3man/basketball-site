@@ -12,6 +12,7 @@
  * @module @/app/games/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { getRecentGames } from '@/lib/query/home';
 import {
@@ -24,14 +25,14 @@ import {
 } from '@/lib/table-styles';
 
 /**
- * Render the Games page showing recent completed games in a table.
+ * Render the Games page showing a table of recent completed games.
  *
- * Fetches up to 200 recent games and lists each game's date, away/home teams,
- * scores (or "-" when missing), and a link to the game's box score.
+ * Displays up to 200 recent games with date, away/home team abbreviations,
+ * scores (shows `-` when missing), and a link to each game's box score.
  *
  * @returns The Games page JSX element containing the table of recent games
  */
-export default function GamesPage() {
+export default function GamesPage(): React.JSX.Element {
   const games = getRecentGames(200);
 
   return (
@@ -50,15 +51,15 @@ export default function GamesPage() {
             </tr>
           </thead>
           <tbody>
-            {games.map((g, i) => (
-              <tr key={g.game_id} className={i % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
-                <td className={tableCellClass('left')}>{g.game_date}</td>
-                <td className={tableCellClass('left')}>{g.away_abbrev}</td>
-                <td className={tableCellClass('right')}>{g.away_score ?? '-'}</td>
-                <td className={tableCellClass('left')}>{g.home_abbrev}</td>
-                <td className={tableCellClass('right')}>{g.home_score ?? '-'}</td>
+            {games.map((game, gameIndex) => (
+              <tr key={game.game_id} className={gameIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+                <td className={tableCellClass('left')}>{game.game_date}</td>
+                <td className={tableCellClass('left')}>{game.away_abbrev}</td>
+                <td className={tableCellClass('right')}>{game.away_score ?? '-'}</td>
+                <td className={tableCellClass('left')}>{game.home_abbrev}</td>
+                <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/games/${g.game_id}`}>
+                  <Link className={tableLinkClass} href={`/games/${game.game_id}`}>
                     Box
                   </Link>
                 </td>

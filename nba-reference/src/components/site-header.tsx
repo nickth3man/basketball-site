@@ -8,6 +8,7 @@
  * @module @/components/site-header
  */
 
+import type { JSX } from 'react';
 import Link from 'next/link';
 
 /**
@@ -17,7 +18,7 @@ import Link from 'next/link';
  *
  * @returns The header JSX element for the site's global navigation.
  */
-export function SiteHeader() {
+export function SiteHeader(): JSX.Element {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-linear-to-r from-header-start via-header-mid to-header-start text-header-text shadow-header">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">

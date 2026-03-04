@@ -1,54 +1,63 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-03 01:50:35 EST
-**Commit:** 969b9c1
+**Generated:** 2026-03-03T23:52:51Z
+**Commit:** 5ee774e
 **Branch:** main
 
 ## OVERVIEW
-Monorepo shell with one active app package: `nba-reference/` (Next.js App Router + TypeScript + SQLite via `better-sqlite3`).
-Root also stores large DB assets under `db/` (Git LFS expected).
+Basketball stats repository with one runnable app (`nba-reference/`) and one data payload (`db/nba_raw_data.db`).
+Top-level logic is orchestration/documentation; product code lives under `nba-reference/`.
 
 ## STRUCTURE
 ```text
 basketball-site/
-|- db/                     # Raw SQLite asset copy
-|- nba-reference/          # Actual web app and testable code
-|- README.md
+├── nba-reference/      # Next.js app (all feature work)
+├── db/                 # SQLite payload (Git LFS)
+├── scripts/            # Repo maintenance scripts
+├── AGENTS.md           # Root guidance (this file)
+└── CLAUDE.md           # Mirror of AGENTS.md
 ```
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
-|---|---|---|
-| Run app | `nba-reference/package.json` | `npm run dev` from `nba-reference/` |
-| Build/test commands | `nba-reference/package.json` | `build`, `lint`, `test`, `test:watch` |
-| System architecture intent | `nba-reference/ARCHITECTURE.md` | High-level rules; some sections are aspirational |
-| DB source files | `db/`, `nba-reference/nba_raw_data.db` | Two copies exist; app resolves by `DB_PATH` or cwd |
+|------|----------|-------|
+| Build feature/page/API | `nba-reference/src/` | App Router + server components |
+| Query/data logic | `nba-reference/src/lib/` | Layer boundary and DB access |
+| App-level constraints | `nba-reference/AGENTS.md` | Primary contributor guide |
+| Database payload issues | `db/nba_raw_data.db` | Read-only runtime model |
+| Keep docs mirrored | `scripts/sync-claude-agents.sh` | Syncs AGENTS/CLAUDE pairs |
+
+## CODE MAP
+| Symbol | Type | Location | Refs | Role |
+|--------|------|----------|------|------|
+| `getDb` | function | `nba-reference/src/lib/db.ts` | high | Shared DB entry point |
+| `getCachedQueryOne` | function | `nba-reference/src/lib/db.ts` | low | Single-row cached read helper |
+| `getCachedQueryMany` | function | `nba-reference/src/lib/db.ts` | medium | Multi-row cached read helper |
+| `Home` | page component | `nba-reference/src/app/page.tsx` | route | Home route server component |
 
 ## CONVENTIONS
-- Work inside `nba-reference/`; root has no runnable app scripts.
-- TypeScript strict mode is enabled in `nba-reference/tsconfig.json`.
-- Tests use Vitest + jsdom (`nba-reference/vitest.config.ts`, `nba-reference/src/test-setup.ts`).
-- Path alias is `@/*` => `src/*`.
+- All application changes belong in `nba-reference/`; root is coordination and repo metadata.
+- Database file is externalized in `db/` and consumed read-only by app code.
+- `AGENTS.md` and `CLAUDE.md` are mirrored in each directory that has both.
 
 ## ANTI-PATTERNS (THIS PROJECT)
-- Do not assume root `README.md` path descriptions are fully current (`skills/` is referenced but absent).
-- Do not assume a single database file location; respect `DB_PATH` handling in `nba-reference/src/lib/db.ts`.
-- Do not write migration/mutation logic into app data access: DB is opened readonly.
+- Never add runtime database writes to app code.
+- Never invert architecture dependencies (Infrastructure -> Application, Application -> Presentation).
+- Never introduce circular module dependencies across layers.
 
 ## UNIQUE STYLES
-- Repository keeps large SQLite binaries under Git LFS.
-- App package intentionally contains an architecture plan doc (`ARCHITECTURE.md`) alongside source.
+- Strict TypeScript/ESLint setup is enforced in app workspace, not at repo root.
+- Query-heavy design: data access is centralized in `src/lib/`, not in route components.
 
 ## COMMANDS
 ```bash
-cd nba-reference
-npm install
-npm run dev
-npm run lint
-npm test
-npm run build
+# From repo root
+bash scripts/sync-claude-agents.sh
+
+# App pipeline (runs in app workspace)
+npm --prefix nba-reference run ci
 ```
 
 ## NOTES
-- If tests or pages fail with missing DB, verify `nba-reference/nba_raw_data.db` exists or set `DB_PATH`.
-- Treat `nba-reference/` as project root for everyday development tasks.
+- `db/` contains LFS-backed artifacts; missing LFS pull manifests as invalid SQLite file behavior.
+- For DB resolution details and day-to-day app work, continue in `nba-reference/AGENTS.md`.

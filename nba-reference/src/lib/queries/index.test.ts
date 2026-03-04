@@ -27,10 +27,10 @@ import {
   getPlayerGameHighs,
   getPlayerSeasonStats,
   getTeamByAbbrev,
-  getTeamGameBox,
+  getGameTeamBoxScores,
   getTeamRoster,
   getTeamSeasonStats,
-} from './index';
+} from '@/lib/queries';
 
 describe('query helpers', () => {
   /**
@@ -60,8 +60,10 @@ describe('query helpers', () => {
    */
   it('returns team roster rows', () => {
     const team = getTeamByAbbrev('NYK');
-    expect(team).toBeTruthy();
-    const roster = getTeamRoster(team!.team_id);
+    if (team == null) {
+      throw new Error('Expected team to be defined');
+    }
+    const roster = getTeamRoster(team.team_id);
     expect(Array.isArray(roster)).toBe(true);
   });
 
@@ -92,7 +94,9 @@ describe('query helpers', () => {
   it('returns realistic per-100 values', () => {
     const rows = getPlayerPer100Stats('jamesle01', 1);
     expect(rows.length).toBeGreaterThan(0);
-    const pts100 = Number(rows[0].pts_100);
+    const firstRow = rows[0];
+    if (firstRow === undefined) throw new Error('Expected at least one per-100 stats row');
+    const pts100 = Number(firstRow['pts_100']);
     expect(Number.isNaN(pts100)).toBe(false);
     expect(pts100).toBeGreaterThan(5);
     expect(pts100).toBeLessThan(70);
@@ -124,8 +128,10 @@ describe('query helpers', () => {
    */
   it('returns expanded game highs including minutes and shooting', () => {
     const player = getPlayerByBrefId('jamesle01');
-    expect(player).toBeTruthy();
-    const highs = getPlayerGameHighs(player!.player_id) as Record<string, unknown>;
+    if (player == null) {
+      throw new Error('Expected player to be defined');
+    }
+    const highs = getPlayerGameHighs(player.player_id) as Record<string, unknown>;
     expect(Object.prototype.hasOwnProperty.call(highs, 'mp')).toBe(true);
     expect(Object.prototype.hasOwnProperty.call(highs, 'fga')).toBe(true);
     expect(Object.prototype.hasOwnProperty.call(highs, 'plus_minus')).toBe(true);
@@ -138,7 +144,8 @@ describe('query helpers', () => {
   it('returns game box for a known game', () => {
     const game = getGameById('0022300001') ?? getGameById('0022400001');
     expect(game).toBeTruthy();
-    const box = getTeamGameBox(game!.game_id as string);
+    if (game === undefined) throw new Error('Expected game to be defined');
+    const box = getGameTeamBoxScores(game['game_id'] as string);
     expect(Array.isArray(box)).toBe(true);
     expect(box.length).toBeGreaterThan(0);
   });

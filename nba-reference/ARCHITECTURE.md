@@ -25,7 +25,10 @@
 
 ### Project Description
 
-NBA Reference is a Basketball-Reference clone built as a modern web application providing comprehensive basketball statistics, historical team records, and player attributes. The application serves as a read-only interface to a pre-populated SQLite database containing NBA data.
+NBA Reference is a Basketball-Reference clone built as a modern web application
+providing comprehensive basketball statistics, historical team records, and
+player attributes. The application serves as a read-only interface to a
+pre-populated SQLite database containing NBA data.
 
 ### Tech Stack
 
@@ -52,7 +55,8 @@ NBA Reference is a Basketball-Reference clone built as a modern web application 
 
 ### Layered Architecture with Clean Architecture Elements
 
-The application follows a **Layered Architecture** pattern with influences from **Clean Architecture** principles. This ensures:
+The application follows a **Layered Architecture** pattern with influences from
+**Clean Architecture** principles. This ensures:
 
 - **Separation of Concerns:** Each layer has a distinct responsibility
 - **Dependency Inversion:** Inner layers don't depend on outer layers
@@ -154,7 +158,8 @@ nba-reference/
 
 ### Target Structure (Post-Migration)
 
-After the migration, `src/lib/queries.ts` (921 lines) will be split into domain modules:
+After the migration, `src/lib/queries.ts` (921 lines) will be split into domain
+modules:
 
 ```
 src/lib/queries/              # Domain-split query modules
@@ -171,7 +176,8 @@ src/lib/queries/              # Domain-split query modules
 
 ### 4.1 Presentation Layer
 
-**Location:** [`src/app/`](src/app/) (pages), [`src/components/`](src/components/)
+**Location:** [`src/app/`](src/app/) (pages),
+[`src/components/`](src/components/)
 
 **Responsibility:** Render UI and handle user interactions.
 
@@ -193,7 +199,11 @@ src/lib/queries/              # Domain-split query modules
 // src/app/players/[id]/page.tsx
 import { getPlayerByBrefId, getPlayerSeasonStats } from '@/lib/queries';
 
-export default async function PlayerPage({ params }: { params: { id: string } }) {
+export default async function PlayerPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const player = await getPlayerByBrefId(params.id);
   const stats = await getPlayerSeasonStats(params.id);
 
@@ -244,7 +254,8 @@ export async function GET(request: Request) {
 
 ### 4.3 Application Layer
 
-**Location:** [`src/lib/queries/`](src/lib/queries/), [`src/lib/query/`](src/lib/query/)
+**Location:** [`src/lib/queries/`](src/lib/queries/),
+[`src/lib/query/`](src/lib/query/)
 
 **Responsibility:** Encapsulate business logic and data access patterns.
 
@@ -272,9 +283,9 @@ export async function GET(request: Request) {
 import { getDb } from '@/lib/db';
 
 export function getPlayerByBrefId(brefId: string) {
-  return getDb().prepare(`SELECT * FROM dim_player WHERE bref_id = ?`).get(brefId) as
-    | PlayerRecord
-    | undefined;
+  return getDb()
+    .prepare(`SELECT * FROM dim_player WHERE bref_id = ?`)
+    .get(brefId) as PlayerRecord | undefined;
 }
 ```
 
@@ -284,7 +295,8 @@ export function getPlayerByBrefId(brefId: string) {
 
 **Location:** [`src/lib/db.ts`](src/lib/db.ts)
 
-**Responsibility:** Manage database connections, caching, and low-level data access.
+**Responsibility:** Manage database connections, caching, and low-level data
+access.
 
 | Feature               | Description                                     |
 | --------------------- | ----------------------------------------------- |
@@ -307,7 +319,9 @@ export function getCachedQueryMany<T>(sql, params, ttl): T; // Multiple rows wit
 
 ### 4.5 Shared Utilities
 
-**Location:** [`src/lib/formatters.ts`](src/lib/formatters.ts), [`src/lib/utils.ts`](src/lib/utils.ts), [`src/lib/table-styles.ts`](src/lib/table-styles.ts)
+**Location:** [`src/lib/formatters.ts`](src/lib/formatters.ts),
+[`src/lib/utils.ts`](src/lib/utils.ts),
+[`src/lib/table-styles.ts`](src/lib/table-styles.ts)
 
 **Responsibility:** Provide reusable helper functions across layers.
 
@@ -371,7 +385,8 @@ import { getPlayerStats } from './players'; // WRONG - creates cycle!
 
 1. **One-way dependency flow:** Always import from layers below, never above
 2. **Avoid circular imports:** Use type-only imports when needed
-3. **Keep infrastructure pure:** `db.ts` should have no knowledge of domain logic
+3. **Keep infrastructure pure:** `db.ts` should have no knowledge of domain
+   logic
 4. **Use the index hub:** Import from `@/lib/queries` for backward compatibility
 
 ---
@@ -600,7 +615,7 @@ graph LR
 | ------------------- | ---------------------------------- | ------------------------------------ |
 | Query functions     | `get<Entity>[By<Field>][<Action>]` | `getPlayerByBrefId`, `getTeamRoster` |
 | Search functions    | `search<Entities>`                 | `searchEntities`, `searchPlayers`    |
-| Formatter functions | `format<DataType>`                 | `formatPct`, `formatMoney`           |
+| Formatter functions | `format<DataType>`                 | `formatPercentage`, `formatUsd`      |
 | Event handlers      | `handle<Event>`                    | `handleSearch`, `handleSubmit`       |
 | React components    | `<PascalCase>`                     | `SearchBox`, `StatsTable`            |
 
@@ -673,15 +688,15 @@ src/app/api/
 ```typescript
 // src/lib/formatters.test.ts
 import { describe, it, expect } from 'vitest';
-import { formatPct, formatMoney } from './formatters';
+import { formatPercentage, formatUsd } from './formatters';
 
-describe('formatPct', () => {
+describe('formatPercentage', () => {
   it('formats decimal as 3-digit percentage', () => {
-    expect(formatPct(0.456)).toBe('0.456');
+    expect(formatPercentage(0.456)).toBe('0.456');
   });
 
   it('returns dash for null values', () => {
-    expect(formatPct(null)).toBe('-');
+    expect(formatPercentage(null)).toBe('-');
   });
 });
 ```
@@ -724,7 +739,8 @@ npm test -- --coverage
 
 ### Summary of Changes
 
-This architecture documentation reflects the state of the codebase **after** the Phase 5-7 reorganization. Key changes from the original structure:
+This architecture documentation reflects the state of the codebase **after** the
+Phase 5-7 reorganization. Key changes from the original structure:
 
 ### 10.1 Query Module Split
 
@@ -815,7 +831,8 @@ To complete the migration, execute these steps:
 
 4. **Update imports (optional)**
    - Existing imports from `@/lib/queries` continue to work
-   - New code can import directly: `import { getPlayerStats } from '@/lib/queries/players'`
+   - New code can import directly:
+     `import { getPlayerStats } from '@/lib/queries/players'`
 
 5. **Remove original queries.ts**
 
@@ -825,6 +842,7 @@ To complete the migration, execute these steps:
    ```
 
 6. **Update .gitignore and clean tracked files**
+
    ```bash
    git rm -r --cached .next/
    git rm --cached *.db-shm *.db-wal
@@ -862,7 +880,7 @@ import { getHomeStandings } from '@/lib/query/home';
 import { getDb } from '@/lib/db';
 
 // Formatters
-import { formatPct, formatMoney } from '@/lib/formatters';
+import { formatPercentage, formatUsd } from '@/lib/formatters';
 
 // Components
 import { SearchBox } from '@/components/search-box';
@@ -885,4 +903,5 @@ docs/adr/
 
 ---
 
-_This document is maintained as part of the NBA Reference project. For questions or updates, contact the development team._
+_This document is maintained as part of the NBA Reference project. For questions
+or updates, contact the development team._

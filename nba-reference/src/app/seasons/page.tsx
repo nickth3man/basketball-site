@@ -12,8 +12,9 @@
  * @module @/app/seasons/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
-import { getSeasons } from '@/lib/queries';
+import { getSeasonList } from '@/lib/queries';
 import {
   tableCellClass,
   tableClass,
@@ -26,12 +27,12 @@ import {
 /**
  * Render the Seasons directory page listing NBA seasons in a table with links to each season's detail page.
  *
- * Fetches up to 40 seasons and orders them by start year (newest first) before rendering.
+ * Fetches up to 40 seasons and displays them in descending start-year order; each row links to the corresponding season detail page.
  *
- * @returns The JSX element for the Seasons directory page
+ * @returns The Seasons directory page JSX element
  */
-export default function SeasonsPage() {
-  const seasons = getSeasons(40);
+export default function SeasonsPage(): React.JSX.Element {
+  const seasons = getSeasonList(40);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -46,15 +47,18 @@ export default function SeasonsPage() {
             </tr>
           </thead>
           <tbody>
-            {seasons.map((s, i) => (
-              <tr key={s.season_id} className={i % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+            {seasons.map((season, seasonIndex) => (
+              <tr
+                key={season.season_id}
+                className={seasonIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
+              >
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/seasons/${s.season_id}`}>
-                    {s.season_id}
+                  <Link className={tableLinkClass} href={`/seasons/${season.season_id}`}>
+                    {season.season_id}
                   </Link>
                 </td>
-                <td className={tableCellClass('left')}>{s.start_year}</td>
-                <td className={tableCellClass('left')}>{s.end_year}</td>
+                <td className={tableCellClass('left')}>{season.start_year}</td>
+                <td className={tableCellClass('left')}>{season.end_year}</td>
               </tr>
             ))}
           </tbody>

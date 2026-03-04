@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 /**
  * @fileoverview Unit tests for the StatsTable component.
  *
@@ -75,10 +77,12 @@ describe('StatsTable', () => {
    */
   it('exports CSV data through Blob download', () => {
     vi.useFakeTimers();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const createObjectURL = vi.fn((_blob: Blob | MediaSource) => 'blob:mock-url');
     const revokeObjectURL = vi.fn();
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
 
     vi.stubGlobal('URL', {
       createObjectURL,
@@ -104,9 +108,10 @@ describe('StatsTable', () => {
     expect(clickSpy).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(300);
     expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+  });
 
-    clickSpy.mockRestore();
-    vi.unstubAllGlobals();
-    vi.useRealTimers();
+  it('renders safely with no columns', () => {
+    render(<StatsTable columns={[]} rows={rows} />);
+    expect(screen.queryByRole('button', { name: /Export CSV/i })).not.toBeInTheDocument();
   });
 });

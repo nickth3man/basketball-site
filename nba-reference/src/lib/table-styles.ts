@@ -76,24 +76,17 @@ export const tableLinkClass =
  * <th className={tableHeaderCellClass("right")}>PTS</th>
  * ```
  */
-export function tableHeaderCellClass(align?: 'left' | 'right') {
+export function tableHeaderCellClass(align?: 'left' | 'right'): string {
   return cn('border border-line px-2 py-1', align === 'right' ? 'text-right' : 'text-left');
 }
 
 /**
- * Generates body cell classes with optional right alignment.
+ * Generate a class string for a table body cell with optional right alignment.
  *
- * Right-aligned cells use `tabular-nums` for consistent number alignment.
- * Uses softer border color for visual hierarchy.
- *
- * @param align - Text alignment direction ("left" or "right")
- * @returns Combined class string with border, padding, and alignment
- * @example
- * ```tsx
- * <td className={tableCellClass("right")}>{player.pts}</td>
- * ```
+ * @param align - If `"right"`, adds right-alignment and `tabular-nums` for numeric alignment; otherwise left-aligns
+ * @returns The combined Tailwind CSS class string including border, padding, and alignment classes
  */
-export function tableCellClass(align?: 'left' | 'right') {
+export function tableCellClass(align?: 'left' | 'right'): string {
   return cn(
     'border border-line-soft px-2 py-1',
     align === 'right' ? 'text-right tabular-nums' : 'text-left'

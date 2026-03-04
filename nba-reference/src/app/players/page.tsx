@@ -11,6 +11,7 @@
  * @module @/app/players/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { getPlayerDirectory } from '@/lib/query/directory';
 import {
@@ -23,13 +24,14 @@ import {
 } from '@/lib/table-styles';
 
 /**
- * Render the players directory page.
+ * Renders the players directory page.
  *
- * Fetches up to 400 players and displays them in a simple HTML table with columns for Player, Pos, and Status.
+ * Displays up to 400 players in a table with columns for Player, Pos, and Status.
+ * Player names link to `/players/{bref_id}`. Position shows `-` when absent. Status shows `Active` when `is_active === 1`, otherwise `Retired`.
  *
  * @returns The page JSX containing the players table
  */
-export default function PlayersPage() {
+export default function PlayersPage(): React.JSX.Element {
   const players = getPlayerDirectory(400);
 
   return (
@@ -45,15 +47,20 @@ export default function PlayersPage() {
             </tr>
           </thead>
           <tbody>
-            {players.map((p, i) => (
-              <tr key={p.bref_id} className={i % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+            {players.map((player, playerIndex) => (
+              <tr
+                key={player.bref_id}
+                className={playerIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
+              >
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/players/${p.bref_id}`}>
-                    {p.full_name}
+                  <Link className={tableLinkClass} href={`/players/${player.bref_id}`}>
+                    {player.full_name}
                   </Link>
                 </td>
-                <td className={tableCellClass('left')}>{p.position ?? '-'}</td>
-                <td className={tableCellClass('left')}>{p.is_active ? 'Active' : 'Retired'}</td>
+                <td className={tableCellClass('left')}>{player.position ?? '-'}</td>
+                <td className={tableCellClass('left')}>
+                  {player.is_active === 1 ? 'Active' : 'Retired'}
+                </td>
               </tr>
             ))}
           </tbody>

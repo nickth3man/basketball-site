@@ -10,50 +10,55 @@
 
 'use client';
 
+import type { JSX } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 /**
  * Represents a single search result item.
  */
-type SearchResult = {
+interface SearchResult {
   /** Entity type: "player" or "team" */
   type: 'player' | 'team';
   /** Entity ID (player bref_id or team abbreviation) */
   id: string;
   /** Display name for the result */
   label: string;
-};
+}
 
 /**
- * Search box component with debounced API calls.
+ * Search input component that queries players and teams and displays a debounced, cancellable results dropdown.
  *
- * Features:
- * - Debounced search (200ms delay) to reduce API calls
- * - AbortController for canceling outdated requests
- * - Minimum 2-character query threshold
- * - Dropdown results with player/team type badges
- * - Direct links to entity pages
+ * Displays a dropdown of matching players and teams when the trimmed query has at least 2 characters. Requests are debounced (200ms) and in-flight fetches are cancelled via AbortController when the query changes or the component unmounts.
  *
- * State Management:
- * - `q`: Current input value
- * - `results`: Fetched search results
- * - `showResults`: Whether to display dropdown (true when q >= 2 chars and results exist)
- *
- * @returns React component for the search box
- * @example
- * ```tsx
- * <SearchBox />
- * ```
+ * @returns A JSX element rendering the search box and a results dropdown linking to player or team pages
  */
-export function SearchBox() {
-  const [q, setQ] = useState('');
+export function SearchBox(): JSX.Element {
+  const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
-  const showResults = q.trim().length >= 2 && results.length > 0;
+  const showResults = query.trim().length >= 2 && results.length > 0;
+
+  // Debounced search function
+  const debouncedSearch = useCallback(async (searchQuery: string, signal: AbortSignal) => {
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
+        signal,
+      });
+      if (!res.ok) {
+        setResults([]);
+        return;
+      }
+      const data = (await res.json()) as { results: SearchResult[] | undefined };
+      setResults(data.results ?? []);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setResults([]);
+    }
+  }, []);
 
   useEffect(() => {
     // Don't search for very short queries
-    if (q.trim().length < 2) {
+    if (query.trim().length < 2) {
       return;
     }
 
@@ -61,13 +66,8 @@ export function SearchBox() {
     const controller = new AbortController();
 
     // Debounce: wait 200ms after user stops typing
-    const timer = setTimeout(async () => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
-        signal: controller.signal,
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as { results: SearchResult[] };
-      setResults(data.results ?? []);
+    const timer = setTimeout(() => {
+      void debouncedSearch(query, controller.signal);
     }, 200);
 
     // Cleanup: cancel timer and abort fetch on unmount or query change
@@ -75,14 +75,16 @@ export function SearchBox() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q]);
+  }, [query, debouncedSearch]);
 
   return (
     <div className="relative">
       {/* Search input with focus states */}
       <input
-        value={q}
-        onChange={e => setQ(e.target.value)}
+        value={query}
+        onChange={event => {
+          setQuery(event.target.value);
+        }}
         placeholder="Search players or teams"
         className="w-full rounded border border-line bg-white px-3 py-2 text-sm text-ink shadow-input transition-all duration-200 placeholder:text-placeholder focus:border-focus-border focus:ring-2 focus:ring-focus-ring focus:outline-none"
       />
@@ -90,15 +92,15 @@ export function SearchBox() {
       {/* Results dropdown - only shown when we have results */}
       {showResults ? (
         <div className="absolute z-20 mt-1 w-full fade-slide-in overflow-hidden rounded border border-line bg-white shadow-popover">
-          {results.map(r => (
+          {results.map(result => (
             <Link
-              key={`${r.type}-${r.id}`}
-              href={r.type === 'player' ? `/players/${r.id}` : `/teams/${r.id}`}
+              key={`${result.type}-${result.id}`}
+              href={result.type === 'player' ? `/players/${result.id}` : `/teams/${result.id}`}
               className="block border-b border-dropdown-line px-3 py-2 text-sm transition-colors duration-150 last:border-b-0 hover:bg-paper-soft"
             >
               {/* Type badge (player/team) */}
-              <span className="mr-2 text-xs text-label uppercase">{r.type}</span>
-              {r.label}
+              <span className="mr-2 text-xs text-label uppercase">{result.type}</span>
+              {result.label}
             </Link>
           ))}
         </div>

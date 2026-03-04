@@ -13,11 +13,11 @@
  * @module @/app/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { SearchBox } from '@/components/search-box';
 import { StatsTable } from '@/components/stats-table';
-import { getLatestSeasonId } from '@/lib/db';
-import { getHomeStandings, getRecentGames } from '@/lib/query/home';
+import { getHomeSeasonId, getHomeStandings, getRecentGames } from '@/lib/query/home';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -29,14 +29,14 @@ import {
 } from '@/lib/table-styles';
 
 /**
- * Render the homepage showing the current season standings and recent games.
+ * Renders the homepage displaying the current season standings, search/export controls, and a list of recent games.
  *
- * Fetches the latest season ID, the top 30 team standings, and the 12 most recent completed games, then renders the page header, search/export controls, a standings table, and a recent games table.
+ * The page includes a header with the season ID, a searchable export control row, a standings table, and a recent games table with links to box scores. Games with missing scores render a '-' in the score cells.
  *
  * @returns The homepage JSX element containing header text, controls, a standings StatsTable, and a recent games table with box score links.
  */
-export default function Home() {
-  const seasonId = getLatestSeasonId();
+export default function Home(): React.JSX.Element {
+  const seasonId = getHomeSeasonId();
   const standings = getHomeStandings(30);
   const games = getRecentGames(12);
 
@@ -46,15 +46,12 @@ export default function Home() {
       <h1 className="mb-1 fade-slide-in text-3xl font-bold text-heading">
         Basketball Stats and History
       </h1>
-      <p className="mb-5 fade-slide-in text-sm text-muted" style={{ animationDelay: '80ms' }}>
+      <p className="mb-5 fade-slide-in text-sm text-muted [animation-delay:80ms]">
         Season {seasonId} standings, scores, and player/team lookup.
       </p>
 
       {/* Search and export controls */}
-      <div
-        className="mb-6 grid fade-slide-in gap-3 md:grid-cols-[2fr_1fr]"
-        style={{ animationDelay: '140ms' }}
-      >
+      <div className="mb-6 grid fade-slide-in gap-3 [animation-delay:140ms] md:grid-cols-[2fr_1fr]">
         <SearchBox />
         <div className="flex items-center gap-2 text-sm">
           <Link
@@ -73,7 +70,7 @@ export default function Home() {
       </div>
 
       {/* Standings section */}
-      <section className="mb-8 fade-slide-in panel-paper p-3" style={{ animationDelay: '200ms' }}>
+      <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">
         <h2 className="mb-2 text-xl font-bold text-heading">{seasonId} NBA Standings</h2>
         <StatsTable
           columns={[
@@ -89,29 +86,29 @@ export default function Home() {
       </section>
 
       {/* Recent games section */}
-      <section className="fade-slide-in panel-paper p-3" style={{ animationDelay: '260ms' }}>
+      <section className="fade-slide-in panel-paper p-3 [animation-delay:260ms]">
         <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
         <div className={tableContainerClass}>
           <table className={tableClass}>
             <thead>
               <tr className={tableHeadRowClass}>
-                {['Date', 'Away', 'Away PTS', 'Home', 'Home PTS', 'Box Score'].map(h => (
-                  <th key={h} className={tableHeaderCellClass('left')}>
-                    {h}
+                {['Date', 'Away', 'Away PTS', 'Home', 'Home PTS', 'Box Score'].map(header => (
+                  <th key={header} className={tableHeaderCellClass('left')}>
+                    {header}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {games.map(g => (
-                <tr key={g.game_id} className={tableBodyRowClass}>
-                  <td className={tableCellClass('left')}>{g.game_date}</td>
-                  <td className={tableCellClass('left')}>{g.away_abbrev}</td>
-                  <td className={tableCellClass('right')}>{g.away_score ?? '-'}</td>
-                  <td className={tableCellClass('left')}>{g.home_abbrev}</td>
-                  <td className={tableCellClass('right')}>{g.home_score ?? '-'}</td>
+              {games.map(game => (
+                <tr key={game.game_id} className={tableBodyRowClass}>
+                  <td className={tableCellClass('left')}>{game.game_date}</td>
+                  <td className={tableCellClass('left')}>{game.away_abbrev}</td>
+                  <td className={tableCellClass('right')}>{game.away_score ?? '-'}</td>
+                  <td className={tableCellClass('left')}>{game.home_abbrev}</td>
+                  <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
                   <td className={tableCellClass('left')}>
-                    <Link className={tableLinkClass} href={`/games/${g.game_id}`}>
+                    <Link className={tableLinkClass} href={`/games/${game.game_id}`}>
                       Box Score
                     </Link>
                   </td>

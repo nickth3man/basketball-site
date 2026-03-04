@@ -21,7 +21,9 @@ import { getDb } from '@/lib/db';
  * @param limit - Maximum number of seasons to return (default: 30)
  * @returns Array of season records with ID and year range, ordered by start year (newest first)
  */
-export function getSeasons(limit = 30): { season_id: string; start_year: number; end_year: number }[] {
+export function getSeasonList(
+  limit = 30
+): Array<{ season_id: string; start_year: number; end_year: number }> {
   return getDb()
     .prepare(
       `SELECT season_id, start_year, end_year
@@ -29,7 +31,7 @@ export function getSeasons(limit = 30): { season_id: string; start_year: number;
        ORDER BY start_year DESC
        LIMIT ?`
     )
-    .all(limit) as { season_id: string; start_year: number; end_year: number }[];
+    .all(limit) as Array<{ season_id: string; start_year: number; end_year: number }>;
 }
 
 /**
@@ -40,7 +42,9 @@ export function getSeasons(limit = 30): { season_id: string; start_year: number;
  * @param seasonId - Season identifier (for example, "2024-25")
  * @returns An array of records for each team containing: `bref_abbrev` (team abbreviation), `w` (wins), `l` (losses), `srs` (Simple Rating System), `o_rtg` (offensive rating), `d_rtg` (defensive rating), `n_rtg` (net rating), and `pace`. Numeric fields may be `null`.
  */
-export function getSeasonStandings(seasonId: string): Record<string, string | number | null>[] {
+export function getSeasonStandings(
+  seasonId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT bref_abbrev, w, l, srs, o_rtg, d_rtg, n_rtg, pace
@@ -48,7 +52,7 @@ export function getSeasonStandings(seasonId: string): Record<string, string | nu
        WHERE season_id = ?
        ORDER BY w DESC, l ASC`
     )
-    .all(seasonId) as Record<string, string | number | null>[];
+    .all(seasonId) as Array<Record<string, string | number | null>>;
 }
 
 /**
@@ -60,53 +64,57 @@ export function getSeasonStandings(seasonId: string): Record<string, string | nu
  * @param limit - Maximum number of leaders to return (default: 25)
  * @returns Array of records with fields: `bref_id` (player Basketball-Reference id), `full_name`, `team` (team abbreviation), `g` (games played), `pts` (total points), `pts_pg` (points per game, rounded to one decimal)
  */
-export function getSeasonScoringLeaders(seasonId: string, limit = 25): Record<string, string | number | null>[] {
+export function getSeasonScoringLeaders(
+  seasonId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
-      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT t.abbreviation) as team,
-              COUNT(*) as g,
-              SUM(pgl.pts) as pts,
-              ROUND(1.0 * SUM(pgl.pts) / COUNT(*), 1) as pts_pg
-       FROM player_game_log pgl
-       JOIN fact_game fg ON fg.game_id = pgl.game_id
-       JOIN dim_player p ON p.player_id = pgl.player_id
-       JOIN dim_team t ON t.team_id = pgl.team_id
-       WHERE fg.season_id = ?
-       GROUP BY p.player_id
-       HAVING COUNT(*) >= 10  -- Minimum games threshold (total across all teams)
+      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT fpss.team_abbrev) as team,
+              SUM(fpss.g) as g,
+              SUM(fpss.pts) as pts,
+              ROUND(1.0 * SUM(fpss.pts) / SUM(fpss.g), 1) as pts_pg
+       FROM fact_player_season_stats fpss
+       JOIN dim_player p ON p.bref_id = fpss.bref_player_id
+       WHERE fpss.season_id = ?
+         AND fpss.team_abbrev NOT LIKE '%TM'
+       GROUP BY p.bref_id, p.full_name
+       HAVING SUM(fpss.g) >= 10
        ORDER BY pts_pg DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
 /**
- * Retrieves the top rebounding leaders for a season.
+ * Get the season's top rebound leaders ordered by rebounds per game.
  *
- * Returns players who played at least 10 games in the season, ordered by rebounds per game.
+ * Includes only players who played at least 10 games in the season and excludes placeholder team entries (team abbreviations ending with "TM").
  *
- * @param seasonId - Season ID (e.g., "2024-25")
- * @param limit - Maximum number of leaders to return
- * @returns Array of records with `bref_id`, `full_name`, `team`, `g` (games), `reb` (total rebounds), and `reb_pg` (rebounds per game)
+ * @param seasonId - Season identifier (e.g., "2024-25")
+ * @param limit - Maximum number of leaders to return (default: 25)
+ * @returns Array of records with `bref_id`, `full_name`, `team` (comma-separated team abbreviations), `g` (total games), `reb` (total rebounds), and `reb_pg` (rebounds per game, rounded to one decimal)
  */
-export function getSeasonReboundLeaders(seasonId: string, limit = 25): Record<string, string | number | null>[] {
+export function getSeasonReboundLeaders(
+  seasonId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
-      `SELECT p.bref_id, p.full_name, t.abbreviation as team,
-              COUNT(*) as g,
-              SUM(pgl.reb) as reb,
-              ROUND(1.0 * SUM(pgl.reb) / COUNT(*), 1) as reb_pg
-       FROM player_game_log pgl
-       JOIN fact_game fg ON fg.game_id = pgl.game_id
-       JOIN dim_player p ON p.player_id = pgl.player_id
-       JOIN dim_team t ON t.team_id = pgl.team_id
-       WHERE fg.season_id = ?
-       GROUP BY p.player_id, t.abbreviation
-       HAVING COUNT(*) >= 10  -- Minimum games threshold
+      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT fpss.team_abbrev) as team,
+              SUM(fpss.g) as g,
+              SUM(fpss.reb) as reb,
+              ROUND(1.0 * SUM(fpss.reb) / SUM(fpss.g), 1) as reb_pg
+       FROM fact_player_season_stats fpss
+       JOIN dim_player p ON p.bref_id = fpss.bref_player_id
+       WHERE fpss.season_id = ?
+         AND fpss.team_abbrev NOT LIKE '%TM'
+       GROUP BY p.bref_id, p.full_name
+       HAVING SUM(fpss.g) >= 10
        ORDER BY reb_pg DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
 /**
@@ -124,24 +132,26 @@ export function getSeasonReboundLeaders(seasonId: string, limit = 25): Record<st
  *  - `ast`: Total assists (integer)
  *  - `ast_pg`: Assists per game rounded to one decimal place (number)
  */
-export function getSeasonAssistLeaders(seasonId: string, limit = 25): Record<string, string | number | null>[] {
+export function getSeasonAssistLeaders(
+  seasonId: string,
+  limit = 25
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
-      `SELECT p.bref_id, p.full_name, t.abbreviation as team,
-              COUNT(*) as g,
-              SUM(pgl.ast) as ast,
-              ROUND(1.0 * SUM(pgl.ast) / COUNT(*), 1) as ast_pg
-       FROM player_game_log pgl
-       JOIN fact_game fg ON fg.game_id = pgl.game_id
-       JOIN dim_player p ON p.player_id = pgl.player_id
-       JOIN dim_team t ON t.team_id = pgl.team_id
-       WHERE fg.season_id = ?
-       GROUP BY p.player_id, t.abbreviation
-       HAVING COUNT(*) >= 10  -- Minimum games threshold
+      `SELECT p.bref_id, p.full_name, GROUP_CONCAT(DISTINCT fpss.team_abbrev) as team,
+              SUM(fpss.g) as g,
+              SUM(fpss.ast) as ast,
+              ROUND(1.0 * SUM(fpss.ast) / SUM(fpss.g), 1) as ast_pg
+       FROM fact_player_season_stats fpss
+       JOIN dim_player p ON p.bref_id = fpss.bref_player_id
+       WHERE fpss.season_id = ?
+         AND fpss.team_abbrev NOT LIKE '%TM'
+       GROUP BY p.bref_id, p.full_name
+       HAVING SUM(fpss.g) >= 10
        ORDER BY ast_pg DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }
 
 /**
@@ -167,7 +177,8 @@ export function getSeasonLeagueSummary(seasonId: string): Record<string, number 
               ROUND(AVG(CASE WHEN (fga + 0.44 * fta) > 0 THEN 1.0 * pts / (2 * (fga + 0.44 * fta)) END), 3) AS ts_pct
        FROM team_game_log tgl
        JOIN fact_game fg ON fg.game_id = tgl.game_id
-       WHERE fg.season_id = ?`
+       WHERE fg.season_id = ?
+         AND fg.season_type = 'Regular Season'`
     )
     .get(seasonId) as Record<string, number | null>;
 }
@@ -181,7 +192,10 @@ export function getSeasonLeagueSummary(seasonId: string): Record<string, number 
  * @param limit - Maximum number of games to return (default: 50)
  * @returns Array of game records, ordered by date (newest first)
  */
-export function getSeasonRecentGames(seasonId: string, limit = 50): Record<string, string | number | null>[] {
+export function getSeasonRecentGames(
+  seasonId: string,
+  limit = 50
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT g.game_id, g.game_date,
@@ -198,5 +212,5 @@ export function getSeasonRecentGames(seasonId: string, limit = 50): Record<strin
        ORDER BY g.game_date DESC
        LIMIT ?`
     )
-    .all(seasonId, limit) as Record<string, string | number | null>[];
+    .all(seasonId, limit) as Array<Record<string, string | number | null>>;
 }

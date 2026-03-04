@@ -16,13 +16,14 @@ import { getCachedQueryMany } from '@/lib/db';
  * Represents a search result entity.
  */
 export interface SearchEntityResult {
+  [key: string]: string | number | null;
   /** Entity type: "player" or "team" */
   type: 'player' | 'team';
   /** Entity ID (player bref_id or team abbreviation) */
   id: string;
   /** Display label (full name) */
   label: string;
-};
+}
 
 /**
  * Find players and teams whose names or abbreviations partially match the query.
@@ -35,25 +36,25 @@ export interface SearchEntityResult {
 export function searchEntities(query: string): SearchEntityResult[] {
   const normalized = query.trim().toLowerCase();
   if (normalized.length < 2) return [];
-  const q = `%${normalized}%`;
+  const likeQuery = `%${normalized}%`;
 
   // Search players by name (cached for 5s)
-  const players = getCachedQueryMany<{ type: 'player'; id: string; label: string }[]>(
+  const players = getCachedQueryMany<Array<{ type: 'player'; id: string; label: string }>>(
     `SELECT 'player' as type, bref_id as id, full_name as label
      FROM dim_player
      WHERE bref_id IS NOT NULL AND LOWER(full_name) LIKE ?
      LIMIT 10`,
-    [q],
+    [likeQuery],
     5_000
   );
 
   // Search teams by name or abbreviation (cached for 5s)
-  const teams = getCachedQueryMany<{ type: 'team'; id: string; label: string }[]>(
+  const teams = getCachedQueryMany<Array<{ type: 'team'; id: string; label: string }>>(
     `SELECT 'team' as type, abbreviation as id, full_name as label
      FROM dim_team
      WHERE LOWER(full_name) LIKE ? OR LOWER(abbreviation) LIKE ?
      LIMIT 10`,
-    [q, q],
+    [likeQuery, likeQuery],
     5_000
   );
 

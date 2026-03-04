@@ -5,10 +5,16 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
+    environment: 'node',
     setupFiles: ['src/test-setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
-    globals: true,
+    globals: false,
+    clearMocks: true,
+    restoreMocks: true,
+    unstubGlobals: true,
+    // Run test files sequentially to prevent concurrent SQLite WAL access
+    // errors (disk I/O error) when multiple workers open the same DB file.
+    fileParallelism: false,
   },
   resolve: {
     alias: {

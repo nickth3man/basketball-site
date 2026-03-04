@@ -22,7 +22,7 @@ import { getDb } from '@/lib/db';
  * @param gameId - Game identifier (e.g., "0022400001")
  * @returns A record containing game fields (date, season type, status, home/away scores) and home/away team names and abbreviations, or `undefined` if not found
  */
-export function getGameById(gameId: string) {
+export function getGameById(gameId: string): Record<string, string | number | null> | undefined {
   return getDb()
     .prepare(
       `SELECT g.game_id, g.game_date, g.season_type, g.status,
@@ -47,7 +47,10 @@ export function getGameById(gameId: string) {
  * @param limit - Maximum number of events to return (default: 40)
  * @returns An array of play-by-play records, each containing `period`, `pc_time_string`, `home_description`, `visitor_description`, and `score`
  */
-export function getGamePbpEvents(gameId: string, limit = 40) {
+export function getGamePbpEvents(
+  gameId: string,
+  limit = 40
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT period, pc_time_string, home_description, visitor_description, score
@@ -70,7 +73,9 @@ export function getGamePbpEvents(gameId: string, limit = 40) {
  * @param gameId - Unique identifier of the game to query
  * @returns An array of player box score records matching the game, or an empty array if no records exist
  */
-export function getGamePlayerBox(gameId: string) {
+export function getGamePlayerBoxScore(
+  gameId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT t.abbreviation as team,
@@ -115,7 +120,9 @@ export function getGamePlayerBox(gameId: string) {
  * @returns Array of records with keys: `team`, `bref_id`, `full_name`, `minutes_played`,
  * `efg_pct`, `ts_pct`, `tov_pct`, and `game_score`
  */
-export function getGamePlayerAdvancedBox(gameId: string) {
+export function getGamePlayerAdvancedBoxScore(
+  gameId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT t.abbreviation as team,
@@ -169,7 +176,14 @@ export function getGamePlayerAdvancedBox(gameId: string) {
  * - `ft_fga`: free throws made per field goal attempt (number | null)
  * - `drb_pct`: defensive rebounding percentage (number | null)
  */
-export function getGameTeamFourFactors(gameId: string) {
+export function getGameTeamFourFactors(gameId: string): Array<{
+  team: string | number | null;
+  efg_pct: number | null;
+  tov_pct: number | null;
+  orb_pct: number | null;
+  ft_fga: number | null;
+  drb_pct: number | null;
+}> {
   const rows = getDb()
     .prepare(
       `SELECT t.abbreviation as team,
@@ -192,33 +206,51 @@ export function getGameTeamFourFactors(gameId: string) {
     )
     .all(gameId) as Array<Record<string, number | string | null>>;
 
-  return rows.map(r => {
-    const fgm = Number(r.fgm ?? 0);
-    const fga = Number(r.fga ?? 0);
-    const fg3m = Number(r.fg3m ?? 0);
-    const ftm = Number(r.ftm ?? 0);
-    const fta = Number(r.fta ?? 0);
-    const oreb = Number(r.oreb ?? 0);
-    const dreb = Number(r.dreb ?? 0);
-    const tov = Number(r.tov ?? 0);
-    const oppOreb = Number(r.opp_oreb ?? 0);
-    const oppDreb = Number(r.opp_dreb ?? 0);
+  return rows.map(row => {
+    const fieldGoalsMade = Number(row['fgm'] ?? 0);
+    const fieldGoalsAttempted = Number(row['fga'] ?? 0);
+    const threePointersMade = Number(row['fg3m'] ?? 0);
+    const freeThrowsMade = Number(row['ftm'] ?? 0);
+    const freeThrowsAttempted = Number(row['fta'] ?? 0);
+    const offensiveRebounds = Number(row['oreb'] ?? 0);
+    const defensiveRebounds = Number(row['dreb'] ?? 0);
+    const turnovers = Number(row['tov'] ?? 0);
+    const opponentOffensiveRebounds = Number(row['opp_oreb'] ?? 0);
+    const opponentDefensiveRebounds = Number(row['opp_dreb'] ?? 0);
 
     // Estimated possessions for TOV% calculation
-    const possessions = fga + 0.44 * fta + tov;
+    const possessions = fieldGoalsAttempted + 0.44 * freeThrowsAttempted + turnovers;
 
     return {
-      team: r.team,
+      team: row['team'] ?? null,
       // eFG%: Accounts for 3P being worth 1.5x a 2P
-      efg_pct: fga > 0 ? Number(((fgm + 0.5 * fg3m) / fga).toFixed(3)) : null,
+      efg_pct:
+        fieldGoalsAttempted > 0
+          ? Number(((fieldGoalsMade + 0.5 * threePointersMade) / fieldGoalsAttempted).toFixed(3))
+          : null,
       // TOV%: Percentage of possessions ending in turnover
-      tov_pct: possessions > 0 ? Number(((100 * tov) / possessions).toFixed(1)) : null,
+      tov_pct: possessions > 0 ? Number(((100 * turnovers) / possessions).toFixed(1)) : null,
       // ORB%: Percentage of available offensive rebounds grabbed
-      orb_pct: oreb + oppDreb > 0 ? Number(((100 * oreb) / (oreb + oppDreb)).toFixed(1)) : null,
+      orb_pct:
+        offensiveRebounds + opponentDefensiveRebounds > 0
+          ? Number(
+              ((100 * offensiveRebounds) / (offensiveRebounds + opponentDefensiveRebounds)).toFixed(
+                1
+              )
+            )
+          : null,
       // FT/FGA: Free throws made per field goal attempt
-      ft_fga: fga > 0 ? Number((ftm / fga).toFixed(3)) : null,
+      ft_fga:
+        fieldGoalsAttempted > 0 ? Number((freeThrowsMade / fieldGoalsAttempted).toFixed(3)) : null,
       // DRB%: Percentage of available defensive rebounds grabbed
-      drb_pct: dreb + oppOreb > 0 ? Number(((100 * dreb) / (dreb + oppOreb)).toFixed(1)) : null,
+      drb_pct:
+        defensiveRebounds + opponentOffensiveRebounds > 0
+          ? Number(
+              ((100 * defensiveRebounds) / (defensiveRebounds + opponentOffensiveRebounds)).toFixed(
+                1
+              )
+            )
+          : null,
     };
   });
 }
@@ -231,7 +263,9 @@ export function getGameTeamFourFactors(gameId: string) {
  * @param gameId - The game identifier used to fetch play-by-play score entries
  * @returns Array of objects with `period` (period number), `away` (away team points in that period), and `home` (home team points in that period)
  */
-export function getGameLineScore(gameId: string) {
+export function getGameLineScore(
+  gameId: string
+): Array<{ period: number; away: number; home: number }> {
   const rows = getDb()
     .prepare(
       `SELECT period, score
@@ -261,7 +295,9 @@ export function getGameLineScore(gameId: string) {
   let prevAway = 0;
   let prevHome = 0;
 
-  const sortedPeriods = Array.from(periodEndTotals.entries()).sort((a, b) => a[0] - b[0]);
+  const sortedPeriods = Array.from(periodEndTotals.entries()).sort(
+    ([leftPeriod], [rightPeriod]) => leftPeriod - rightPeriod
+  );
 
   for (const [period, { away, home }] of sortedPeriods) {
     result.push({
@@ -282,7 +318,9 @@ export function getGameLineScore(gameId: string) {
  * @param gameId - Game ID
  * @returns Array of team box score records (typically 2: home and away)
  */
-export function getTeamGameBox(gameId: string) {
+export function getGameTeamBoxScores(
+  gameId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT t.abbreviation as team, tgl.fgm, tgl.fga, tgl.fg3m, tgl.fg3a,

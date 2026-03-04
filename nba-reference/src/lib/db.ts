@@ -21,12 +21,12 @@ let db: Database.Database | null = null;
  * Cache entry structure for query results.
  * Uses expiration timestamp for TTL-based invalidation.
  */
-type CacheEntry = {
+interface CacheEntry {
   /** Unix timestamp (ms) when this entry expires */
   expiresAt: number;
   /** Cached query result value */
   value: unknown;
-};
+}
 
 /** Maximum number of cached query results to prevent unbounded memory growth */
 const MAX_QUERY_CACHE_SIZE = 500;
@@ -34,13 +34,13 @@ const MAX_QUERY_CACHE_SIZE = 500;
 /**
  * Runtime options for statement-level cache patching.
  */
-type PreparePatchOptions = {
+interface PreparePatchOptions {
   /**
    * Whether the database connection is read-only.
    * Statement-level caching is disabled when false to avoid stale reads after mutations.
    */
   readonly: boolean;
-};
+}
 
 /**
  * In-memory cache for query results.
@@ -105,7 +105,7 @@ function evictLeastRecentlyUsedEntryIfNeeded(): void {
     return;
   }
   // Evict the oldest entry (first inserted / least recently used due to re-insertion on access)
-  const firstKey = queryResultCache.keys().next().value as string | undefined;
+  const firstKey = queryResultCache.keys().next().value;
   if (firstKey !== undefined) {
     queryResultCache.delete(firstKey);
   }
@@ -150,7 +150,7 @@ function writeCachedResult<T>(key: string, value: T, ttlMs: number): T {
 function stripLeadingSqlComments(sql: string): string {
   let remaining = sql;
 
-  while (true) {
+  for (;;) {
     const trimmedStart = remaining.trimStart();
     remaining = trimmedStart;
 
@@ -261,13 +261,13 @@ function patchPrepareWithCache(database: Database.Database, options: PreparePatc
  * @returns The database file path; when `DB_PATH` is unset, an absolute path to `nba_raw_data.db`
  */
 function dbPath(): string {
-  const envPath = process.env.DB_PATH;
-  if (envPath) return envPath;
+  const envPath = process.env['DB_PATH'];
+  if (envPath !== undefined && envPath.trim().length > 0) return envPath;
   return path.join(process.cwd(), 'nba_raw_data.db');
 }
 
 /**
- * Get the singleton database instance, initializing it on first access and configuring it for read-only use with WAL, foreign keys, and automatic query caching.
+ * Get the singleton read-only SQLite Database configured with WAL journaling, foreign key enforcement, and automatic query caching.
  *
  * @returns The singleton Database instance configured for read-only access, WAL journaling, foreign key enforcement, and automatic query caching.
  */
@@ -276,9 +276,6 @@ export function getDb(): Database.Database {
     const readonly = true;
     db = new Database(dbPath(), { readonly });
     patchPrepareWithCache(db, { readonly });
-    if (!readonly) {
-      db.pragma('journal_mode = WAL');
-    }
     db.pragma('foreign_keys = ON');
   }
 
@@ -326,16 +323,24 @@ export function getCachedQueryMany<T>(sql: string, params: unknown[], ttlMs = 30
 }
 
 /**
- * Get the most recent season ID from the database.
+ * Retrieve the most recent season ID from the database.
  *
- * Falls back to "2025-26" when the seasons table is empty or no row is found.
+ * If the seasons table is empty or no row is found, returns a fallback season ID computed from the current date assuming an NBA season starts in October (format `YYYY-YY`, e.g., `2025-26`).
  *
- * @returns The latest season ID (e.g., "2024-25"); `"2025-26"` if none found.
+ * @returns The latest season ID (e.g., `2024-25`) or a computed fallback in `YYYY-YY` format when no row exists.
  */
 export function getLatestSeasonId(): string {
   const row = getDb()
     .prepare('SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT 1')
     .get() as { season_id: string } | undefined;
 
-  return row?.season_id ?? '2025-26';
+  if (row !== undefined && row.season_id.length > 0) {
+    return row.season_id;
+  }
+
+  // Calculate current NBA season dynamically (NBA season: Oct-June)
+  // Use the year of October (start of season)
+  const now = new Date();
+  const year = now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${year}-${(year + 1).toString().slice(-2)}`;
 }

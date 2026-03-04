@@ -12,6 +12,7 @@
  * @module @/app/seasons/[year]/page
  */
 
+import type React from 'react';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
 import {
@@ -32,7 +33,11 @@ import { notFound } from 'next/navigation';
  * @param params - Promise resolving to route parameters containing the `year` string
  * @returns The season detail page JSX element
  */
-export default async function SeasonPage({ params }: { params: Promise<{ year: string }> }) {
+export default async function SeasonPage({
+  params,
+}: {
+  params: Promise<{ year: string }>;
+}): Promise<React.JSX.Element> {
   const { year } = await params;
 
   // Primary standings lookup - 404 if no data (invalid season)
@@ -59,19 +64,19 @@ export default async function SeasonPage({ params }: { params: Promise<{ year: s
         <h2 className="mb-2 text-lg font-bold">League Summary</h2>
         <div className="grid gap-2 sm:grid-cols-5">
           <div>
-            PPG: <span className="font-bold tabular-nums">{leagueSummary.ppg ?? '-'}</span>
+            PPG: <span className="font-bold tabular-nums">{leagueSummary['ppg'] ?? '-'}</span>
           </div>
           <div>
-            RPG: <span className="font-bold tabular-nums">{leagueSummary.rpg ?? '-'}</span>
+            RPG: <span className="font-bold tabular-nums">{leagueSummary['rpg'] ?? '-'}</span>
           </div>
           <div>
-            APG: <span className="font-bold tabular-nums">{leagueSummary.apg ?? '-'}</span>
+            APG: <span className="font-bold tabular-nums">{leagueSummary['apg'] ?? '-'}</span>
           </div>
           <div>
-            eFG%: <span className="font-bold tabular-nums">{leagueSummary.efg_pct ?? '-'}</span>
+            eFG%: <span className="font-bold tabular-nums">{leagueSummary['efg_pct'] ?? '-'}</span>
           </div>
           <div>
-            TS%: <span className="font-bold tabular-nums">{leagueSummary.ts_pct ?? '-'}</span>
+            TS%: <span className="font-bold tabular-nums">{leagueSummary['ts_pct'] ?? '-'}</span>
           </div>
         </div>
       </section>

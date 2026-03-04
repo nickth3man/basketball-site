@@ -21,53 +21,50 @@
  * @returns Formatted percentage string (e.g., "0.452") or "-"
  * @example
  * ```ts
- * formatPct(0.452)   // "0.452"
- * formatPct("0.452") // "0.452"
- * formatPct(null)    // "-"
- * formatPct(NaN)     // "-"
+ * formatPercentage(0.452)   // "0.452"
+ * formatPercentage("0.452") // "0.452"
+ * formatPercentage(null)    // "-"
+ * formatPercentage(NaN)     // "-"
  * ```
  */
-export function formatPct(value: string | number | null | undefined) {
-  if (value == null) return '-';
-  const n = Number(value);
-  if (Number.isNaN(n)) return '-';
-  return n.toFixed(3);
+function toFiniteNumber(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
+export function formatPercentage(value: string | number | null | undefined): string {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue == null) return '-';
+  return numericValue.toFixed(3);
+}
+
+const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
 /**
- * Format a numeric value as US dollar currency with no fractional digits.
+ * Formats a numeric value as US dollar currency with no fractional digits.
  *
  * @param value - Numeric value or numeric string representing an amount
  * @returns The formatted currency string (e.g., "$45,000,000"), or "-" for null, undefined, or NaN
  */
-export function formatMoney(value: string | number | null | undefined) {
-  if (value == null) return '-';
-  const n = Number(value);
-  if (Number.isNaN(n)) return '-';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(n);
+export function formatUsd(value: string | number | null | undefined): string {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue == null) return '-';
+  return usdFormatter.format(numericValue);
 }
 
 /**
- * Formats a number with explicit + sign for positive values.
+ * Format a number with an explicit "+" prefix for positive values.
  *
- * Used for stats like plus/minus (+/-) where the sign is significant.
- * Returns "-" for null or undefined values.
- *
- * @param value - Numeric value to format
- * @returns Signed string (e.g., "+5" or "-3") or "-"
- * @example
- * ```ts
- * formatSignedNumber(5)   // "+5"
- * formatSignedNumber(-3)  // "-3"
- * formatSignedNumber(0)   // "0"
- * formatSignedNumber(null) // "-"
- * ```
+ * @param value - The number to format
+ * @returns A string with a leading `"+"` for values greater than zero, the numeric string for zero or negative values (e.g., `"-3"` or `"0"`), or `"-"` when `value` is `null` or `undefined`
  */
-export function formatSignedNumber(value: number | null | undefined) {
+export function formatSignedNumber(value: number | null | undefined): string {
   if (value == null) return '-';
   return value > 0 ? `+${value}` : String(value);
 }

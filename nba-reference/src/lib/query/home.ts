@@ -14,9 +14,35 @@
 import { getCachedQueryMany, getCachedQueryOne, getLatestSeasonId } from '@/lib/db';
 
 /**
+ * Determines the most recent season that contains team data.
+ *
+ * If no season with team data exists in fact_team_season, falls back to the overall latest season id.
+ *
+ * @returns The `season_id` of the most recent season containing team data.
+ */
+function getLatestSeasonWithTeamData(): string {
+  const latestWithTeamData = getCachedQueryOne<{ season_id: string } | undefined>(
+    'SELECT season_id FROM fact_team_season ORDER BY season_id DESC LIMIT 1',
+    [],
+    60_000
+  );
+  return latestWithTeamData?.season_id ?? getLatestSeasonId();
+}
+
+/**
+ * Get the latest season_id that has team data.
+ *
+ * @returns The `season_id` for the most recent season containing team data
+ */
+export function getHomeSeasonId(): string {
+  return getLatestSeasonWithTeamData();
+}
+
+/**
  * Represents a team standing row for the homepage table.
  */
 export interface TeamStandingRow {
+  [key: string]: string | number | null;
   /** Season ID (e.g., "2024-25") */
   season_id: string;
   /** Team abbreviation */
@@ -29,12 +55,13 @@ export interface TeamStandingRow {
   n_rtg: number | null;
   /** Possessions per 48 minutes */
   pace: number | null;
-};
+}
 
 /**
  * Represents a recent game row for the homepage table.
  */
 export interface RecentGameRow {
+  [key: string]: string | number | null;
   /** Game ID */
   game_id: string;
   /** Game date (YYYY-MM-DD format) */
@@ -47,31 +74,18 @@ export interface RecentGameRow {
   home_score: number | null;
   /** Away team final score (null if not completed) */
   away_score: number | null;
-};
+}
 
 /**
- * Retrieves team standings for the most recent season with team data.
+ * Retrieve team standings for the most recent season that has team data.
  *
- * First queries for the latest season with team season data, then
- * fetches standings for that season. Falls back to getLatestSeasonId()
- * if no team data exists.
- *
- * Cache TTL: 60s for season detection, 20s for standings data.
+ * Returns up to `limit` team standing records for that season, ordered by wins (descending) then losses (ascending).
  *
  * @param limit - Maximum number of teams to return (default: 15)
- * @returns Array of team standing records, sorted by wins
- * @example
- * ```ts
- * const standings = getHomeStandings(30); // Top 30 teams
- * ```
+ * @returns An array of team standing records ordered by wins descending then losses ascending
  */
 export function getHomeStandings(limit = 15): TeamStandingRow[] {
-  const latestWithTeamData = getCachedQueryOne<{ season_id: string } | undefined>(
-    'SELECT season_id FROM fact_team_season ORDER BY season_id DESC LIMIT 1',
-    [],
-    60_000
-  );
-  const seasonId = latestWithTeamData?.season_id ?? getLatestSeasonId();
+  const seasonId = getLatestSeasonWithTeamData();
 
   return getCachedQueryMany<TeamStandingRow[]>(
     `SELECT season_id, bref_abbrev, w, l, n_rtg, pace

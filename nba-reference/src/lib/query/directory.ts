@@ -15,7 +15,7 @@ import { getCachedQueryMany } from '@/lib/db';
 /**
  * Represents a player in the directory listing.
  */
-export type PlayerDirectoryRow = {
+export interface PlayerDirectoryRow {
   /** Basketball-Reference player ID */
   bref_id: string;
   /** Player's full name */
@@ -24,12 +24,12 @@ export type PlayerDirectoryRow = {
   position: string | null;
   /** 1 if active, 0 if retired */
   is_active: number;
-};
+}
 
 /**
  * Represents a team in the directory listing.
  */
-export type TeamDirectoryRow = {
+export interface TeamDirectoryRow {
   /** Team abbreviation */
   abbreviation: string;
   /** Team's full name (City + Nickname) */
@@ -38,7 +38,7 @@ export type TeamDirectoryRow = {
   conference: string | null;
   /** Division name */
   division: string | null;
-};
+}
 
 /**
  * Retrieves a paginated list of players for the directory.
