@@ -12,6 +12,9 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     unstubGlobals: true,
+    // Run test files sequentially to prevent concurrent SQLite WAL access
+    // errors (disk I/O error) when multiple workers open the same DB file.
+    fileParallelism: false,
   },
   resolve: {
     alias: {
