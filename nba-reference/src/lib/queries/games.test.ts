@@ -6,7 +6,7 @@ import {
   getGameTeamFourFactors,
   getGameLineScore,
   getGameTeamBoxScores,
-} from './games';
+} from '@/lib/queries/games';
 
 describe('game queries', () => {
   const TEST_GAME_ID = '0022401228';

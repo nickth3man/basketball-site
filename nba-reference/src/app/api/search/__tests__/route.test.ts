@@ -12,7 +12,7 @@ vi.mock('@/middleware/rate-limit', () => ({
 
 import { searchEntities } from '@/lib/query/search';
 import { checkRateLimit } from '@/middleware/rate-limit';
-import { GET } from '../route';
+import { GET } from '@/app/api/search/route';
 
 interface SearchResponse {
   results: Array<{ type: 'player' | 'team'; id: string; label: string }>;

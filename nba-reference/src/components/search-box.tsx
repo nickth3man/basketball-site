@@ -44,12 +44,15 @@ export function SearchBox(): JSX.Element {
       const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
         signal,
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        setResults([]);
+        return;
+      }
       const data = (await res.json()) as { results: SearchResult[] | undefined };
       setResults(data.results ?? []);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
-      throw error;
+      setResults([]);
     }
   }, []);
 

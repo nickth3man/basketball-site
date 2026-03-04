@@ -8,7 +8,7 @@ import {
   getPlayerAdvancedSeasonStats,
   getPlayerCareerSummary,
   getPlayerCareerTotals,
-} from './players';
+} from '@/lib/queries/players';
 
 describe('player queries', () => {
   const TEST_PLAYER_ID = 'jamesle01';

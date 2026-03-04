@@ -39,12 +39,13 @@ function cleanupOldEntries(): void {
   }
 }
 
-// Schedule periodic cleanup - store handle to allow graceful shutdown
-const cleanupIntervalId = setInterval(cleanupOldEntries, CLEANUP_INTERVAL_MS);
+// Track last cleanup time for opportunistic cleanup (avoids persistent timer)
+let lastCleanupTime = 0;
 
-/** Stops the periodic cleanup timer. Call during graceful shutdown. */
-export function stopRateLimitCleanup(): void {
-  clearInterval(cleanupIntervalId);
+function maybeCleanup(now: number): void {
+  if (now - lastCleanupTime < CLEANUP_INTERVAL_MS) return;
+  lastCleanupTime = now;
+  cleanupOldEntries();
 }
 
 /**
@@ -63,6 +64,7 @@ export function checkRateLimit(req: NextRequest): NextResponse | null {
   const ip = forwardedFor?.split(',')[0]?.trim() ?? realIp ?? 'unknown';
 
   const now = Date.now();
+  maybeCleanup(now);
   const windowStart = now - WINDOW_MS;
 
   const entry = rateLimitStore.get(ip) ?? { timestamps: [] };
@@ -70,17 +72,20 @@ export function checkRateLimit(req: NextRequest): NextResponse | null {
 
   if (recentRequests.length >= RATE_LIMIT) {
     const oldestRequest = recentRequests[0] ?? now;
+    const resetEpochSec = Math.ceil((oldestRequest + WINDOW_MS) / 1000);
+    const retryAfterSec = Math.max(0, resetEpochSec - Math.ceil(now / 1000));
     return NextResponse.json(
       {
         error: 'Too many requests',
-        message: `Rate limit exceeded. Try again in ${Math.ceil(WINDOW_MS / 1000)} seconds.`,
+        message: `Rate limit exceeded. Try again in ${retryAfterSec} seconds.`,
       },
       {
         status: 429,
         headers: {
           'X-RateLimit-Limit': String(RATE_LIMIT),
           'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(Math.ceil((oldestRequest + WINDOW_MS) / 1000)),
+          'X-RateLimit-Reset': String(resetEpochSec),
+          'Retry-After': String(retryAfterSec),
         },
       }
     );

@@ -7,6 +7,29 @@
 import { getDb } from '@/lib/db';
 
 /**
+ * Shape of a player profile record returned from the database.
+ */
+export interface PlayerProfile {
+  player_id: string;
+  bref_id: string;
+  full_name: string;
+  first_name: string;
+  last_name: string;
+  position: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  birth_date: string | null;
+  birth_city: string | null;
+  birth_country: string | null;
+  college: string | null;
+  draft_year: number | null;
+  draft_round: number | null;
+  draft_number: number | null;
+  is_active: number;
+  hof: number;
+}
+
+/**
  * Fetches a player's profile by Basketball-Reference ID.
  *
  * If the stored position is null or empty, uses the most recent non-empty position from the player's season stats.
@@ -21,27 +44,7 @@ import { getDb } from '@/lib/db';
  *   console.log(player.position);  // "SF"
  * }
  */
-export function getPlayerByBrefId(brefId: string):
-  | {
-      player_id: string;
-      bref_id: string;
-      full_name: string;
-      first_name: string;
-      last_name: string;
-      position: string | null;
-      height_cm: number | null;
-      weight_kg: number | null;
-      birth_date: string | null;
-      birth_city: string | null;
-      birth_country: string | null;
-      college: string | null;
-      draft_year: number | null;
-      draft_round: number | null;
-      draft_number: number | null;
-      is_active: number;
-      hof: number;
-    }
-  | undefined {
+export function getPlayerByBrefId(brefId: string): PlayerProfile | undefined {
   return getDb()
     .prepare(
       `SELECT player_id, bref_id, full_name, first_name, last_name,
@@ -63,25 +66,5 @@ export function getPlayerByBrefId(brefId: string):
        FROM dim_player
        WHERE bref_id = ?`
     )
-    .get(brefId) as
-    | {
-        player_id: string;
-        bref_id: string;
-        full_name: string;
-        first_name: string;
-        last_name: string;
-        position: string | null;
-        height_cm: number | null;
-        weight_kg: number | null;
-        birth_date: string | null;
-        birth_city: string | null;
-        birth_country: string | null;
-        college: string | null;
-        draft_year: number | null;
-        draft_round: number | null;
-        draft_number: number | null;
-        is_active: number;
-        hof: number;
-      }
-    | undefined;
+    .get(brefId) as PlayerProfile | undefined;
 }

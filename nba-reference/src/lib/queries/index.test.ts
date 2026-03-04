@@ -30,7 +30,7 @@ import {
   getGameTeamBoxScores,
   getTeamRoster,
   getTeamSeasonStats,
-} from './index';
+} from '@/lib/queries';
 
 describe('query helpers', () => {
   /**

@@ -18,7 +18,7 @@ vi.mock('@/middleware/rate-limit', () => ({
 import { getHomeStandings, getRecentGames } from '@/lib/query/home';
 import { searchEntities } from '@/lib/query/search';
 import { checkRateLimit } from '@/middleware/rate-limit';
-import { GET } from '../route';
+import { GET } from '@/app/api/export/[type]/route';
 
 const getHomeStandingsMock = vi.mocked(getHomeStandings);
 const getRecentGamesMock = vi.mocked(getRecentGames);

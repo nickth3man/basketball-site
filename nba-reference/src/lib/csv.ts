@@ -64,6 +64,7 @@ export function convertRowsToCsv(rows: DbRows): string {
  * @returns A CSV string whose first line is the header built from `columns` labels and whose subsequent lines are the rows' fields in the specified order; fields are CSV-quoted and escaped as necessary.
  */
 export function convertRowsToCsvWithColumns(rows: DbRows, columns: CsvColumn[]): string {
+  if (columns.length === 0) return '';
   const headerLine = columns.map(column => quoteCsvValue(column.label)).join(',');
   const lines = rows.map(row => columns.map(column => quoteCsvValue(row[column.key])).join(','));
   return [headerLine, ...lines].join('\n');

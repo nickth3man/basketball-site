@@ -7,7 +7,7 @@ import {
   getSeasonAssistLeaders,
   getSeasonLeagueSummary,
   getSeasonRecentGames,
-} from './seasons';
+} from '@/lib/queries/seasons';
 
 describe('season queries', () => {
   const TEST_SEASON_ID = '2024-25';
