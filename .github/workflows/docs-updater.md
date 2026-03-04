@@ -1,7 +1,7 @@
 ---
 on:
   push:
-    branches: [dev]
+    branches: [dev,main]
 permissions:
   contents: read
   pull-requests: read
