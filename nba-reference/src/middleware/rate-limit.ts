@@ -43,18 +43,14 @@ function cleanupOldEntries(): void {
 setInterval(cleanupOldEntries, CLEANUP_INTERVAL_MS);
 
 /**
- * Rate limiting check for API requests.
+ * Enforces per-IP rate limiting for an incoming request and returns a 429 response when the limit is exceeded.
  *
- * Tracks requests per IP address and returns 429 Too Many Requests
- * if the limit is exceeded within the time window.
+ * Extracts the client IP from the `x-forwarded-for` header (first value) or `x-real-ip`. If the IP has made
+ * at least the configured number of requests within the time window, a 429 `NextResponse` is returned containing
+ * an error message and `X-RateLimit-*` headers; otherwise the request is recorded and the function returns `null`.
  *
- * @param req - Next.js request object
- * @returns NextResponse with 429 status if rate limited, null if allowed
- *
- * @example
- * const rateLimitResponse = checkRateLimit(req);
- * if (rateLimitResponse) return rateLimitResponse;
- * // Continue with normal request handling
+ * @param req - Next.js request object (client IP is derived from `x-forwarded-for` or `x-real-ip`)
+ * @returns `NextResponse` with status 429 and rate-limit headers when the IP is over the limit, `null` otherwise
  */
 export function checkRateLimit(req: NextRequest): NextResponse | null {
   const forwardedFor = req.headers.get('x-forwarded-for');
@@ -92,10 +88,10 @@ export function checkRateLimit(req: NextRequest): NextResponse | null {
 }
 
 /**
- * Get current rate limit status for an IP.
+ * Retrieve the remaining request count and reset timestamp for the given client IP.
  *
- * @param ip - Client IP address
- * @returns Object with remaining requests and reset time
+ * @param ip - Client IP address to query
+ * @returns The current rate limit status: `remaining` is requests left in the current window, `reset` is the epoch milliseconds when the window will reset
  */
 export function getRateLimitStatus(ip: string): { remaining: number; reset: number } {
   const now = Date.now();

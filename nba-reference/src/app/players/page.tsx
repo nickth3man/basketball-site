@@ -24,9 +24,10 @@ import {
 } from '@/lib/table-styles';
 
 /**
- * Render the players directory page.
+ * Renders the players directory page.
  *
- * Fetches up to 400 players and displays them in a simple HTML table with columns for Player, Pos, and Status.
+ * Displays up to 400 players in a table with columns for Player, Pos, and Status.
+ * Player names link to `/players/{bref_id}`. Position shows `-` when absent. Status shows `Active` when `is_active === 1`, otherwise `Retired`.
  *
  * @returns The page JSX containing the players table
  */

@@ -25,10 +25,10 @@ import {
 } from '@/lib/table-styles';
 
 /**
- * Render the Games page showing recent completed games in a table.
+ * Render the Games page showing a table of recent completed games.
  *
- * Fetches up to 200 recent games and lists each game's date, away/home teams,
- * scores (or "-" when missing), and a link to the game's box score.
+ * Displays up to 200 recent games with date, away/home team abbreviations,
+ * scores (shows `-` when missing), and a link to each game's box score.
  *
  * @returns The Games page JSX element containing the table of recent games
  */

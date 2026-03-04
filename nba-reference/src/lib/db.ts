@@ -267,7 +267,7 @@ function dbPath(): string {
 }
 
 /**
- * Get the singleton database instance, initializing it on first access and configuring it for read-only use with WAL, foreign keys, and automatic query caching.
+ * Get the singleton read-only SQLite Database configured with WAL journaling, foreign key enforcement, and automatic query caching.
  *
  * @returns The singleton Database instance configured for read-only access, WAL journaling, foreign key enforcement, and automatic query caching.
  */
@@ -323,11 +323,11 @@ export function getCachedQueryMany<T>(sql: string, params: unknown[], ttlMs = 30
 }
 
 /**
- * Get the most recent season ID from the database.
+ * Retrieve the most recent season ID from the database.
  *
- * Falls back to "2025-26" when the seasons table is empty or no row is found.
+ * If the seasons table is empty or no row is found, returns a fallback season ID computed from the current date assuming an NBA season starts in October (format `YYYY-YY`, e.g., `2025-26`).
  *
- * @returns The latest season ID (e.g., "2024-25"); `"2025-26"` if none found.
+ * @returns The latest season ID (e.g., `2024-25`) or a computed fallback in `YYYY-YY` format when no row exists.
  */
 export function getLatestSeasonId(): string {
   const row = getDb()

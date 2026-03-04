@@ -109,10 +109,10 @@ export function getTeamRoster(teamId: string): Array<Record<string, string | num
 }
 
 /**
- * Retrieve the current roster for a team including per-game season statistics.
+ * Retrieves the team's current roster with per-game season statistics.
  *
  * @param teamId - Internal team identifier
- * @returns An array of roster records; each record contains player identifiers and profile fields (`bref_id`, `full_name`, `position`, `height_cm`, `weight_kg`, `birth_date`), season games played (`g`), and per-game averages (`pts_pg`, `reb_pg`, `ast_pg`) which are numbers or `null` when not available
+ * @returns An array of roster records. Each record includes player identifiers and profile fields (`bref_id`, `full_name`, `position`, `height_cm`, `weight_kg`, `birth_date`), season games played (`g`), and per-game averages (`pts_pg`, `reb_pg`, `ast_pg`) as numbers or `null` when not available
  */
 export function getTeamRosterWithStats(
   teamId: string
@@ -153,18 +153,12 @@ export function getTeamRosterWithStats(
 }
 
 /**
- * Retrieves Four Factors comparison for the team's most recent season.
+ * Retrieve team and opponent Four Factors for the team's most recent season.
  *
- * The Four Factors are key metrics for team success:
- * - eFG%: Effective Field Goal% (accounts for 3P value)
- * - TOV%: Turnover Rate (possessions ending in TO)
- * - ORB%: Offensive Rebound% (possessions extended)
- * - FT/FGA: Free Throw Rate (getting to the line)
- *
- * Returns both team and opponent values for comparison.
+ * Four Factors include effective field goal percentage, turnover rate, offensive rebound percentage, and free-throw rate; this returns those metrics and the opponent counterparts for the latest season row.
  *
  * @param teamAbbrev - Team abbreviation (e.g., "LAL")
- * @returns Four factors record or undefined
+ * @returns A record containing `season_id` and Four Factors fields (team and opponent) or `undefined` if no season data is found
  */
 export function getTeamFourFactorsComparison(
   teamAbbrev: string
@@ -214,13 +208,11 @@ export function getTeamSeasonStats(
 }
 
 /**
- * Finds the previous and next seasons relative to a given season.
- *
- * Used for season navigation links on team detail pages.
+ * Determine the previous and next season IDs for a team relative to a given season.
  *
  * @param teamAbbrev - Team abbreviation (e.g., "LAL")
  * @param seasonId - Season ID to find neighbors for (e.g., "2024-25")
- * @returns Object with prev/next season IDs or null
+ * @returns An object with `prev` set to the previous season ID or `null`, and `next` set to the next season ID or `null`
  */
 export function getTeamSeasonNeighbors(
   teamAbbrev: string,
@@ -374,13 +366,13 @@ export function getTeamPerGameAverages(teamId: string): Record<string, number | 
 }
 
 /**
- * Get the team's top scoring leaders for the most recent season in which the team has game data.
+ * Retrieves the team's top scoring leaders for the most recent season with game data.
  *
- * Players must have played at least 10 games; results are ordered by points per game and limited by `limit`.
+ * Players must have played at least 10 games; results are ordered by points per game and limited to `limit`.
  *
  * @param teamId - Internal team identifier used to filter player game logs
  * @param limit - Maximum number of leaders to return (default: 8)
- * @returns Array of leader records with fields: `bref_id`, `full_name`, `g`, `pts`, `reb`, `ast`, `pts_pg`, `reb_pg`, `ast_pg`
+ * @returns An array of leader records with fields: `bref_id`, `full_name`, `g`, `pts`, `reb`, `ast`, `pts_pg`, `reb_pg`, `ast_pg`
  */
 export function getTeamPlayerLeaders(
   teamId: string,
