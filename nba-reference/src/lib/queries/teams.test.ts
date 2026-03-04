@@ -40,7 +40,9 @@ describe('team queries', () => {
 
     it('returns stats with required fields', () => {
       const stats = getTeamSeasonStats(TEST_TEAM_ABBREV);
+      expect(stats.length).toBeGreaterThan(0);
       const first = stats[0];
+      if (first === undefined) throw new Error('Expected non-empty stats array');
       expect(first).toHaveProperty('season_id');
       expect(first).toHaveProperty('w');
       expect(first).toHaveProperty('l');

@@ -54,6 +54,7 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
   const [sortKey, setSortKey] = useState<string>(initialSort ?? columns[0]?.key ?? '');
   const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingUrlRef = useRef<string | null>(null);
 
   /**
    * Sorted rows based on current sort key and direction.
@@ -138,13 +139,17 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
     document.body.removeChild(link);
 
     // Clean up blob URL after download starts
-    // Clear previous timer if exists
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    // Clear previous timer and revoke any pending URL
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (pendingUrlRef.current !== null) {
+      URL.revokeObjectURL(pendingUrlRef.current);
+      pendingUrlRef.current = null;
     }
 
+    pendingUrlRef.current = downloadUrl;
     timeoutRef.current = setTimeout(() => {
       URL.revokeObjectURL(downloadUrl);
+      pendingUrlRef.current = null;
       timeoutRef.current = null;
     }, 250);
   };
@@ -154,6 +159,10 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+      }
+      if (pendingUrlRef.current !== null) {
+        URL.revokeObjectURL(pendingUrlRef.current);
+        pendingUrlRef.current = null;
       }
     };
   }, []);

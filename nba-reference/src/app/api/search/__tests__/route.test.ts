@@ -68,7 +68,7 @@ describe('GET /api/search', () => {
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
 
-  it('returns empty results for exact 2-character boundary after trimming', async () => {
+  it('returns empty results for trimmed input below 2-character boundary', async () => {
     const request = createSearchRequest('  a  ');
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;

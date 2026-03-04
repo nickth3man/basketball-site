@@ -5,7 +5,7 @@ import { Component } from 'react';
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
+  fallback?: ReactNode | ((error: Error) => ReactNode);
 }
 
 interface State {
@@ -40,8 +40,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override render(): ReactNode {
     if (this.state.hasError) {
+      const { fallback } = this.props;
+      const { error } = this.state;
+      if (typeof fallback === 'function' && error) {
+        return fallback(error);
+      }
+      const nodeFallback = typeof fallback !== 'function' ? fallback : undefined;
       return (
-        this.props.fallback ?? (
+        nodeFallback ?? (
           <div className="mx-auto max-w-2xl p-6 text-center">
             <h2 className="mb-4 text-xl font-bold text-red-600">Something went wrong</h2>
             <p className="mb-4 text-gray-600">

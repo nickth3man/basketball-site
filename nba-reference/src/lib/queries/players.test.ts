@@ -109,7 +109,7 @@ describe('player queries', () => {
       expect(Array.isArray(stats)).toBe(true);
     });
 
-    it('includes advanced metrics', () => {
+    it('includes advanced metrics when available', () => {
       const stats = getPlayerAdvancedSeasonStats(TEST_PLAYER_ID, 1);
       if (stats.length > 0) {
         const first = stats[0];

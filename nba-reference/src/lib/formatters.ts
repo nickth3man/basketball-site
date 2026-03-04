@@ -27,10 +27,16 @@
  * formatPercentage(NaN)     // "-"
  * ```
  */
-export function formatPercentage(value: string | number | null | undefined): string {
-  if (value == null) return '-';
+function toFiniteNumber(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
   const numericValue = Number(value);
-  if (Number.isNaN(numericValue)) return '-';
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+export function formatPercentage(value: string | number | null | undefined): string {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue == null) return '-';
   return numericValue.toFixed(3);
 }
 
@@ -47,9 +53,8 @@ const usdFormatter = new Intl.NumberFormat('en-US', {
  * @returns The formatted currency string (e.g., "$45,000,000"), or "-" for null, undefined, or NaN
  */
 export function formatUsd(value: string | number | null | undefined): string {
-  if (value == null) return '-';
-  const numericValue = Number(value);
-  if (Number.isNaN(numericValue)) return '-';
+  const numericValue = toFiniteNumber(value);
+  if (numericValue == null) return '-';
   return usdFormatter.format(numericValue);
 }
 
