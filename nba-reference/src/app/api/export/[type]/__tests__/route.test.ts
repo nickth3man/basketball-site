@@ -141,4 +141,38 @@ describe('GET /api/export/[type]', () => {
     expect(response.status).toBe(429);
     expect(getHomeStandingsMock).not.toHaveBeenCalled();
   });
+
+  it('returns games data', async () => {
+    const request = createExportRequest('/api/export/games');
+    const params = Promise.resolve({ type: 'games' });
+    const response = await GET(request, { params });
+
+    expect(response.status).toBe(200);
+    expect(getRecentGamesMock).toHaveBeenCalledWith(100);
+
+    const csvBody = await response.text();
+    expect(csvBody).toContain('game_id,game_date,home_abbrev,away_abbrev,home_score,away_score');
+    expect(csvBody).toContain('"0022400001","2025-01-01","LAL","BOS","110","105"');
+  });
+
+  it('handles empty search query', async () => {
+    searchEntitiesMock.mockReturnValue([]);
+
+    const request = createExportRequest('/api/export/search?q=');
+    const params = Promise.resolve({ type: 'search' });
+    const response = await GET(request, { params });
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith('');
+    expect(response.status).toBe(200);
+  });
+
+  it('does not use gzip for small payloads', async () => {
+    const request = createExportRequest('/api/export/standings', 'gzip');
+    const params = Promise.resolve({ type: 'standings' });
+    const response = await GET(request, { params });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Encoding')).toBeNull();
+    expect(response.headers.get('Vary')).toBeNull();
+  });
 });

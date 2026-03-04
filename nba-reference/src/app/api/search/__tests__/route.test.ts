@@ -66,4 +66,38 @@ describe('GET /api/search', () => {
     expect(payload.error).toBe('Too many requests');
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
+
+  it('returns empty results when query parameter is missing', async () => {
+    const request = new NextRequest('http://localhost/api/search');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+
+    expect(payload.results).toEqual([]);
+    expect(searchEntitiesMock).not.toHaveBeenCalled();
+  });
+
+  it('returns search results for exactly 2 character query', async () => {
+    const expectedResults: SearchResponse['results'] = [
+      { type: 'team', id: 'LAL', label: 'Los Angeles Lakers' },
+    ];
+    searchEntitiesMock.mockReturnValue(expectedResults);
+
+    const request = createSearchRequest('LA');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith('LA');
+    expect(payload.results).toEqual(expectedResults);
+  });
+
+  it('returns empty results array when no entities match', async () => {
+    searchEntitiesMock.mockReturnValue([]);
+
+    const request = createSearchRequest('xyz123');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith('xyz123');
+    expect(payload.results).toEqual([]);
+  });
 });
