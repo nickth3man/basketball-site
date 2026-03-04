@@ -7,18 +7,10 @@
 import { getDb } from '@/lib/db';
 
 /**
- * Retrieves career summary statistics for a player.
- *
- * Aggregates totals across all seasons and calculates per-game averages
- * and shooting percentages.
+ * Get career summary statistics for a player across all seasons.
  *
  * @param brefId - Basketball-Reference player ID
- * @returns Career totals and averages record
- *
- * @example
- * const career = getPlayerCareerSummary('jamesle01');
- * console.log(career.g);       // Total games played
- * console.log(career.pts_pg);  // Career points per game average
+ * @returns Record mapping stat names to numbers or `null`: `g`, `pts`, `reb`, `ast`, `pts_pg`, `reb_pg`, `ast_pg`, `fg_pct`, `fg3_pct`, `ft_pct`
  */
 export function getPlayerCareerSummary(brefId: string): Record<string, number | null> {
   return getDb()

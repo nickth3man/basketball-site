@@ -46,12 +46,12 @@ import { notFound } from 'next/navigation';
 import { validateBrefId } from '@/lib/validation';
 
 /**
- * Render the player detail page showing a comprehensive dashboard of a player's biography, season and per-game statistics, shooting and advanced metrics, play-by-play derived stats, game log, awards, salary history, career summary, and game highs.
+ * Render a server-side player detail page presenting biography, seasonal and advanced statistics, shooting breakdowns, play-by-play metrics, game logs, awards, salary history, a career summary, and career game highs.
  *
- * Triggers a 404 (via notFound) when the requested player cannot be found.
+ * Triggers a 404 via `notFound()` when the requested player cannot be found.
  *
- * @param params - Promise resolving to route params containing the player's bref `id`
- * @returns The rendered player detail page JSX
+ * @param params - Promise resolving to route params containing the player's Basketball-Reference `id`
+ * @returns The player detail page JSX element
  */
 export default async function PlayerPage({
   params,

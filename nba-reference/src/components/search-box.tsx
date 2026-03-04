@@ -27,25 +27,11 @@ interface SearchResult {
 }
 
 /**
- * Search box component with debounced API calls.
+ * Search input component that queries players and teams and displays a debounced, cancellable results dropdown.
  *
- * Features:
- * - Debounced search (200ms delay) to reduce API calls
- * - AbortController for canceling outdated requests
- * - Minimum 2-character query threshold
- * - Dropdown results with player/team type badges
- * - Direct links to entity pages
+ * Displays a dropdown of matching players and teams when the trimmed query has at least 2 characters. Requests are debounced (200ms) and in-flight fetches are cancelled via AbortController when the query changes or the component unmounts.
  *
- * State Management:
- * - `query`: Current input value
- * - `results`: Fetched search results
- * - `showResults`: Whether to display dropdown (true when query >= 2 chars and results exist)
- *
- * @returns React component for the search box
- * @example
- * ```tsx
- * <SearchBox />
- * ```
+ * @returns A JSX element rendering the search box and a results dropdown linking to player or team pages
  */
 export function SearchBox(): JSX.Element {
   const [query, setQuery] = useState('');

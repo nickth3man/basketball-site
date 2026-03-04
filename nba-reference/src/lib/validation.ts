@@ -30,16 +30,12 @@ export function validateBrefId(id: string): string {
 }
 
 /**
- * Validates a team abbreviation.
+ * Validates an NBA team abbreviation.
  *
- * NBA team abbreviations are exactly 3 uppercase letters.
- * Examples: "LAL", "BOS", "NYK"
+ * The abbreviation must be exactly three uppercase letters (e.g., "LAL", "BOS", "NYK"); invalid values trigger a not-found response.
  *
  * @param abbrev - The team abbreviation to validate
- * @returns The validated abbreviation (throws notFound() if invalid)
- * @example
- * const abbrev = validateTeamAbbrev('LAL'); // Returns 'LAL'
- * validateTeamAbbrev('lakers'); // Calls notFound()
+ * @returns The validated abbreviation
  */
 export function validateTeamAbbrev(abbrev: string): string {
   if (abbrev.length !== 3) {
@@ -52,12 +48,10 @@ export function validateTeamAbbrev(abbrev: string): string {
 }
 
 /**
- * Validates a season ID.
+ * Validates that a season identifier matches the pattern YYYY-YY (for example, "2023-24").
  *
- * Season IDs follow the pattern: "YYYY-YY" (e.g., "2023-24")
- *
- * @param seasonId - The season ID to validate
- * @returns The validated season ID (throws notFound() if invalid)
+ * @param seasonId - The season identifier to validate
+ * @returns The input `seasonId` when it matches the `YYYY-YY` pattern
  */
 export function validateSeasonId(seasonId: string): string {
   if (seasonId.length !== 7) {
@@ -70,11 +64,13 @@ export function validateSeasonId(seasonId: string): string {
 }
 
 /**
- * Validates that a string is a positive integer.
+ * Ensures a string represents an integer greater than 0 and less than or equal to `max`.
  *
- * @param value - The string to validate
+ * Calls `notFound()` for invalid inputs.
+ *
+ * @param value - The string to validate as a positive integer
  * @param max - Maximum allowed value (default: 10000)
- * @returns The validated number
+ * @returns The numeric value of `value` when it is an integer > 0 and <= `max`
  */
 export function validatePositiveInt(value: string, max = 10000): number {
   const num = Number(value);

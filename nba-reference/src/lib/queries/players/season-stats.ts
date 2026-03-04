@@ -75,21 +75,13 @@ export function getPlayerPer36Stats(
 }
 
 /**
- * Retrieves per-100-possessions statistics for a player.
+ * Fetches a player's season-level statistics normalized to 100 possessions.
  *
- * Per-100 normalizes stats to a per-possession basis, enabling fair
- * comparison across different pace/era teams.
- * Calculation: stat * 4800 / (minutes * team_pace)
- * - 4800 = 48 minutes * 100 possessions (standard game length)
- * - Team pace from fact_team_season, defaults to 100 if unavailable
+ * Values are computed per 100 possessions using team pace from fact_team_season (falls back to 100 when missing); per-100 fields are rounded to 1 decimal and return `null` when a player's total minutes for the season are not positive.
  *
  * @param brefId - Basketball-Reference player ID
  * @param limit - Maximum number of seasons to return (default: 25)
- * @returns Array of per-100 stats, ordered by season (newest first)
- *
- * @example
- * const stats = getPlayerPer100Stats('jamesle01');
- * console.log(stats[0].pts_100); // Points per 100 possessions
+ * @returns Array of records containing per-100 statistics (e.g., `pts_100`, `reb_100`, `ast_100`) ordered by season (newest first)
  */
 export function getPlayerPer100Stats(
   brefId: string,

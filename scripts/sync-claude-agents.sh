@@ -17,7 +17,7 @@ set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Cross-platform modification time (GNU stat on Linux/Git Bash; BSD stat on macOS)
+# get_mtime returns the file's modification time as a numeric Unix timestamp, using GNU-compatible `stat` if available and falling back to BSD-compatible `stat` otherwise.
 get_mtime() {
     if stat --version 2>/dev/null | grep -q GNU; then
         stat -c %Y "$1"
@@ -26,6 +26,7 @@ get_mtime() {
     fi
 }
 
+# sync_pair synchronizes CLAUDE.md and AGENTS.md in a directory by copying the newer file over the older (or creating the missing counterpart) and prints a status message.
 sync_pair() {
     local dir="$1"
     local claude="$dir/CLAUDE.md"

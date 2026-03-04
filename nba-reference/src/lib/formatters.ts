@@ -35,7 +35,7 @@ export function formatPercentage(value: string | number | null | undefined): str
 }
 
 /**
- * Format a numeric value as US dollar currency with no fractional digits.
+ * Formats a numeric value as US dollar currency with no fractional digits.
  *
  * @param value - Numeric value or numeric string representing an amount
  * @returns The formatted currency string (e.g., "$45,000,000"), or "-" for null, undefined, or NaN
@@ -52,20 +52,10 @@ export function formatUsd(value: string | number | null | undefined): string {
 }
 
 /**
- * Formats a number with explicit + sign for positive values.
+ * Format a number with an explicit "+" prefix for positive values.
  *
- * Used for stats like plus/minus (+/-) where the sign is significant.
- * Returns "-" for null or undefined values.
- *
- * @param value - Numeric value to format
- * @returns Signed string (e.g., "+5" or "-3") or "-"
- * @example
- * ```ts
- * formatSignedNumber(5)   // "+5"
- * formatSignedNumber(-3)  // "-3"
- * formatSignedNumber(0)   // "0"
- * formatSignedNumber(null) // "-"
- * ```
+ * @param value - The number to format
+ * @returns A string with a leading `"+"` for values greater than zero, the numeric string for zero or negative values (e.g., `"-3"` or `"0"`), or `"-"` when `value` is `null` or `undefined`
  */
 export function formatSignedNumber(value: number | null | undefined): string {
   if (value == null) return '-';

@@ -27,9 +27,9 @@ import {
 /**
  * Render the Seasons directory page listing NBA seasons in a table with links to each season's detail page.
  *
- * Fetches up to 40 seasons and orders them by start year (newest first) before rendering.
+ * Fetches up to 40 seasons and displays them in descending start-year order; each row links to the corresponding season detail page.
  *
- * @returns The JSX element for the Seasons directory page
+ * @returns The Seasons directory page JSX element
  */
 export default function SeasonsPage(): React.JSX.Element {
   const seasons = getSeasonList(40);

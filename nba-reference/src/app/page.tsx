@@ -29,9 +29,9 @@ import {
 } from '@/lib/table-styles';
 
 /**
- * Render the homepage showing the current season standings and recent games.
+ * Renders the homepage displaying the current season standings, search/export controls, and a list of recent games.
  *
- * Fetches the latest season ID, the top 30 team standings, and the 12 most recent completed games, then renders the page header, search/export controls, a standings table, and a recent games table.
+ * The page includes a header with the season ID, a searchable export control row, a standings table, and a recent games table with links to box scores. Games with missing scores render a '-' in the score cells.
  *
  * @returns The homepage JSX element containing header text, controls, a standings StatsTable, and a recent games table with box score links.
  */

@@ -23,15 +23,18 @@ import { promisify } from 'node:util';
 const gzipAsync = promisify(gzip);
 
 /**
- * Handle GET requests to export data as a CSV file for "standings", "games", or "search".
+ * Export standings, recent games, or search results as an RFC 4180-compliant CSV attachment.
  *
- * For `standings` returns current team standings (30 teams). For `games` returns recent games (100 games).
- * For `search` reads query parameter `q` from the request URL and returns matching search results.
+ * Depending on the route `type` parameter, this handler returns:
+ * - "standings": current 30-team standings,
+ * - "games": 100 most recent games,
+ * - "search": results for the `q` query parameter (trimmed).
  *
- * @param req - Next.js request object (used to read query parameter `q` for search)
+ * The handler enforces rate limiting, returns 400 for an invalid `type`, and will gzip the CSV when the client accepts gzip and the CSV exceeds 1024 bytes. Responses include `Content-Type: text/csv; charset=utf-8` and `Content-Disposition: attachment; filename="{type}.csv"`; gzipped responses also include `Content-Encoding: gzip` and `Vary: Accept-Encoding`.
+ *
+ * @param req - Next.js request object; used to read the `q` search query for `type = "search"` and request headers for compression support
  * @param params - Promise resolving to route parameters with `type` set to "standings" | "games" | "search"
- * @returns A CSV response whose body is the exported data and headers include `Content-Type: text/csv; charset=utf-8`
- *          and `Content-Disposition: attachment; filename="{type}.csv"`
+ * @returns A Response whose body is the exported CSV (plain string or gzipped bytes) with appropriate CSV and content-disposition headers
  */
 export async function GET(
   req: NextRequest,

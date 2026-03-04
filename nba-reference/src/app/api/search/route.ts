@@ -14,14 +14,13 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 /**
- * Handle GET requests to /api/search and return matching search results.
+ * Handle GET requests to /api/search and return matching players and teams for the provided query.
  *
- * Enforces a minimum query length of 2 characters; if the `q` parameter is shorter than 2 characters
- * the response contains an empty `results` array. When `q` is 2 or more characters, returns search
- * results produced from the query.
+ * May short-circuit with a rate-limit response. If the `q` query parameter is omitted or shorter than 2 characters,
+ * the response contains an empty `results` array; otherwise `results` contains matching entities.
  *
- * @param req - Next.js request object containing the `q` query parameter
- * @returns An object with a `results` array of search entries (e.g. `{ type: string, id: string, label: string }`)
+ * @param req - Next.js request whose URL may include the `q` query parameter (search text)
+ * @returns An object with a `results` array of search entries, each entry having fields such as `type`, `id`, and `label`
  */
 export function GET(req: NextRequest): NextResponse {
   const rateLimitResponse = checkRateLimit(req);

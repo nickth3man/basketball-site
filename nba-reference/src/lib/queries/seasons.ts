@@ -87,13 +87,13 @@ export function getSeasonScoringLeaders(
 }
 
 /**
- * Retrieves the top rebounding leaders for a season.
+ * Get the season's top rebound leaders ordered by rebounds per game.
  *
- * Returns players who played at least 10 games in the season, ordered by rebounds per game.
+ * Includes only players who played at least 10 games in the season and excludes placeholder team entries (team abbreviations ending with "TM").
  *
- * @param seasonId - Season ID (e.g., "2024-25")
- * @param limit - Maximum number of leaders to return
- * @returns Array of records with `bref_id`, `full_name`, `team`, `g` (games), `reb` (total rebounds), and `reb_pg` (rebounds per game)
+ * @param seasonId - Season identifier (e.g., "2024-25")
+ * @param limit - Maximum number of leaders to return (default: 25)
+ * @returns Array of records with `bref_id`, `full_name`, `team` (comma-separated team abbreviations), `g` (total games), `reb` (total rebounds), and `reb_pg` (rebounds per game, rounded to one decimal)
  */
 export function getSeasonReboundLeaders(
   seasonId: string,

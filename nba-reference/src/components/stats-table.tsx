@@ -39,13 +39,14 @@ interface StatsTableProps {
 /**
  * Render a sortable data table with a client-side CSV export button.
  *
- * Supports click-to-sort per column (toggles ascending/descending), sorts nulls to the end,
- * compares strings case-insensitively and numbers numerically, and generates stable React row keys.
+ * Supports per-column sorting (click header to toggle ascending/descending), places null/undefined
+ * values at the end of sorted results, compares string values case-insensitively, and generates
+ * stable React keys for rows. When columns are present an "Export CSV" button downloads the
+ * currently sorted rows as an RFC 4180-compliant CSV.
  *
- * CSV export produces RFC 4180-compliant output (all fields wrapped in double quotes; internal quotes doubled),
- * triggers a download named "table-export.csv", and revokes the temporary Blob URL after download.
- *
- * @param props - Component props
+ * @param columns - Column definitions (each with `key`, `label`, and optional `align`)
+ * @param rows - Table rows to display (DbRows)
+ * @param initialSort - Optional initial column key to sort by; defaults to the first column key if present
  * @returns The rendered stats table element
  */
 export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX.Element {
