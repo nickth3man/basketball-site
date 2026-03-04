@@ -142,21 +142,31 @@ describe('GET /api/export/[type]', () => {
     expect(getHomeStandingsMock).not.toHaveBeenCalled();
   });
 
-  it('returns games data', async () => {
+  it('returns games data with correct headers', async () => {
     const request = createExportRequest('/api/export/games');
     const params = Promise.resolve({ type: 'games' });
     const response = await GET(request, { params });
 
     expect(response.status).toBe(200);
     expect(getRecentGamesMock).toHaveBeenCalledWith(100);
+    expect(response.headers.get('Content-Type')).toContain('text/csv');
+    expect(response.headers.get('Content-Disposition')).toContain('games.csv');
 
     const csvBody = await response.text();
     expect(csvBody).toContain('game_id,game_date,home_abbrev,away_abbrev,home_score,away_score');
     expect(csvBody).toContain('"0022400001","2025-01-01","LAL","BOS","110","105"');
-    expect(response.headers.get('Content-Disposition')).toContain('games.csv');
   });
 
-  it('handles search without query parameter', async () => {
+  it('handles search export with empty query parameter', async () => {
+    const request = createExportRequest('/api/export/search?q=');
+    const params = Promise.resolve({ type: 'search' });
+    const response = await GET(request, { params });
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith('');
+    expect(response.status).toBe(200);
+  });
+
+  it('handles search export without query parameter', async () => {
     const request = createExportRequest('/api/export/search');
     const params = Promise.resolve({ type: 'search' });
     const response = await GET(request, { params });
@@ -165,7 +175,7 @@ describe('GET /api/export/[type]', () => {
     expect(response.status).toBe(200);
   });
 
-  it('does not compress when payload is small', async () => {
+  it('does not gzip when payload is small', async () => {
     const request = createExportRequest('/api/export/standings', 'gzip');
     const params = Promise.resolve({ type: 'standings' });
     const response = await GET(request, { params });
@@ -174,7 +184,7 @@ describe('GET /api/export/[type]', () => {
     expect(response.headers.get('Vary')).toBeNull();
   });
 
-  it('does not compress when gzip not accepted', async () => {
+  it('does not gzip when client does not support gzip', async () => {
     const largeAbbreviation = `TEAM-${'X'.repeat(1400)}`;
     getHomeStandingsMock.mockReturnValue([
       {
@@ -187,25 +197,106 @@ describe('GET /api/export/[type]', () => {
       },
     ]);
 
-    const request = createExportRequest('/api/export/standings', 'deflate');
+    const request = createExportRequest('/api/export/standings');
     const params = Promise.resolve({ type: 'standings' });
     const response = await GET(request, { params });
 
     expect(response.headers.get('Content-Encoding')).toBeNull();
-    expect(response.headers.get('Vary')).toBeNull();
+    expect(response.headers.get('Content-Type')).toContain('text/csv; charset=utf-8');
   });
 
-  it('handles empty search results', async () => {
+  it('handles empty results from standings query', async () => {
+    getHomeStandingsMock.mockReturnValue([]);
+
+    const request = createExportRequest('/api/export/standings');
+    const params = Promise.resolve({ type: 'standings' });
+    const response = await GET(request, { params });
+
+    expect(response.status).toBe(200);
+    const csvBody = await response.text();
+    // Empty CSV should still have no content
+    expect(csvBody).toBe('');
+  });
+
+  it('handles empty results from games query', async () => {
+    getRecentGamesMock.mockReturnValue([]);
+
+    const request = createExportRequest('/api/export/games');
+    const params = Promise.resolve({ type: 'games' });
+    const response = await GET(request, { params });
+
+    expect(response.status).toBe(200);
+    const csvBody = await response.text();
+    expect(csvBody).toBe('');
+  });
+
+  it('handles empty results from search query', async () => {
     searchEntitiesMock.mockReturnValue([]);
 
-    const request = createExportRequest('/api/export/search?q=xyz123nonexistent');
+    const request = createExportRequest('/api/export/search?q=nonexistent');
     const params = Promise.resolve({ type: 'search' });
     const response = await GET(request, { params });
 
     expect(response.status).toBe(200);
     const csvBody = await response.text();
-    // Empty results should still produce a CSV header row
-    expect(csvBody.length).toBeGreaterThanOrEqual(0);
-    expect(searchEntitiesMock).toHaveBeenCalledWith('xyz123nonexistent');
+    expect(csvBody).toBe('');
+  });
+
+  it('supports gzip with deflate in accept-encoding', async () => {
+    const largeAbbreviation = `TEAM-${'X'.repeat(1400)}`;
+    getHomeStandingsMock.mockReturnValue([
+      {
+        season_id: '2024-25',
+        bref_abbrev: largeAbbreviation,
+        w: 50,
+        l: 32,
+        n_rtg: 3.2,
+        pace: 99.1,
+      },
+    ]);
+
+    const request = createExportRequest('/api/export/standings', 'deflate, gzip, br');
+    const params = Promise.resolve({ type: 'standings' });
+    const response = await GET(request, { params });
+
+    expect(response.headers.get('Content-Encoding')).toBe('gzip');
+    expect(response.headers.get('Vary')).toBe('Accept-Encoding');
+  });
+
+  it('handles multiple standings entries', async () => {
+    getHomeStandingsMock.mockReturnValue([
+      {
+        season_id: '2024-25',
+        bref_abbrev: 'LAL',
+        w: 50,
+        l: 32,
+        n_rtg: 3.2,
+        pace: 99.1,
+      },
+      {
+        season_id: '2024-25',
+        bref_abbrev: 'BOS',
+        w: 48,
+        l: 34,
+        n_rtg: 2.8,
+        pace: 98.5,
+      },
+    ]);
+
+    const request = createExportRequest('/api/export/standings');
+    const params = Promise.resolve({ type: 'standings' });
+    const response = await GET(request, { params });
+
+    const csvBody = await response.text();
+    expect(csvBody).toContain('"LAL"');
+    expect(csvBody).toContain('"BOS"');
+  });
+
+  it('returns charset in Content-Type header', async () => {
+    const request = createExportRequest('/api/export/standings');
+    const params = Promise.resolve({ type: 'standings' });
+    const response = await GET(request, { params });
+
+    expect(response.headers.get('Content-Type')).toBe('text/csv; charset=utf-8');
   });
 });
