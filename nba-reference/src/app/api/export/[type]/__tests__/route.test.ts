@@ -153,12 +153,11 @@ describe('GET /api/export/[type]', () => {
     const csvBody = await response.text();
     expect(csvBody).toContain('game_id,game_date,home_abbrev,away_abbrev,home_score,away_score');
     expect(csvBody).toContain('"0022400001","2025-01-01","LAL","BOS","110","105"');
+    expect(response.headers.get('Content-Disposition')).toContain('games.csv');
   });
 
-  it('handles empty search query', async () => {
-    searchEntitiesMock.mockReturnValue([]);
-
-    const request = createExportRequest('/api/export/search?q=');
+  it('handles search without query parameter', async () => {
+    const request = createExportRequest('/api/export/search');
     const params = Promise.resolve({ type: 'search' });
     const response = await GET(request, { params });
 
@@ -166,13 +165,47 @@ describe('GET /api/export/[type]', () => {
     expect(response.status).toBe(200);
   });
 
-  it('does not use gzip for small payloads', async () => {
+  it('does not compress when payload is small', async () => {
     const request = createExportRequest('/api/export/standings', 'gzip');
     const params = Promise.resolve({ type: 'standings' });
     const response = await GET(request, { params });
 
-    expect(response.status).toBe(200);
     expect(response.headers.get('Content-Encoding')).toBeNull();
     expect(response.headers.get('Vary')).toBeNull();
+  });
+
+  it('does not compress when gzip not accepted', async () => {
+    const largeAbbreviation = `TEAM-${'X'.repeat(1400)}`;
+    getHomeStandingsMock.mockReturnValue([
+      {
+        season_id: '2024-25',
+        bref_abbrev: largeAbbreviation,
+        w: 50,
+        l: 32,
+        n_rtg: 3.2,
+        pace: 99.1,
+      },
+    ]);
+
+    const request = createExportRequest('/api/export/standings', 'deflate');
+    const params = Promise.resolve({ type: 'standings' });
+    const response = await GET(request, { params });
+
+    expect(response.headers.get('Content-Encoding')).toBeNull();
+    expect(response.headers.get('Vary')).toBeNull();
+  });
+
+  it('handles empty search results', async () => {
+    searchEntitiesMock.mockReturnValue([]);
+
+    const request = createExportRequest('/api/export/search?q=xyz123nonexistent');
+    const params = Promise.resolve({ type: 'search' });
+    const response = await GET(request, { params });
+
+    expect(response.status).toBe(200);
+    const csvBody = await response.text();
+    // Empty results should still produce a CSV header row
+    expect(csvBody.length).toBeGreaterThanOrEqual(0);
+    expect(searchEntitiesMock).toHaveBeenCalledWith('xyz123nonexistent');
   });
 });

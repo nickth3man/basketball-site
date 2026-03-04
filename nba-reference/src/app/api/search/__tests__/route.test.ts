@@ -67,7 +67,7 @@ describe('GET /api/search', () => {
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
 
-  it('returns empty results when query parameter is missing', async () => {
+  it('returns empty results for missing query parameter', async () => {
     const request = new NextRequest('http://localhost/api/search');
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
@@ -76,7 +76,16 @@ describe('GET /api/search', () => {
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
 
-  it('returns search results for exactly 2 character query', async () => {
+  it('returns empty results for empty string after trim', async () => {
+    const request = createSearchRequest('   ');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+
+    expect(payload.results).toEqual([]);
+    expect(searchEntitiesMock).not.toHaveBeenCalled();
+  });
+
+  it('processes query at exactly 2 character boundary', async () => {
     const expectedResults: SearchResponse['results'] = [
       { type: 'team', id: 'LAL', label: 'Los Angeles Lakers' },
     ];
@@ -90,14 +99,42 @@ describe('GET /api/search', () => {
     expect(payload.results).toEqual(expectedResults);
   });
 
-  it('returns empty results array when no entities match', async () => {
-    searchEntitiesMock.mockReturnValue([]);
+  it('handles multi-word queries', async () => {
+    const expectedResults: SearchResponse['results'] = [
+      { type: 'player', id: 'jamesle01', label: 'LeBron James' },
+    ];
+    searchEntitiesMock.mockReturnValue(expectedResults);
 
-    const request = createSearchRequest('xyz123');
+    const request = createSearchRequest('LeBron James');
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith('xyz123');
+    expect(searchEntitiesMock).toHaveBeenCalledWith('LeBron James');
+    expect(payload.results).toEqual(expectedResults);
+  });
+
+  it('handles queries with special characters', async () => {
+    const expectedResults: SearchResponse['results'] = [
+      { type: 'player', id: 'onealsh01', label: "Shaquille O'Neal" },
+    ];
+    searchEntitiesMock.mockReturnValue(expectedResults);
+
+    const request = createSearchRequest("O'Neal");
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith("O'Neal");
+    expect(payload.results).toEqual(expectedResults);
+  });
+
+  it('returns empty array for valid query with no matches', async () => {
+    searchEntitiesMock.mockReturnValue([]);
+
+    const request = createSearchRequest('xyz123nonexistent');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith('xyz123nonexistent');
     expect(payload.results).toEqual([]);
   });
 });
