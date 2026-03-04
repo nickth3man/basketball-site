@@ -18,7 +18,7 @@ function sanitizeCsvValue(value: RowValue | undefined): string {
   // Numbers are safe from formula injection; only check string values
   if (typeof value === 'number') return String(value);
   const escaped = value.replaceAll('"', '""');
-  if (/^[=+\-@]/.test(escaped)) {
+  if (/^[\s]*[=+\-@]/.test(escaped)) {
     return `'${escaped}`;
   }
   return escaped;

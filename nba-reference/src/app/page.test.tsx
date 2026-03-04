@@ -17,6 +17,7 @@ const getHomeStandingsMock = vi.mocked(getHomeStandings);
 const getRecentGamesMock = vi.mocked(getRecentGames);
 
 beforeEach(() => {
+  vi.clearAllMocks();
   getHomeSeasonIdMock.mockReturnValue('2024-25');
   getHomeStandingsMock.mockReturnValue([
     {

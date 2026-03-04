@@ -61,15 +61,19 @@
   // ============================================
   // TYPESCRIPT - STRICT WORKSPACE VERSION
   // ============================================
-  "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
-  "js/ts.preferences.importModuleSpecifier": "relative",
-  "js/ts.preferences.quoteStyle": "single",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.quoteStyle": "single",
+  "javascript.preferences.quoteStyle": "single",
   "typescript.preferences.includePackageTypeInDeclarationImports": true,
-  "js/ts.tsc.autoDetect": "off",
-  "js/ts.format.enable": false,
-  "js/ts.validate.enabled": true,
-  "js/ts.suggest.autoImports": true,
+  "typescript.tsc.autoDetect": "off",
+  "javascript.format.enable": false,
+  "typescript.format.enable": false,
+  "typescript.validate.enable": true,
+  "typescript.suggest.autoImports": true,
+  "javascript.suggest.autoImports": true,
   "typescript.suggest.includeCompletionsForModuleExports": true,
 
   // ============================================
@@ -177,7 +181,7 @@
   // ERROR & PROBLEMS
   // ============================================
   "problems.decorations.enabled": true,
-  "js/ts.reportStyleChecksAsWarnings": false,
+  "typescript.reportStyleChecksAsWarnings": false,
 
   // ============================================
   // DEBUGGING

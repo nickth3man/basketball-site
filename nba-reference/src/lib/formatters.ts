@@ -34,6 +34,12 @@ export function formatPercentage(value: string | number | null | undefined): str
   return numericValue.toFixed(3);
 }
 
+const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
 /**
  * Formats a numeric value as US dollar currency with no fractional digits.
  *
@@ -44,11 +50,7 @@ export function formatUsd(value: string | number | null | undefined): string {
   if (value == null) return '-';
   const numericValue = Number(value);
   if (Number.isNaN(numericValue)) return '-';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(numericValue);
+  return usdFormatter.format(numericValue);
 }
 
 /**

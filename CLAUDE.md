@@ -14,8 +14,8 @@ basketball-site/
 ├── nba-reference/      # Next.js app (all feature work)
 ├── db/                 # SQLite payload (Git LFS)
 ├── scripts/            # Repo maintenance scripts
-├── AGENTS.md           # Root guidance (this file)
-└── CLAUDE.md           # Mirror of AGENTS.md
+├── AGENTS.md           # Mirrors CLAUDE.md
+└── CLAUDE.md           # This file (mirrors AGENTS.md)
 ```
 
 ## WHERE TO LOOK

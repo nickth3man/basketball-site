@@ -27,6 +27,7 @@ function createSearchRequest(query: string): NextRequest {
 
 describe('GET /api/search', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     checkRateLimitMock.mockReturnValue(null);
   });
 

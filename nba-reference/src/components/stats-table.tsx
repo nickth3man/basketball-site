@@ -53,7 +53,7 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
   const hasColumns = columns.length > 0;
   const [sortKey, setSortKey] = useState<string>(initialSort ?? columns[0]?.key ?? '');
   const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * Sorted rows based on current sort key and direction.
@@ -180,6 +180,7 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
                 {columns.map(column => (
                   <th key={column.key} className={tableHeaderCellClass(column.align)}>
                     <button
+                      type="button"
                       onClick={() => {
                         if (sortKey === column.key) {
                           // Toggle direction if clicking same column
