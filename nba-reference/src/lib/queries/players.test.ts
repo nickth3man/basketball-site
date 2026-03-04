@@ -79,11 +79,11 @@ describe('player queries', () => {
 
     it('includes calculated per-100 fields', () => {
       const stats = getPlayerPer100Stats(TEST_PLAYER_ID, 1);
-      if (stats.length > 0) {
-        const first = stats[0];
-        expect(first).toHaveProperty('pts_100');
-        expect(first).toHaveProperty('reb_100');
-      }
+      expect(stats.length).toBeGreaterThan(0);
+      const first = stats[0];
+      if (first === undefined) throw new Error('Expected non-empty per-100 stats');
+      expect(first).toHaveProperty('pts_100');
+      expect(first).toHaveProperty('reb_100');
     });
   });
 

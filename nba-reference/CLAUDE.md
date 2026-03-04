@@ -15,7 +15,8 @@ nba-reference/
 ├── src/lib/                 # Data access and query orchestration
 ├── vitest.config.ts         # Test configuration
 ├── eslint.config.mjs        # Lint rules
-└── AGENTS.md                # This file (mirrors CLAUDE.md)
+├── AGENTS.md                # Mirrors CLAUDE.md
+└── CLAUDE.md                # This file (mirrors AGENTS.md)
 ```
 
 ## WHERE TO LOOK

@@ -46,9 +46,9 @@ export function getPlayerByBrefId(brefId: string):
     .prepare(
       `SELECT player_id, bref_id, full_name, first_name, last_name,
               COALESCE(
-                position,
+                NULLIF(position, ''),
                 (
-                  -- Fallback: get most recent non-null position from stats
+                  -- Fallback: get most recent non-null/non-empty position from stats
                   SELECT fps.pos
                   FROM fact_player_season_stats fps
                   WHERE fps.bref_player_id = dim_player.bref_id

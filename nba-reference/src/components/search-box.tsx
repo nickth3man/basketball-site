@@ -40,12 +40,17 @@ export function SearchBox(): JSX.Element {
 
   // Debounced search function
   const debouncedSearch = useCallback(async (searchQuery: string, signal: AbortSignal) => {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
-      signal,
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as { results: SearchResult[] };
-    setResults(data.results);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
+        signal,
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { results: SearchResult[] | undefined };
+      setResults(data.results ?? []);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      throw error;
+    }
   }, []);
 
   useEffect(() => {

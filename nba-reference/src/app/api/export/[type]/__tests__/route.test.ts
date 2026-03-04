@@ -76,7 +76,7 @@ describe('GET /api/export/[type]', () => {
     expect(getHomeStandingsMock).toHaveBeenCalledWith(30);
 
     const csvBody = await response.text();
-    expect(csvBody).toContain('season_id,bref_abbrev,w,l,n_rtg,pace');
+    expect(csvBody).toContain('"season_id","bref_abbrev","w","l","n_rtg","pace"');
     expect(csvBody).toContain('"2024-25","LAL","50","32","3.2","99.1"');
   });
 
@@ -153,7 +153,9 @@ describe('GET /api/export/[type]', () => {
     expect(response.headers.get('Content-Disposition')).toContain('games.csv');
 
     const csvBody = await response.text();
-    expect(csvBody).toContain('game_id,game_date,home_abbrev,away_abbrev,home_score,away_score');
+    expect(csvBody).toContain(
+      '"game_id","game_date","home_abbrev","away_abbrev","home_score","away_score"'
+    );
     expect(csvBody).toContain('"0022400001","2025-01-01","LAL","BOS","110","105"');
   });
 
@@ -181,7 +183,7 @@ describe('GET /api/export/[type]', () => {
     const response = await GET(request, { params });
 
     expect(response.headers.get('Content-Encoding')).toBeNull();
-    expect(response.headers.get('Vary')).toBeNull();
+    expect(response.headers.get('Vary')).toBe('Accept-Encoding');
   });
 
   it('does not gzip when client does not support gzip', async () => {

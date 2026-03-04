@@ -262,7 +262,7 @@ function patchPrepareWithCache(database: Database.Database, options: PreparePatc
  */
 function dbPath(): string {
   const envPath = process.env['DB_PATH'];
-  if (envPath !== undefined) return envPath;
+  if (envPath !== undefined && envPath !== '') return envPath;
   return path.join(process.cwd(), 'nba_raw_data.db');
 }
 

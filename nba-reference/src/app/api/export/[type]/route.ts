@@ -77,6 +77,7 @@ export async function GET(
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="${type}.csv"`,
+      Vary: 'Accept-Encoding',
     },
   });
 }

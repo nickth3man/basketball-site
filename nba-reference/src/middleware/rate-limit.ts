@@ -39,8 +39,13 @@ function cleanupOldEntries(): void {
   }
 }
 
-// Schedule periodic cleanup
-setInterval(cleanupOldEntries, CLEANUP_INTERVAL_MS);
+// Schedule periodic cleanup - store handle to allow graceful shutdown
+const cleanupIntervalId = setInterval(cleanupOldEntries, CLEANUP_INTERVAL_MS);
+
+/** Stops the periodic cleanup timer. Call during graceful shutdown. */
+export function stopRateLimitCleanup(): void {
+  clearInterval(cleanupIntervalId);
+}
 
 /**
  * Enforces per-IP rate limiting for an incoming request and returns a 429 response when the limit is exceeded.

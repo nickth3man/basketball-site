@@ -171,7 +171,6 @@ const eslintConfig = defineConfig([
       // ============================================
       // STRICT ERROR HANDLING
       // ============================================
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
       '@typescript-eslint/restrict-template-expressions': [
         'error',
         {

@@ -41,13 +41,13 @@ describe('game queries', () => {
 
     it('includes player stats', () => {
       const box = getGamePlayerBoxScore(TEST_GAME_ID);
-      if (box.length > 0) {
-        const player = box[0];
-        expect(player).toHaveProperty('full_name');
-        expect(player).toHaveProperty('pts');
-        expect(player).toHaveProperty('reb');
-        expect(player).toHaveProperty('ast');
-      }
+      expect(box.length).toBeGreaterThan(0);
+      const player = box[0];
+      if (player === undefined) throw new Error('Expected non-empty box score');
+      expect(player).toHaveProperty('full_name');
+      expect(player).toHaveProperty('pts');
+      expect(player).toHaveProperty('reb');
+      expect(player).toHaveProperty('ast');
     });
   });
 
@@ -59,12 +59,12 @@ describe('game queries', () => {
 
     it('includes advanced metrics', () => {
       const box = getGamePlayerAdvancedBoxScore(TEST_GAME_ID);
-      if (box.length > 0) {
-        const player = box[0];
-        expect(player).toHaveProperty('game_score');
-        expect(player).toHaveProperty('efg_pct');
-        expect(player).toHaveProperty('ts_pct');
-      }
+      expect(box.length).toBeGreaterThan(0);
+      const player = box[0];
+      if (player === undefined) throw new Error('Expected non-empty advanced box score');
+      expect(player).toHaveProperty('game_score');
+      expect(player).toHaveProperty('efg_pct');
+      expect(player).toHaveProperty('ts_pct');
     });
   });
 

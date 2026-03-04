@@ -146,7 +146,7 @@ describe('GET /api/search', () => {
     const payload = (await response.json()) as SearchResponse;
 
     expect(payload.results).toHaveLength(1);
-    expect(payload.results[0].type).toBe('team');
+    expect(payload.results[0]?.type).toBe('team');
   });
 
   it('returns player results', async () => {
@@ -160,7 +160,7 @@ describe('GET /api/search', () => {
     const payload = (await response.json()) as SearchResponse;
 
     expect(payload.results).toHaveLength(1);
-    expect(payload.results[0].type).toBe('player');
+    expect(payload.results[0]?.type).toBe('player');
   });
 
   it('handles long search queries', async () => {
@@ -189,7 +189,7 @@ describe('GET /api/search', () => {
     expect(payload.results).toEqual(expectedResults);
   });
 
-  it('returns 200 status for successful search', async () => {
+  it('returns 200 status for successful search', () => {
     searchEntitiesMock.mockReturnValue([
       { type: 'player', id: 'jamesle01', label: 'LeBron James' },
     ]);
@@ -200,7 +200,7 @@ describe('GET /api/search', () => {
     expect(response.status).toBe(200);
   });
 
-  it('returns 200 status for empty results', async () => {
+  it('returns 200 status for empty results', () => {
     const request = createSearchRequest('a');
     const response = GET(request);
 

@@ -126,7 +126,7 @@ export default async function PlayerPage({
               alt={`Photo of ${player.full_name}`}
               width={130}
               height={170}
-              className="h-42.5 w-32.5 border border-image-line object-cover"
+              className="h-[170px] w-[130px] border border-image-line object-cover"
             />
           </div>
 

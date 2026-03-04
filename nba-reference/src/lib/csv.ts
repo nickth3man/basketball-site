@@ -15,7 +15,9 @@ export interface CsvColumn {
  */
 function sanitizeCsvValue(value: RowValue | undefined): string {
   if (value == null) return '';
-  const escaped = String(value).replaceAll('"', '""');
+  // Numbers are safe from formula injection; only check string values
+  if (typeof value === 'number') return String(value);
+  const escaped = value.replaceAll('"', '""');
   if (/^[=+\-@]/.test(escaped)) {
     return `'${escaped}`;
   }
@@ -45,7 +47,7 @@ export function convertRowsToCsv(rows: DbRows): string {
   if (firstRow === undefined) return '';
 
   const headers = Object.keys(firstRow);
-  const output: string[] = [headers.join(',')];
+  const output: string[] = [headers.map(h => quoteCsvValue(h)).join(',')];
 
   for (const row of rows) {
     output.push(headers.map(header => quoteCsvValue(row[header])).join(','));

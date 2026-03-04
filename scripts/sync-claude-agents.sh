@@ -62,7 +62,10 @@ echo ""
 
 # Collect unique directories containing CLAUDE.md or AGENTS.md,
 # excluding noisy generated/dependency directories.
-mapfile -t dirs < <(
+dirs=()
+while IFS= read -r dir; do
+    dirs+=("$dir")
+done < <(
     find "$REPO_ROOT" \( -name "CLAUDE.md" -o -name "AGENTS.md" \) \
         -not -path "*/node_modules/*" \
         -not -path "*/.next/*" \

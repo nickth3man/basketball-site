@@ -63,11 +63,11 @@ describe('team queries', () => {
         throw new Error('Expected team to be defined');
       }
       const roster = getTeamRoster(team.team_id);
-      if (roster.length > 0) {
-        const player = roster[0];
-        expect(player).toHaveProperty('bref_id');
-        expect(player).toHaveProperty('full_name');
-      }
+      expect(roster.length).toBeGreaterThan(0);
+      const player = roster[0];
+      if (player === undefined) throw new Error('Expected non-empty roster');
+      expect(player).toHaveProperty('bref_id');
+      expect(player).toHaveProperty('full_name');
     });
   });
 
@@ -107,10 +107,10 @@ describe('team queries', () => {
         throw new Error('Expected team to be defined');
       }
       const games = getTeamRecentGames(team.team_id, 5);
-      if (games.length > 0) {
-        const game = games[0];
-        expect(game).toHaveProperty('result');
-      }
+      expect(games.length).toBeGreaterThan(0);
+      const game = games[0];
+      if (game === undefined) throw new Error('Expected non-empty games array');
+      expect(game).toHaveProperty('result');
     });
   });
 });

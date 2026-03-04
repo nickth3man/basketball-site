@@ -2,7 +2,7 @@
 
 **Generated:** 2026-03-03T23:52:51Z
 **Commit:** 5ee774e
-**Branch:** dev
+**Branch:** main
 
 ## OVERVIEW
 Basketball stats repository with one runnable app (`nba-reference/`) and one data payload (`db/nba_raw_data.db`).

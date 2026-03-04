@@ -95,7 +95,7 @@ describe('query helpers', () => {
     const rows = getPlayerPer100Stats('jamesle01', 1);
     expect(rows.length).toBeGreaterThan(0);
     const firstRow = rows[0];
-    if (firstRow === undefined) return;
+    if (firstRow === undefined) throw new Error('Expected at least one per-100 stats row');
     const pts100 = Number(firstRow['pts_100']);
     expect(Number.isNaN(pts100)).toBe(false);
     expect(pts100).toBeGreaterThan(5);
@@ -144,7 +144,7 @@ describe('query helpers', () => {
   it('returns game box for a known game', () => {
     const game = getGameById('0022300001') ?? getGameById('0022400001');
     expect(game).toBeTruthy();
-    if (game === undefined) return;
+    if (game === undefined) throw new Error('Expected game to be defined');
     const box = getGameTeamBoxScores(game['game_id'] as string);
     expect(Array.isArray(box)).toBe(true);
     expect(box.length).toBeGreaterThan(0);

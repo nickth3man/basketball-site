@@ -57,12 +57,12 @@ describe('season queries', () => {
 
     it('includes scoring stats', () => {
       const leaders = getSeasonScoringLeaders(TEST_SEASON_ID, 5);
-      if (leaders.length > 0) {
-        const leader = leaders[0];
-        expect(leader).toHaveProperty('full_name');
-        expect(leader).toHaveProperty('pts_pg');
-        expect(leader).toHaveProperty('g');
-      }
+      expect(leaders.length).toBeGreaterThan(0);
+      const leader = leaders[0];
+      if (leader === undefined) throw new Error('Expected non-empty scoring leaders');
+      expect(leader).toHaveProperty('full_name');
+      expect(leader).toHaveProperty('pts_pg');
+      expect(leader).toHaveProperty('g');
     });
 
     it('respects limit parameter', () => {
@@ -79,10 +79,10 @@ describe('season queries', () => {
 
     it('includes rebound stats', () => {
       const leaders = getSeasonReboundLeaders(TEST_SEASON_ID, 5);
-      if (leaders.length > 0) {
-        const leader = leaders[0];
-        expect(leader).toHaveProperty('reb_pg');
-      }
+      expect(leaders.length).toBeGreaterThan(0);
+      const leader = leaders[0];
+      if (leader === undefined) throw new Error('Expected non-empty rebound leaders');
+      expect(leader).toHaveProperty('reb_pg');
     });
   });
 
@@ -94,10 +94,10 @@ describe('season queries', () => {
 
     it('includes assist stats', () => {
       const leaders = getSeasonAssistLeaders(TEST_SEASON_ID, 5);
-      if (leaders.length > 0) {
-        const leader = leaders[0];
-        expect(leader).toHaveProperty('ast_pg');
-      }
+      expect(leaders.length).toBeGreaterThan(0);
+      const leader = leaders[0];
+      if (leader === undefined) throw new Error('Expected non-empty assist leaders');
+      expect(leader).toHaveProperty('ast_pg');
     });
   });
 
@@ -119,13 +119,13 @@ describe('season queries', () => {
 
     it('returns games with required fields', () => {
       const games = getSeasonRecentGames(TEST_SEASON_ID, 5);
-      if (games.length > 0) {
-        const game = games[0];
-        expect(game).toHaveProperty('game_id');
-        expect(game).toHaveProperty('game_date');
-        expect(game).toHaveProperty('home_score');
-        expect(game).toHaveProperty('away_score');
-      }
+      expect(games.length).toBeGreaterThan(0);
+      const game = games[0];
+      if (game === undefined) throw new Error('Expected non-empty recent games');
+      expect(game).toHaveProperty('game_id');
+      expect(game).toHaveProperty('game_date');
+      expect(game).toHaveProperty('home_score');
+      expect(game).toHaveProperty('away_score');
     });
   });
 });
