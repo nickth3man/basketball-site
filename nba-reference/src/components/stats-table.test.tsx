@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 /**
  * @fileoverview Unit tests for the StatsTable component.
  *
@@ -106,10 +108,6 @@ describe('StatsTable', () => {
     expect(clickSpy).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(300);
     expect(revokeObjectURL).toHaveBeenCalledTimes(1);
-
-    clickSpy.mockRestore();
-    vi.unstubAllGlobals();
-    vi.useRealTimers();
   });
 
   it('renders safely with no columns', () => {
