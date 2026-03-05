@@ -9,6 +9,7 @@
  */
 
 import type { JSX } from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 
 /**
@@ -38,11 +39,26 @@ export function SiteHeader(): JSX.Element {
           <Link href="/teams" className="transition-colors duration-200 hover:text-white">
             Teams
           </Link>
-          <Link href="/games" className="transition-colors duration-200 hover:text-white">
-            Games
+          <Link href="/leagues" className="transition-colors duration-200 hover:text-white">
+            Leagues
           </Link>
-          <Link href="/seasons" className="transition-colors duration-200 hover:text-white">
-            Seasons
+          <Link href="/boxscores" className="transition-colors duration-200 hover:text-white">
+            Box Scores
+          </Link>
+          <Link href="/leaders" className="transition-colors duration-200 hover:text-white">
+            Leaders
+          </Link>
+          <Link href="/draft" className="transition-colors duration-200 hover:text-white">
+            Draft
+          </Link>
+          <Link href={'/playoffs' as Route} className="transition-colors duration-200 hover:text-white">
+            Playoffs
+          </Link>
+          <Link href={'/awards' as Route} className="transition-colors duration-200 hover:text-white">
+            Awards
+          </Link>
+          <Link href={'/standings' as Route} className="transition-colors duration-200 hover:text-white">
+            Standings
           </Link>
         </nav>
       </div>
