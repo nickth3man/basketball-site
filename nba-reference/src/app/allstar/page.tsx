@@ -40,24 +40,24 @@ export default function AllStarPage(): React.JSX.Element {
                 <tbody>
                   {seasons.map((season, index) => (
                     <tr
-                      key={season['season_id'] as string}
+                      key={season.season_id}
                       className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
                     >
                       <td className={tableCellClass('left')}>
                         <Link
-                          href={`/allstar/${(season['end_year'] as number).toString().slice(-2)}` as Route}
+                          href={`/allstar/${season.end_year.toString().slice(-2)}` as Route}
                           className={tableLinkClass}
                         >
-                          {season['season_id'] as string} All-Star Game
+                          {season.season_id} All-Star Game
                         </Link>
                       </td>
                       <td className={tableCellClass('left')}>
-                        {season['start_year'] as number}-{season['end_year'] as number}
+                        {season.start_year}-{season.end_year}
                       </td>
-                      <td className={tableCellClass('right')}>{season['player_count'] as number}</td>
+                      <td className={tableCellClass('right')}>{season.player_count}</td>
                       <td className={tableCellClass('left')}>
                         <Link
-                          href={`/allstar/${(season['end_year'] as number).toString().slice(-2)}` as Route}
+                          href={`/allstar/${season.end_year.toString().slice(-2)}` as Route}
                           className="text-link hover:underline"
                         >
                           View Roster →
@@ -86,24 +86,27 @@ export default function AllStarPage(): React.JSX.Element {
                 <tbody>
                   {mvps.map((mvp, index) => (
                     <tr
-                      key={mvp['season_id'] as string}
+                      key={mvp.season_id}
                       className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
                     >
-                      <td className={tableCellClass('left')}>{mvp['end_year'] as number}</td>
+                      <td className={tableCellClass('left')}>{mvp.end_year}</td>
                       <td className={tableCellClass('left')}>
                         <Link
-                          href={`/players/${(mvp['bref_id'] as string).slice(0, 1).toLowerCase()}/${mvp['bref_id']}` as Route}
+                          href={
+                            `/players/${mvp.bref_id.slice(0, 1).toLowerCase()}/${mvp.bref_id}` as Route
+                          }
                           className={tableLinkClass}
                         >
-                          {mvp['full_name'] as string}
+                          {mvp.full_name}
                         </Link>
                       </td>
-                      <td className={tableCellClass('left')}>{mvp['team_abbrev'] ?? '-'}</td>
+                      <td className={tableCellClass('left')}>{mvp.team_abbrev ?? '-'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>          </section>
+            </div>{' '}
+          </section>
         </div>
       </div>
     </main>

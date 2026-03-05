@@ -96,7 +96,7 @@ export default async function PlayerSplitsPage({
   params,
 }: PlayerSplitsPageProps): Promise<React.JSX.Element> {
   const { letter, id } = await params;
-  
+
   let playerId: string;
   try {
     playerId = validateBrefId(id);
@@ -105,7 +105,7 @@ export default async function PlayerSplitsPage({
   }
 
   const latestSeason = getPlayerLatestSeason(playerId);
-  
+
   const homeAway = getPlayerHomeAwaySplits(playerId, latestSeason);
   const monthly = getPlayerMonthlySplits(playerId, latestSeason);
   const opponents = getPlayerOpponentSplits(playerId, latestSeason).slice(0, 10);
@@ -116,13 +116,13 @@ export default async function PlayerSplitsPage({
       <div className="mb-6">
         <Link
           href={`/players/${letter}/${id}` as Route}
-          className="text-link mb-2 inline-block hover:underline"
+          className="mb-2 inline-block text-link hover:underline"
         >
           ← Back to Player
         </Link>
         <h1 className="text-3xl font-bold text-heading">Player Splits</h1>
-        {latestSeason && (
-          <p className="text-muted mt-1">Season: {latestSeason}</p>
+        {latestSeason != null && latestSeason.length > 0 && (
+          <p className="mt-1 text-muted">Season: {latestSeason}</p>
         )}
       </div>
 

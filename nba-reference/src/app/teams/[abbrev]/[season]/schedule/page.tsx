@@ -36,20 +36,22 @@ function groupByMonth(games: TeamScheduleGame[]): Array<{
   games: TeamScheduleGame[];
 }> {
   const groups = new Map<string, TeamScheduleGame[]>();
-  
+
   for (const game of games) {
     const date = new Date(game.game_date);
     const monthKey = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    
-    if (!groups.has(monthKey)) {
-      groups.set(monthKey, []);
+
+    const monthGames = groups.get(monthKey);
+    if (monthGames == null) {
+      groups.set(monthKey, [game]);
+    } else {
+      monthGames.push(game);
     }
-    groups.get(monthKey)!.push(game);
   }
-  
-  return Array.from(groups.entries()).map(([month, games]) => ({
+
+  return Array.from(groups.entries()).map(([month, monthGames]) => ({
     month,
-    games,
+    games: monthGames,
   }));
 }
 
@@ -57,22 +59,22 @@ export default async function TeamSchedulePage({
   params,
 }: TeamSchedulePageProps): Promise<React.JSX.Element> {
   const { abbrev, season } = await params;
-  
+
   const teamAbbrev = validateTeamAbbrev(abbrev.toUpperCase());
   const seasonId = validateSeasonId(season);
-  
+
   const team = getTeamByAbbrev(teamAbbrev);
-  if (!team) {
+  if (team == null) {
     notFound();
   }
-  
+
   const schedule = getTeamSchedule(teamAbbrev, seasonId);
   const groupedGames = groupByMonth(schedule);
-  
+
   // Calculate record after each game
   let wins = 0;
   let losses = 0;
-  const gamesWithRecord = schedule.map((game) => {
+  const gamesWithRecord = schedule.map(game => {
     if (game.result === 'W') wins++;
     if (game.result === 'L') losses++;
     return {
@@ -86,18 +88,19 @@ export default async function TeamSchedulePage({
       <div className="mb-6">
         <Link
           href={`/teams/${teamAbbrev}` as Route}
-          className="text-link mb-2 inline-block hover:underline"
+          className="mb-2 inline-block text-link hover:underline"
         >
           ← Back to {team.full_name}
         </Link>
         <h1 className="text-3xl font-bold text-heading">{seasonId} Schedule</h1>
-        <p className="text-muted mt-1">
-          {schedule.filter((g) => g.result === 'W').length} - {schedule.filter((g) => g.result === 'L').length} Record
+        <p className="mt-1 text-muted">
+          {schedule.filter(g => g.result === 'W').length} -{' '}
+          {schedule.filter(g => g.result === 'L').length} Record
         </p>
       </div>
 
       {groupedGames.map(({ month, games }) => (
-        <section key={month} className="panel-paper mb-6 p-4">
+        <section key={month} className="mb-6 panel-paper p-4">
           <h2 className="mb-3 text-lg font-bold text-heading">{month}</h2>
           <div className={tableContainerClass}>
             <table className={tableClass}>
@@ -129,8 +132,8 @@ export default async function TeamSchedulePage({
                       <span
                         className={
                           game.location === 'Home'
-                            ? 'text-green-600 font-medium'
-                            : 'text-orange-600 font-medium'
+                            ? 'font-medium text-green-600'
+                            : 'font-medium text-orange-600'
                         }
                       >
                         {game.location}
@@ -144,8 +147,8 @@ export default async function TeamSchedulePage({
                           href={`/boxscores/${game.game_id}` as Route}
                           className={
                             game.result === 'W'
-                              ? 'text-green-600 font-semibold hover:underline'
-                              : 'text-red-600 font-semibold hover:underline'
+                              ? 'font-semibold text-green-600 hover:underline'
+                              : 'font-semibold text-red-600 hover:underline'
                           }
                         >
                           {game.result} ({game.team_score} - {game.opp_score})
@@ -153,7 +156,7 @@ export default async function TeamSchedulePage({
                       )}
                     </td>
                     <td className={tableCellClass('left')}>
-                      {gamesWithRecord.find((g) => g.game_id === game.game_id)?.record ?? '-'}
+                      {gamesWithRecord.find(g => g.game_id === game.game_id)?.record ?? '-'}
                     </td>
                   </tr>
                 ))}

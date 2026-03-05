@@ -141,10 +141,10 @@ export function getStandingsAsOfDate(date: string, seasonId: string): TeamStandi
     if (teams.length === 0) return;
     const leader = teams[0];
     if (leader === undefined) return;
-    
+
     for (const team of teams) {
       // GB = ((Leader Wins - Team Wins) + (Team Losses - Leader Losses)) / 2
-      const gbValue = ((leader.w - team.w) + (team.l - leader.l)) / 2;
+      const gbValue = (leader.w - team.w + (team.l - leader.l)) / 2;
       team.gb = gbValue <= 0 ? 0 : Math.round(gbValue * 10) / 10;
     }
   };
@@ -175,7 +175,7 @@ export function getAvailableDates(seasonId: string): string[] {
     60_000
   );
 
-  return rows.map((row) => row.game_date);
+  return rows.map(row => row.game_date);
 }
 
 /**
@@ -207,7 +207,7 @@ export function getMostRecentGameDate(seasonId: string): string | undefined {
  */
 export function getCurrentStandings(seasonId: string): TeamStandingRow[] {
   const mostRecentDate = getMostRecentGameDate(seasonId);
-  if (!mostRecentDate) {
+  if (mostRecentDate == null || mostRecentDate.length === 0) {
     return [];
   }
   return getStandingsAsOfDate(mostRecentDate, seasonId);
@@ -227,10 +227,12 @@ export function getCurrentSeasonId(): string {
  *
  * @returns Array of season records ordered by start year (newest first)
  */
-export function getSeasonsWithGames(): Array<{ season_id: string; start_year: number; end_year: number }> {
-  return getCachedQueryMany<
-    Array<{ season_id: string; start_year: number; end_year: number }>
-  >(
+export function getSeasonsWithGames(): Array<{
+  season_id: string;
+  start_year: number;
+  end_year: number;
+}> {
+  return getCachedQueryMany<Array<{ season_id: string; start_year: number; end_year: number }>>(
     `SELECT DISTINCT s.season_id, s.start_year, s.end_year
      FROM dim_season s
      JOIN fact_game g ON g.season_id = s.season_id

@@ -1,0 +1,33 @@
+# Commit message hook
+# Validates commit message format follows conventional commits
+
+message=$(cat "$1")
+
+# Allow merge commits
+if echo "$message" | grep -qE "^Merge branch"; then
+  exit 0
+fi
+
+# Allow revert commits
+if echo "$message" | grep -qE "^Revert"; then
+  exit 0
+fi
+
+# Conventional commit pattern
+pattern="^(feat|fix|docs|style|refactor|test|chore)(\([a-z-]+\))?: .+"
+
+if ! echo "$message" | grep -qE "$pattern"; then
+  echo ""
+  echo "Invalid commit message format!"
+  echo ""
+  echo "Expected format: <type>[(scope)]: <description>"
+  echo ""
+  echo "Types: feat, fix, docs, style, refactor, test, chore"
+  echo ""
+  echo "Examples:"
+  echo "  feat(players): add career stats comparison"
+  echo "  fix(api): handle missing player data"
+  echo "  docs(readme): update setup instructions"
+  echo ""
+  exit 1
+fi

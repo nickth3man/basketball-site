@@ -6,16 +6,48 @@
 
 import { getCachedQueryMany, getCachedQueryOne } from '@/lib/db';
 
-/**
- * Get all seasons that have All-Star games.
- */
-export function getAllStarSeasons(): Array<{
+export interface AllStarSeasonRow {
   season_id: string;
   start_year: number;
   end_year: number;
   player_count: number;
-}> {
-  return getCachedQueryMany(
+}
+
+export interface AllStarRosterPlayer {
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+  is_starter: number;
+  is_replacement: number;
+}
+
+interface AllStarRosterQueryRow extends AllStarRosterPlayer {
+  team_name: string | null;
+}
+
+export interface AllStarMvpRow {
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+}
+
+export interface AllStarMvpHistoryRow extends AllStarMvpRow {
+  season_id: string;
+  start_year: number;
+  end_year: number;
+}
+
+export interface PlayerAllStarSelectionRow {
+  season_id: string;
+  selection_team: string;
+  is_starter: number;
+}
+
+/**
+ * Get all seasons that have All-Star games.
+ */
+export function getAllStarSeasons(): AllStarSeasonRow[] {
+  return getCachedQueryMany<AllStarSeasonRow[]>(
     `SELECT 
       s.season_id,
       s.start_year,
@@ -27,7 +59,7 @@ export function getAllStarSeasons(): Array<{
     ORDER BY s.start_year DESC`,
     [],
     60_000
-  ) as Array<{ season_id: string; start_year: number; end_year: number; player_count: number }>;
+  );
 }
 
 /**
@@ -36,16 +68,10 @@ export function getAllStarSeasons(): Array<{
 export function getAllStarRosters(seasonId: string): {
   teams: Array<{
     team_name: string;
-    players: Array<{
-      bref_id: string;
-      full_name: string;
-      team_abbrev: string | null;
-      is_starter: number;
-      is_replacement: number;
-    }>;
+    players: AllStarRosterPlayer[];
   }>;
 } {
-  const players = getCachedQueryMany(
+  const players = getCachedQueryMany<AllStarRosterQueryRow[]>(
     `SELECT 
       p.bref_id,
       p.full_name,
@@ -60,34 +86,31 @@ export function getAllStarRosters(seasonId: string): {
     ORDER BY fas.selection_team, fas.is_starter DESC, p.full_name`,
     [seasonId],
     60_000
-  ) as Array<{
-    bref_id: string;
-    full_name: string;
-    team_abbrev: string | null;
-    team_name: string;
-    is_starter: number;
-    is_replacement: number;
-  }>;
+  );
 
   // Group by team
-  const teamsMap = new Map<string, typeof players>();
+  const teamsMap = new Map<string, AllStarRosterPlayer[]>();
   for (const player of players) {
-    const teamName = player['team_name'] || 'Team';
-    if (!teamsMap.has(teamName)) {
-      teamsMap.set(teamName, []);
+    const teamName = player.team_name ?? 'Team';
+    const teamPlayers = teamsMap.get(teamName);
+    const normalizedPlayer: AllStarRosterPlayer = {
+      bref_id: player.bref_id,
+      full_name: player.full_name,
+      team_abbrev: player.team_abbrev,
+      is_starter: player.is_starter,
+      is_replacement: player.is_replacement,
+    };
+
+    if (teamPlayers == null) {
+      teamsMap.set(teamName, [normalizedPlayer]);
+    } else {
+      teamPlayers.push(normalizedPlayer);
     }
-    teamsMap.get(teamName)!.push(player);
   }
 
-  const teams = Array.from(teamsMap.entries()).map(([team_name, players]) => ({
-    team_name,
-    players: players.map(p => ({
-      bref_id: p['bref_id'],
-      full_name: p['full_name'],
-      team_abbrev: p['team_abbrev'],
-      is_starter: p['is_starter'],
-      is_replacement: p['is_replacement'],
-    })),
+  const teams = Array.from(teamsMap.entries()).map(([teamName, teamPlayers]) => ({
+    team_name: teamName,
+    players: teamPlayers,
   }));
 
   return { teams };
@@ -96,8 +119,8 @@ export function getAllStarRosters(seasonId: string): {
 /**
  * Get All-Star MVP for a specific season (from awards table).
  */
-export function getAllStarMVP(seasonId: string): Record<string, string | number | null> | undefined {
-  return getCachedQueryOne(
+export function getAllStarMVP(seasonId: string): AllStarMvpRow | undefined {
+  return getCachedQueryOne<AllStarMvpRow | undefined>(
     `SELECT 
       p.bref_id,
       p.full_name,
@@ -112,14 +135,14 @@ export function getAllStarMVP(seasonId: string): Record<string, string | number 
     LIMIT 1`,
     [seasonId],
     60_000
-  ) as Record<string, string | number | null> | undefined;
+  );
 }
 
 /**
  * Get all-time All-Star MVPs.
  */
-export function getAllStarMVPs(): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getAllStarMVPs(): AllStarMvpHistoryRow[] {
+  return getCachedQueryMany<AllStarMvpHistoryRow[]>(
     `SELECT 
       pa.season_id,
       s.start_year,
@@ -137,18 +160,14 @@ export function getAllStarMVPs(): Array<Record<string, string | number | null>> 
     ORDER BY s.start_year DESC`,
     [],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
  * Get All-Star selections count for a player.
  */
-export function getPlayerAllStarSelections(playerId: string): Array<{
-  season_id: string;
-  selection_team: string;
-  is_starter: number;
-}> {
-  return getCachedQueryMany(
+export function getPlayerAllStarSelections(playerId: string): PlayerAllStarSelectionRow[] {
+  return getCachedQueryMany<PlayerAllStarSelectionRow[]>(
     `SELECT 
       season_id,
       selection_team,
@@ -158,5 +177,5 @@ export function getPlayerAllStarSelections(playerId: string): Array<{
     ORDER BY season_id DESC`,
     [playerId],
     60_000
-  ) as Array<{ season_id: string; selection_team: string; is_starter: number }>;
+  );
 }

@@ -23,14 +23,14 @@ export default async function AllStarYearPage({
   params,
 }: AllStarYearPageProps): Promise<React.JSX.Element> {
   const { year } = await params;
-  
+
   // Parse year (e.g., "24" -> "2023-24")
   const fullYear = year.length === 2 ? `20${year}` : year;
-  const seasonId = `${parseInt(fullYear) - 1}-${year.slice(-2)}`;
-  
+  const seasonId = `${parseInt(fullYear, 10) - 1}-${year.slice(-2)}`;
+
   const rosters = getAllStarRosters(seasonId);
   const mvp = getAllStarMVP(seasonId);
-  
+
   if (rosters.teams.length === 0) {
     notFound();
   }
@@ -38,25 +38,25 @@ export default async function AllStarYearPage({
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
       <div className="mb-6">
-        <Link href={'/allstar' as Route} className="text-link mb-2 inline-block hover:underline">
+        <Link href={'/allstar' as Route} className="mb-2 inline-block text-link hover:underline">
           ← All All-Star Games
         </Link>
         <h1 className="text-3xl font-bold text-heading">{seasonId} NBA All-Star Game</h1>
-        {mvp && (
-          <p className="text-muted mt-1">
-            MVP: {' '}
+        {mvp == null ? null : (
+          <p className="mt-1 text-muted">
+            MVP:{' '}
             <Link
-              href={`/players/${(mvp['bref_id'] as string).slice(0, 1).toLowerCase()}/${mvp['bref_id']}` as Route}
+              href={`/players/${mvp.bref_id.slice(0, 1).toLowerCase()}/${mvp.bref_id}` as Route}
               className="font-semibold text-link"
             >
-              {mvp['full_name'] as string}
+              {mvp.full_name}
             </Link>
           </p>
         )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {rosters.teams.map((team) => (
+        {rosters.teams.map(team => (
           <section key={team.team_name} className="panel-paper p-4">
             <h2 className="mb-3 text-xl font-bold text-heading">{team.team_name}</h2>
             <div className={tableContainerClass}>
@@ -71,22 +71,24 @@ export default async function AllStarYearPage({
                 <tbody>
                   {team.players.map((player, index) => (
                     <tr
-                      key={player['bref_id'] as string}
+                      key={player.bref_id}
                       className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
                     >
                       <td className={tableCellClass('left')}>
                         <Link
-                          href={`/players/${(player['bref_id'] as string).slice(0, 1).toLowerCase()}/${player['bref_id']}` as Route}
+                          href={
+                            `/players/${player.bref_id.slice(0, 1).toLowerCase()}/${player.bref_id}` as Route
+                          }
                           className={tableLinkClass}
                         >
-                          {player['full_name'] as string}
+                          {player.full_name}
                         </Link>
                       </td>
-                      <td className={tableCellClass('left')}>{player['team_abbrev'] ?? '-'}</td>
+                      <td className={tableCellClass('left')}>{player.team_abbrev ?? '-'}</td>
                       <td className={tableCellClass('left')}>
-                        {player['is_starter'] ? (
+                        {player.is_starter === 1 ? (
                           <span className="font-semibold text-green-600">Starter</span>
-                        ) : player['is_replacement'] ? (
+                        ) : player.is_replacement === 1 ? (
                           <span className="text-orange-600">Replacement</span>
                         ) : (
                           <span className="text-muted">Reserve</span>

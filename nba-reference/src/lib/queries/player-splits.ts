@@ -31,7 +31,7 @@ function processSplits(
     fta: number;
   }>
 ): PlayerSplitRow[] {
-  return rows.map((row) => ({
+  return rows.map(row => ({
     split_value: row.split_value,
     g: row.g,
     mp: row.mp,
@@ -47,12 +47,9 @@ function processSplits(
   }));
 }
 
-export function getPlayerHomeAwaySplits(
-  playerId: string,
-  seasonId?: string
-): PlayerSplitRow[] {
-  const seasonFilter = seasonId ? 'AND g.season_id = ?' : '';
-  const params = seasonId ? [playerId, seasonId] : [playerId];
+export function getPlayerHomeAwaySplits(playerId: string, seasonId?: string): PlayerSplitRow[] {
+  const seasonFilter = hasSeasonId(seasonId) ? 'AND g.season_id = ?' : '';
+  const params = hasSeasonId(seasonId) ? [playerId, seasonId] : [playerId];
 
   const rows = getCachedQueryMany<
     Array<{
@@ -73,15 +70,15 @@ export function getPlayerHomeAwaySplits(
     `SELECT 
       CASE WHEN g.home_team_id = pgl.team_id THEN 'Home' ELSE 'Away' END as split_value,
       COUNT(*) as g,
-      SUM(pgl.mp) as mp,
+      SUM(pgl.minutes_played) as mp,
       SUM(pgl.pts) as pts,
       SUM(pgl.reb) as reb,
       SUM(pgl.ast) as ast,
-      SUM(pgl.fg) as fg,
+      SUM(pgl.fgm) as fg,
       SUM(pgl.fga) as fga,
-      SUM(pgl.x3p) as x3p,
-      SUM(pgl.x3pa) as x3pa,
-      SUM(pgl.ft) as ft,
+      SUM(pgl.fg3m) as x3p,
+      SUM(pgl.fg3a) as x3pa,
+      SUM(pgl.ftm) as ft,
       SUM(pgl.fta) as fta
     FROM player_game_log pgl
     JOIN fact_game g ON g.game_id = pgl.game_id
@@ -97,12 +94,9 @@ export function getPlayerHomeAwaySplits(
   return processSplits(rows);
 }
 
-export function getPlayerMonthlySplits(
-  playerId: string,
-  seasonId?: string
-): PlayerSplitRow[] {
-  const seasonFilter = seasonId ? 'AND g.season_id = ?' : '';
-  const params = seasonId ? [playerId, seasonId] : [playerId];
+export function getPlayerMonthlySplits(playerId: string, seasonId?: string): PlayerSplitRow[] {
+  const seasonFilter = hasSeasonId(seasonId) ? 'AND g.season_id = ?' : '';
+  const params = hasSeasonId(seasonId) ? [playerId, seasonId] : [playerId];
 
   const rows = getCachedQueryMany<
     Array<{
@@ -131,15 +125,15 @@ export function getPlayerMonthlySplits(
         WHEN '12' THEN 'December'
       END as split_value,
       COUNT(*) as g,
-      SUM(pgl.mp) as mp,
+      SUM(pgl.minutes_played) as mp,
       SUM(pgl.pts) as pts,
       SUM(pgl.reb) as reb,
       SUM(pgl.ast) as ast,
-      SUM(pgl.fg) as fg,
+      SUM(pgl.fgm) as fg,
       SUM(pgl.fga) as fga,
-      SUM(pgl.x3p) as x3p,
-      SUM(pgl.x3pa) as x3pa,
-      SUM(pgl.ft) as ft,
+      SUM(pgl.fg3m) as x3p,
+      SUM(pgl.fg3a) as x3pa,
+      SUM(pgl.ftm) as ft,
       SUM(pgl.fta) as fta
     FROM player_game_log pgl
     JOIN fact_game g ON g.game_id = pgl.game_id
@@ -155,12 +149,9 @@ export function getPlayerMonthlySplits(
   return processSplits(rows);
 }
 
-export function getPlayerOpponentSplits(
-  playerId: string,
-  seasonId?: string
-): PlayerSplitRow[] {
-  const seasonFilter = seasonId ? 'AND g.season_id = ?' : '';
-  const params = seasonId ? [playerId, seasonId] : [playerId];
+export function getPlayerOpponentSplits(playerId: string, seasonId?: string): PlayerSplitRow[] {
+  const seasonFilter = hasSeasonId(seasonId) ? 'AND g.season_id = ?' : '';
+  const params = hasSeasonId(seasonId) ? [playerId, seasonId] : [playerId];
 
   const rows = getCachedQueryMany<
     Array<{
@@ -181,15 +172,15 @@ export function getPlayerOpponentSplits(
     `SELECT 
       opp.full_name as split_value,
       COUNT(*) as g,
-      SUM(pgl.mp) as mp,
+      SUM(pgl.minutes_played) as mp,
       SUM(pgl.pts) as pts,
       SUM(pgl.reb) as reb,
       SUM(pgl.ast) as ast,
-      SUM(pgl.fg) as fg,
+      SUM(pgl.fgm) as fg,
       SUM(pgl.fga) as fga,
-      SUM(pgl.x3p) as x3p,
-      SUM(pgl.x3pa) as x3pa,
-      SUM(pgl.ft) as ft,
+      SUM(pgl.fg3m) as x3p,
+      SUM(pgl.fg3a) as x3pa,
+      SUM(pgl.ftm) as ft,
       SUM(pgl.fta) as fta
     FROM player_game_log pgl
     JOIN fact_game g ON g.game_id = pgl.game_id
@@ -209,12 +200,9 @@ export function getPlayerOpponentSplits(
   return processSplits(rows);
 }
 
-export function getPlayerDivisionSplits(
-  playerId: string,
-  seasonId?: string
-): PlayerSplitRow[] {
-  const seasonFilter = seasonId ? 'AND g.season_id = ?' : '';
-  const params = seasonId ? [playerId, seasonId] : [playerId];
+export function getPlayerDivisionSplits(playerId: string, seasonId?: string): PlayerSplitRow[] {
+  const seasonFilter = hasSeasonId(seasonId) ? 'AND g.season_id = ?' : '';
+  const params = hasSeasonId(seasonId) ? [playerId, seasonId] : [playerId];
 
   const rows = getCachedQueryMany<
     Array<{
@@ -235,15 +223,15 @@ export function getPlayerDivisionSplits(
     `SELECT 
       COALESCE(opp.division, 'Unknown') as split_value,
       COUNT(*) as g,
-      SUM(pgl.mp) as mp,
+      SUM(pgl.minutes_played) as mp,
       SUM(pgl.pts) as pts,
       SUM(pgl.reb) as reb,
       SUM(pgl.ast) as ast,
-      SUM(pgl.fg) as fg,
+      SUM(pgl.fgm) as fg,
       SUM(pgl.fga) as fga,
-      SUM(pgl.x3p) as x3p,
-      SUM(pgl.x3pa) as x3pa,
-      SUM(pgl.ft) as ft,
+      SUM(pgl.fg3m) as x3p,
+      SUM(pgl.fg3a) as x3pa,
+      SUM(pgl.ftm) as ft,
       SUM(pgl.fta) as fta
     FROM player_game_log pgl
     JOIN fact_game g ON g.game_id = pgl.game_id
@@ -266,10 +254,15 @@ export function getPlayerDivisionSplits(
 export function getPlayerLatestSeason(playerId: string): string | undefined {
   const row = getCachedQueryOne<{ season_id: string } | undefined>(
     `SELECT MAX(season_id) as season_id
-    FROM player_game_log
-    WHERE player_id = ?`,
+    FROM fact_game g
+    JOIN player_game_log pgl ON pgl.game_id = g.game_id
+    WHERE pgl.player_id = ?`,
     [playerId],
     60_000
   );
   return row?.season_id;
+}
+
+function hasSeasonId(seasonId: string | undefined): seasonId is string {
+  return seasonId != null && seasonId.length > 0;
 }

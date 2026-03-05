@@ -14,6 +14,7 @@ import type { JSX } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { useEffect, useState, useCallback } from 'react';
+import { Input } from '@/components/ui/input';
 
 /**
  * Represents a single search result item.
@@ -81,13 +82,13 @@ export function SearchBox(): JSX.Element {
   return (
     <div className="relative">
       {/* Search input with focus states */}
-      <input
+      <Input
         value={query}
         onChange={event => {
           setQuery(event.target.value);
         }}
         placeholder="Search players or teams"
-        className="w-full rounded border border-line bg-white px-3 py-2 text-sm text-ink shadow-input transition-all duration-200 placeholder:text-placeholder focus:border-focus-border focus:ring-2 focus:ring-focus-ring focus:outline-none"
+        className="w-full"
       />
 
       {/* Results dropdown - only shown when we have results */}

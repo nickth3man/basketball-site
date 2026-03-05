@@ -13,6 +13,19 @@ import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+const OPTIONS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Accept-Encoding',
+};
+
+export function OPTIONS(): Response {
+  return new Response(null, {
+    status: 204,
+    headers: OPTIONS_HEADERS,
+  });
+}
+
 /**
  * Handle GET requests to /api/search and return matching players and teams for the provided query.
  *

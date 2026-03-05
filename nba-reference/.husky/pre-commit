@@ -1,0 +1,5 @@
+# Pre-commit hook - runs from git root but executes commands in nba-reference
+
+# Change to nba-reference directory and run lint-staged
+cd nba-reference
+npx lint-staged

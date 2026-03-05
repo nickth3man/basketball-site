@@ -1,16 +1,14 @@
 /**
  * @fileoverview Player detail page - comprehensive player statistics dashboard.
  *
- * This is the most complex page in the application, displaying 14+ data sections:
- * - Player bio (photo, position, birth info, draft, etc.)
- * - Career summary stats card
- * - Awards and honors
+ * This page displays 14+ data sections using extracted sub-components:
+ * - Player bio (photo, position, birth info, draft, career summary)
+ * - Awards and honors badges
  * - Per-game, per-36, per-100 possession stats
  * - Season totals and advanced metrics
- * - Shooting breakdowns (distance, zones, assisted %)
- * - Adjusted shooting (league-relative metrics)
- * - Play-by-play derived stats (position estimates)
- * - Full game log with Game Score
+ * - Shooting breakdowns and adjusted shooting
+ * - Play-by-play derived stats
+ * - Full game log
  * - Awards history
  * - Salary history
  * - Career game highs
@@ -23,7 +21,6 @@
 
 import type React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { StatsTable } from '@/components/stats-table';
 import {
@@ -42,39 +39,74 @@ import {
   getPlayerSeasonStats,
   getPlayerShootingSeasonStats,
 } from '@/lib/queries';
-import { formatPercentage, formatUsd } from '@/lib/formatters';
+import { formatUsd } from '@/lib/formatters';
 import { validateBrefId } from '@/lib/validation';
+import { AwardsBadges, GameHighs, PlayerBioHeader } from './components';
+
+interface PlayerPageParams {
+  letter: string;
+  id: string;
+}
+
+interface PlayerPageProps {
+  params: Promise<PlayerPageParams>;
+}
 
 /**
- * Render a server-side player detail page presenting biography, seasonal and advanced statistics, shooting breakdowns, play-by-play metrics, game logs, awards, salary history, a career summary, and career game highs.
- *
- * Validates that the player ID starts with the provided letter (BBR-style canonical URL).
- * Triggers a 404 via `notFound()` when the requested player cannot be found.
- *
- * @param params - Promise resolving to route params containing the `letter` and player `id`
- * @returns The player detail page JSX element
+ * Navigation sections for sticky sidebar.
  */
-export default async function PlayerPage({
-  params,
-}: {
-  params: Promise<{ letter: string; id: string }>;
-}): Promise<React.JSX.Element> {
+const ANCHOR_SECTIONS = [
+  { id: 'per-game', label: 'Per Game' },
+  { id: 'per-36', label: 'Per 36 Min' },
+  { id: 'per-100', label: 'Per 100 Poss' },
+  { id: 'totals', label: 'Totals' },
+  { id: 'advanced', label: 'Advanced' },
+  { id: 'shooting', label: 'Shooting' },
+  { id: 'adjusted-shooting', label: 'Adjusted Shooting' },
+  { id: 'pbp', label: 'Play-by-Play' },
+  { id: 'game-log', label: 'Game Log' },
+  { id: 'awards', label: 'Awards' },
+  { id: 'salaries', label: 'Salaries' },
+  { id: 'highs', label: 'Game Highs' },
+] as const;
+
+/**
+ * Validates URL letter matches player ID first letter (BBR-style canonical URL).
+ */
+function validateLetterMatch(letter: string, id: string): boolean {
+  return /^[a-z]$/i.test(letter) && id.slice(0, 1).toLowerCase() === letter.toLowerCase();
+}
+
+/**
+ * Aggregates awards by name for display badges.
+ */
+function aggregateAwards(awards: Array<{ award_name: string }>): Array<[string, number]> {
+  const counts = awards.reduce<Record<string, number>>((acc, award) => {
+    acc[award.award_name] = (acc[award.award_name] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(counts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 8);
+}
+
+/**
+ * Render a server-side player detail page.
+ */
+export default async function PlayerPage({ params }: PlayerPageProps): Promise<React.JSX.Element> {
   const { letter, id } = await params;
 
-  // Validate letter matches player ID first letter (canonical URL validation)
-  if (!/^[a-z]$/i.test(letter) || id.slice(0, 1).toLowerCase() !== letter.toLowerCase()) {
+  if (!validateLetterMatch(letter, id)) {
     notFound();
   }
 
-  // Validate the player ID format before querying
   validateBrefId(id);
 
-  // Primary player lookup - 404 if not found
   const player = getPlayerByBrefId(id);
   if (!player) notFound();
 
-  // Fetch all player statistics in parallel
-  // Each query is cached (30s TTL) for subsequent page loads
+  // Fetch all player statistics (synchronous - better-sqlite3)
   const perGameStats = getPlayerPerGameStats(id, 25);
   const per36Stats = getPlayerPer36Stats(id, 25);
   const per100Stats = getPlayerPer100Stats(id, 25);
@@ -89,31 +121,7 @@ export default async function PlayerPage({
   const summary = getPlayerCareerSummary(id);
   const highs = getPlayerGameHighs(player.player_id);
 
-  // Aggregate awards by name for display badges
-  const awardCounts = Object.entries(
-    awards.reduce<Record<string, number>>((acc, award) => {
-      acc[award.award_name] = (acc[award.award_name] ?? 0) + 1;
-      return acc;
-    }, {})
-  )
-    .sort((leftAward, rightAward) => rightAward[1] - leftAward[1]) // Sort by count (descending)
-    .slice(0, 8); // Show top 8 award types
-
-  // Navigation anchors for sticky sidebar
-  const anchorSections = [
-    { id: 'per-game', label: 'Per Game' },
-    { id: 'per-36', label: 'Per 36 Min' },
-    { id: 'per-100', label: 'Per 100 Poss' },
-    { id: 'totals', label: 'Totals' },
-    { id: 'advanced', label: 'Advanced' },
-    { id: 'shooting', label: 'Shooting' },
-    { id: 'adjusted-shooting', label: 'Adjusted Shooting' },
-    { id: 'pbp', label: 'Play-by-Play' },
-    { id: 'game-log', label: 'Game Log' },
-    { id: 'awards', label: 'Awards' },
-    { id: 'salaries', label: 'Salaries' },
-    { id: 'highs', label: 'Game Highs' },
-  ];
+  const awardCounts = aggregateAwards(awards);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -122,98 +130,8 @@ export default async function PlayerPage({
         <Link href="/">Home</Link> / <Link href="/players">Players</Link> / {player.full_name}
       </div>
 
-      {/* Player bio header section */}
-      <section className="mb-5 border border-line bg-paper-soft p-4">
-        <div className="grid gap-4 md:grid-cols-[140px_1fr_260px]">
-          {/* Player headshot from Basketball-Reference CDN */}
-          <div>
-            <Image
-              src={`https://www.basketball-reference.com/req/202106291/images/headshots/${player.bref_id}.jpg`}
-              alt={`Photo of ${player.full_name}`}
-              width={130}
-              height={170}
-              className="h-[170px] w-[130px] border border-image-line object-cover"
-            />
-          </div>
-
-          {/* Basic player info grid */}
-          <div>
-            <h1 className="mb-2 text-3xl font-bold">{player.full_name}</h1>
-            <div className="grid gap-1 text-sm text-muted-strong sm:grid-cols-2">
-              <div>Position: {player.position ?? '-'}</div>
-              <div>Birth: {player.birth_date ?? '-'}</div>
-              <div>
-                Birthplace:{' '}
-                {((): string => {
-                  const parts = [player.birth_city, player.birth_country].filter(
-                    (part): part is string => part !== null && part.length > 0
-                  );
-                  return parts.length > 0 ? parts.join(', ') : '-';
-                })()}
-              </div>
-              <div>College: {player.college ?? '-'}</div>
-              <div>
-                Height: {player.height_cm !== null ? `${Math.round(player.height_cm)} cm` : '-'}
-              </div>
-              <div>
-                Weight: {player.weight_kg !== null ? `${Math.round(player.weight_kg)} kg` : '-'}
-              </div>
-              <div>
-                Draft:{' '}
-                {player.draft_year != null
-                  ? `${player.draft_year} R${player.draft_round ?? '?'} P${player.draft_number ?? '?'}`
-                  : '-'}
-              </div>
-              <div>Status: {player.is_active === 1 ? 'Active' : 'Inactive'}</div>
-              <div>Hall of Fame: {player.hof === 1 ? 'Yes' : 'No'}</div>
-            </div>
-          </div>
-
-          {/* Career summary stats card */}
-          <div className="border border-line-mid bg-white p-3 text-xs">
-            <div className="mb-2 font-bold tracking-wide text-crumb uppercase">Career Summary</div>
-            <div className="grid grid-cols-2 gap-y-1">
-              <span>G</span>
-              <span className="text-right tabular-nums">{summary['g'] ?? '-'}</span>
-              <span>PTS/G</span>
-              <span className="text-right tabular-nums">{summary['pts_pg'] ?? '-'}</span>
-              <span>REB/G</span>
-              <span className="text-right tabular-nums">{summary['reb_pg'] ?? '-'}</span>
-              <span>AST/G</span>
-              <span className="text-right tabular-nums">{summary['ast_pg'] ?? '-'}</span>
-              <span>FG%</span>
-              <span className="text-right tabular-nums">
-                {formatPercentage(summary['fg_pct'] as number | null)}
-              </span>
-              <span>3P%</span>
-              <span className="text-right tabular-nums">
-                {formatPercentage(summary['fg3_pct'] as number | null)}
-              </span>
-              <span>FT%</span>
-              <span className="text-right tabular-nums">
-                {formatPercentage(summary['ft_pct'] as number | null)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Awards badges section (only shown if player has awards) */}
-      {awardCounts.length > 0 ? (
-        <section className="mb-5 border border-line-mid bg-white p-3">
-          <h2 className="mb-2 text-lg font-bold">Leaderboards, Awards, & Honors</h2>
-          <div className="flex flex-wrap gap-2">
-            {awardCounts.map(([name, count]) => (
-              <span
-                key={name}
-                className="rounded border border-line bg-button-bg px-2 py-1 text-xs"
-              >
-                {count}x {name}
-              </span>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <PlayerBioHeader player={player} summary={summary} />
+      <AwardsBadges awardCounts={awardCounts} />
 
       {/* Main content with sticky sidebar navigation */}
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
@@ -223,7 +141,7 @@ export default async function PlayerPage({
             On this page
           </div>
           <nav className="space-y-1 text-sm">
-            {anchorSections.map(section => (
+            {ANCHOR_SECTIONS.map(section => (
               <a
                 key={section.id}
                 href={`#${section.id}`}
@@ -530,57 +448,7 @@ export default async function PlayerPage({
             />
           </section>
 
-          {/* Career Game Highs */}
-          <section id="highs" className="scroll-mt-4 border border-line-mid bg-white p-3">
-            <h2 className="mb-2 text-xl font-bold">Game Highs</h2>
-            <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                MP: <span className="font-bold tabular-nums">{highs['mp'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FG: <span className="font-bold tabular-nums">{highs['fg'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FGA: <span className="font-bold tabular-nums">{highs['fga'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                3P: <span className="font-bold tabular-nums">{highs['fg3'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                3PA: <span className="font-bold tabular-nums">{highs['fg3a'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FT: <span className="font-bold tabular-nums">{highs['ft'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                FTA: <span className="font-bold tabular-nums">{highs['fta'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                PTS: <span className="font-bold tabular-nums">{highs['pts'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                REB: <span className="font-bold tabular-nums">{highs['reb'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                AST: <span className="font-bold tabular-nums">{highs['ast'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                STL: <span className="font-bold tabular-nums">{highs['stl'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                BLK: <span className="font-bold tabular-nums">{highs['blk'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                TOV: <span className="font-bold tabular-nums">{highs['tov'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                PF: <span className="font-bold tabular-nums">{highs['pf'] ?? '-'}</span>
-              </div>
-              <div className="rounded border border-line-subtle bg-row-alt p-2">
-                +/-: <span className="font-bold tabular-nums">{highs['plus_minus'] ?? '-'}</span>
-              </div>
-            </div>
-          </section>
+          <GameHighs highs={highs} />
         </div>
       </div>
     </main>

@@ -1,65 +1,129 @@
 # Basketball Site
 
-This repository contains a full-stack basketball statistics website, built with Next.js and SQLite.
+[![CI](https://github.com/nickth3man/basketball-site/actions/workflows/ci.yml/badge.svg)](https://github.com/nickth3man/basketball-site/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/nickth3man/basketball-site)](https://github.com/nickth3man/basketball-site/commits/main)
 
-## Project Structure
+A full-stack basketball statistics website built with Next.js and SQLite. Access comprehensive NBA statistics, historical team records, player attributes, game logs, and more.
 
-- `db/` - Contains the raw SQLite database (`nba_raw_data.db`) storing the basketball statistics. Because of its large size, the `.db` files are tracked using Git LFS.
-- `nba-reference/` - The Next.js frontend application, which serves the user interface, APIs, game logs, and player stats.
-- `skills/` - Custom operational scripts and development tools.
+## Features
+
+- **Player Statistics** - Career stats, season stats, game logs, and advanced metrics
+- **Team Information** - Franchise history, rosters, and team records
+- **Game Data** - Box scores, schedules, and historical games
+- **Awards & Leaders** - NBA awards, statistical leaders, and records
+- **Search Functionality** - Find players and teams quickly
+- **Export Data** - Download statistics in CSV format
+
+## Quick Start
+
+```bash
+# Clone with Git LFS (required for the database)
+git lfs install
+git clone https://github.com/nickth3man/basketball-site.git
+cd basketball-site
+
+# Install dependencies and start development
+cd nba-reference
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## Prerequisites
 
-- **Node.js** (for running the frontend application)
-- **Git LFS** (Git Large File Storage must be installed to pull the database)
+| Requirement | Version | Purpose |
+|-------------|---------|---------|
+| **Node.js** | 20+ | Running the Next.js frontend |
+| **Git** | Latest | Version control |
+| **Git LFS** | Latest | Downloading the large SQLite database |
 
-## Setup
+## Project Structure
 
-1. **Clone the repository:**
-   Ensure you have Git LFS installed on your system before cloning, so the large SQLite `.db` file is downloaded correctly.
+```
+basketball-site/
+├── db/                         # SQLite database (Git LFS tracked)
+│   └── nba_raw_data.db         # Pre-populated NBA statistics
+├── docs/                       # Repository documentation hub
+├── nba-reference/              # Next.js frontend application
+│   ├── src/
+│   │   ├── app/               # Routes and API endpoints
+│   │   ├── components/        # Shared UI components
+│   │   └── lib/               # Data access and queries
+│   ├── package.json           # Dependencies and scripts
+│   └── README.md              # Frontend-specific docs
+├── scripts/                    # Repository maintenance scripts
+├── .github/                    # GitHub Actions and templates
+├── CONTRIBUTING.md             # Contribution guidelines
+└── README.md                   # This file
+```
 
-   ```bash
-   git lfs install
-   git clone https://github.com/nickth3man/basketball-site.git
-   cd basketball-site
-   ```
+## Development
 
-2. **Frontend Setup:**
-   Navigate into the Next.js app directory to install dependencies and start the development server.
+### Available Commands
 
-   ```bash
-   cd nba-reference
-   npm install
-   npm run dev
-   ```
+From the `nba-reference/` directory:
 
-For more comprehensive setup instructions regarding the frontend, please refer to the [nba-reference/README.md](nba-reference/README.md).
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Create production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | Run ESLint with auto-fix |
+| `npm run format` | Format code with Prettier |
+| `npm run test` | Run test suite with Vitest |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run ci` | Run full CI pipeline |
 
-## Database Migration Strategy
+### Database Architecture
 
-The application uses a **read-only database** model. The SQLite database (`db/nba_raw_data.db`) contains pre-populated NBA statistics and is not modified by the application at runtime.
+The application uses a **read-only database** architecture. The SQLite database (`db/nba_raw_data.db`) contains pre-populated NBA statistics and is never modified at runtime.
 
-### Data Updates
+**Key Points:**
+- Database is tracked in Git LFS
+- App only reads from the database
+- Updates happen through separate ETL processes
 
-When updating the database with new season data:
+See [nba-reference/ARCHITECTURE.md](nba-reference/ARCHITECTURE.md) for detailed system design.
 
-1. **Backup the current database** before making changes
-2. **Use a separate ETL process** (outside this application) to populate new data
-3. **Verify data integrity** before committing changes
-4. **Commit the updated `.db` file** to Git LFS
+## Documentation
 
-### Schema Changes
+- **[docs/README.md](docs/README.md)** - Documentation index and navigation
+- **[docs/project-structure.md](docs/project-structure.md)** - Canonical structure map
+- **[db/README.md](db/README.md)** - Database payload and runtime path notes
+- **[scripts/README.md](scripts/README.md)** - Maintenance script reference
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to this project
+- **[nba-reference/README.md](nba-reference/README.md)** - Frontend-specific documentation
+- **[nba-reference/AGENTS.md](nba-reference/AGENTS.md)** - Development guidelines
+- **[nba-reference/ARCHITECTURE.md](nba-reference/ARCHITECTURE.md)** - System architecture
 
-If schema modifications are required:
+## Tech Stack
 
-1. **Version the schema** with migration scripts in `scripts/migrations/`
-2. **Use a migration tool** such as:
-   - [Prisma](https://www.prisma.io/) — Type-safe ORM with migration support
-   - [Drizzle](https://orm.drizzle.team/) — Lightweight TypeScript ORM
-   - [Flyway](https://flywaydb.org/) — SQL-based migrations
-3. **Test migrations** against a copy of the database before applying to production
-4. **Document schema changes** in commit messages and CHANGELOG
+| Technology | Purpose |
+|------------|---------|
+| [Next.js 16](https://nextjs.org/) | React framework with App Router |
+| [React 19](https://react.dev/) | UI library |
+| [TypeScript 5](https://www.typescriptlang.org/) | Type safety |
+| [Tailwind CSS 4](https://tailwindcss.com/) | Utility-first styling |
+| [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | SQLite database access |
+| [Vitest](https://vitest.dev/) | Testing framework |
+| [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) | Code quality |
 
-### No Runtime Migrations
+## Contributing
 
-This application does **not** perform database migrations at runtime. All schema changes must be applied during the data update process before deployment.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+
+- Setting up your development environment
+- Code style and conventions
+- Submitting pull requests
+- Reporting issues
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Note:** This is a personal project for learning and demonstration purposes. NBA data is sourced from publicly available statistics.

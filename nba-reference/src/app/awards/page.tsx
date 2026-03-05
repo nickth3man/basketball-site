@@ -15,7 +15,8 @@ export default function AwardsPage(): React.JSX.Element {
   const awards = [
     {
       name: 'Most Valuable Player (MVP)',
-      description: 'The Michael Jordan Trophy - awarded to the best performing player of the regular season',
+      description:
+        'The Michael Jordan Trophy - awarded to the best performing player of the regular season',
       href: '/awards/mvp',
       trophy: 'Michael Jordan Trophy',
     },
@@ -60,10 +61,7 @@ export default function AwardsPage(): React.JSX.Element {
             </thead>
             <tbody>
               {awards.map((award, index) => (
-                <tr
-                  key={award.href}
-                  className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
-                >
+                <tr key={award.href} className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}>
                   <td className={tableCellClass('left')}>
                     <Link href={award.href as Route} className={tableLinkClass}>
                       {award.name}
@@ -72,10 +70,7 @@ export default function AwardsPage(): React.JSX.Element {
                   <td className={tableCellClass('left')}>{award.trophy}</td>
                   <td className={tableCellClass('left')}>{award.description}</td>
                   <td className={tableCellClass('left')}>
-                    <Link
-                      href={award.href as Route}
-                      className="text-link hover:underline"
-                    >
+                    <Link href={award.href as Route} className="text-link hover:underline">
                       View History →
                     </Link>
                   </td>

@@ -51,13 +51,22 @@ export function SiteHeader(): JSX.Element {
           <Link href="/draft" className="transition-colors duration-200 hover:text-white">
             Draft
           </Link>
-          <Link href={'/playoffs' as Route} className="transition-colors duration-200 hover:text-white">
+          <Link
+            href={'/playoffs' as Route}
+            className="transition-colors duration-200 hover:text-white"
+          >
             Playoffs
           </Link>
-          <Link href={'/awards' as Route} className="transition-colors duration-200 hover:text-white">
+          <Link
+            href={'/awards' as Route}
+            className="transition-colors duration-200 hover:text-white"
+          >
             Awards
           </Link>
-          <Link href={'/standings' as Route} className="transition-colors duration-200 hover:text-white">
+          <Link
+            href={'/standings' as Route}
+            className="transition-colors duration-200 hover:text-white"
+          >
             Standings
           </Link>
         </nav>

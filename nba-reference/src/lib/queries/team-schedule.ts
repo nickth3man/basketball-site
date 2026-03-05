@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/db';
 
-export type TeamScheduleGame = {
+export interface TeamScheduleGame {
   game_id: string;
   game_date: string;
   status: string | null;
@@ -10,7 +10,7 @@ export type TeamScheduleGame = {
   team_score: number | null;
   opp_score: number | null;
   result: 'W' | 'L' | 'Scheduled';
-};
+}
 
 export function getTeamSchedule(teamAbbrev: string, seasonId: string): TeamScheduleGame[] {
   return getDb()
@@ -96,7 +96,7 @@ export function getTeamRecordAsOf(
     | undefined;
 
   return {
-    w: Number(row?.w ?? 0),
-    l: Number(row?.l ?? 0),
+    w: row?.w ?? 0,
+    l: row?.l ?? 0,
   };
 }

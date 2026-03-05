@@ -35,6 +35,7 @@ src/lib/
 
 - `db.ts` is the only infrastructure module that opens SQLite connections.
 - Domain queries belong in `queries/`; feature glue logic belongs in `query/`.
+- Prefer `@/lib/query` as the import entrypoint for feature query functions.
 - Keep SQL in query modules, not in route/page components.
 - Prefer typed helpers (`getCachedQueryOne<T>`, `getCachedQueryMany<T>`) over
   ad-hoc result casts.

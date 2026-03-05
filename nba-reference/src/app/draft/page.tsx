@@ -31,7 +31,7 @@ export default function DraftPage(): React.JSX.Element {
           <tbody>
             {seasons.map((season, seasonIndex) => {
               const slug = seasonIdToLeagueSlug(season.season_id);
-              const draftSlug = slug == null ? season.season_id : slug;
+              const draftSlug = slug ?? season.season_id;
 
               return (
                 <tr
@@ -40,10 +40,7 @@ export default function DraftPage(): React.JSX.Element {
                 >
                   <td className={tableCellClass('left')}>{season.season_id}</td>
                   <td className={tableCellClass('left')}>
-                    <Link
-                      className={tableLinkClass}
-                      href={`/draft/${draftSlug}` as Route}
-                    >
+                    <Link className={tableLinkClass} href={`/draft/${draftSlug}` as Route}>
                       {draftSlug}
                     </Link>
                   </td>
