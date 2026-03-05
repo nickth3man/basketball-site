@@ -61,17 +61,17 @@ export default async function PlayersPage({
           All
         </Link>
         {letters.map(letter => (
-              <Link
-                key={letter}
-                href={`/players/${letter}` as Route}
-                className={
-                  activeLetter === letter
-                    ? 'rounded border border-line bg-button-bg px-2 py-1 font-semibold'
-                    : 'rounded border border-line px-2 py-1 hover:bg-button-bg'
-                }
-              >
-                {letter.toUpperCase()}
-              </Link>
+          <Link
+            key={letter}
+            href={`/players/${letter}` as Route}
+            className={
+              activeLetter === letter
+                ? 'rounded border border-line bg-button-bg px-2 py-1 font-semibold'
+                : 'rounded border border-line px-2 py-1 hover:bg-button-bg'
+            }
+          >
+            {letter.toUpperCase()}
+          </Link>
         ))}
       </div>
       <div className={tableContainerClass}>
@@ -92,7 +92,9 @@ export default async function PlayersPage({
                 <td className={tableCellClass('left')}>
                   <Link
                     className={tableLinkClass}
-                    href={`/players/${player.bref_id.slice(0, 1).toLowerCase()}/${player.bref_id}` as Route}
+                    href={
+                      `/players/${player.bref_id.slice(0, 1).toLowerCase()}/${player.bref_id}` as Route
+                    }
                   >
                     {player.full_name}
                   </Link>

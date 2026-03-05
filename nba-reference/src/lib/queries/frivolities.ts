@@ -54,14 +54,15 @@ export function getAllBirthdaysGrouped(): Array<{
   // Group by month/day
   const grouped = new Map<string, PlayerBirthday[]>();
   for (const player of rows) {
-    const month = player['birth_month'];
-    const day = player['birth_day'];
-    if (month === undefined || day === undefined) continue;
+    const month = player.birth_month;
+    const day = player.birth_day;
     const key = `${month}-${day}`;
-    if (!grouped.has(key)) {
-      grouped.set(key, []);
+    const existingPlayers = grouped.get(key);
+    if (existingPlayers == null) {
+      grouped.set(key, [player]);
+    } else {
+      existingPlayers.push(player);
     }
-    grouped.get(key)!.push(player);
   }
 
   return Array.from(grouped.entries())
@@ -71,7 +72,10 @@ export function getAllBirthdaysGrouped(): Array<{
       const day = parseInt(parts[1] ?? '1', 10);
       return { month, day, players };
     })
-    .sort((a, b) => a.month - b.month || a.day - b.day);
+    .sort((a, b) => {
+      const monthDiff = a.month - b.month;
+      return monthDiff !== 0 ? monthDiff : a.day - b.day;
+    });
 }
 
 export function getPlayersByCollege(): CollegeInfo[] {

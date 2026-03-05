@@ -14,13 +14,70 @@
 
 import { getCachedQueryMany, getCachedQueryOne } from '@/lib/db';
 
+export interface PlayoffSeasonRow {
+  season_id: string;
+  start_year: number;
+  end_year: number;
+}
+
+export interface PlayoffSeriesRow {
+  home_abbrev: string;
+  away_abbrev: string;
+  home_name: string;
+  away_name: string;
+  total_games: number;
+  home_wins: number;
+  away_wins: number;
+  winner_abbrev: string;
+  series_id: string;
+}
+
+export interface PlayoffSeriesGameRow {
+  game_id: string;
+  game_date: string;
+  home_score: number;
+  away_score: number;
+  home_abbrev: string;
+  away_abbrev: string;
+  home_name: string;
+  away_name: string;
+  winner_abbrev: string;
+}
+
+export interface PlayoffLeaderRow {
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string;
+  games: number;
+  total_pts?: number | null;
+  total_reb?: number | null;
+  total_ast?: number | null;
+  total_ws?: number | null;
+  pts_pg?: number | null;
+  reb_pg?: number | null;
+  ast_pg?: number | null;
+  ws_pg?: number | null;
+}
+
+export interface NbaFinalsRow {
+  home_abbrev: string;
+  away_abbrev: string;
+  home_name: string;
+  away_name: string;
+  total_games: number;
+  home_wins: number;
+  away_wins: number;
+  winner_abbrev: string;
+  series_id: string;
+}
+
 /**
  * Get all seasons that have playoff data.
  *
  * @returns Array of season records with ID and year range, ordered by start year (newest first)
  */
-export function getPlayoffSeasons(): Array<{ season_id: string; start_year: number; end_year: number }> {
-  return getCachedQueryMany(
+export function getPlayoffSeasons(): PlayoffSeasonRow[] {
+  return getCachedQueryMany<PlayoffSeasonRow[]>(
     `SELECT DISTINCT s.season_id, s.start_year, s.end_year
      FROM dim_season s
      JOIN fact_game g ON g.season_id = s.season_id
@@ -28,7 +85,7 @@ export function getPlayoffSeasons(): Array<{ season_id: string; start_year: numb
      ORDER BY s.start_year DESC`,
     [],
     60_000
-  ) as Array<{ season_id: string; start_year: number; end_year: number }>;
+  );
 }
 
 /**
@@ -37,10 +94,8 @@ export function getPlayoffSeasons(): Array<{ season_id: string; start_year: numb
  * @param seasonId - Season identifier (e.g., "2024-25")
  * @returns Array of series records with team info, series results, and game count
  */
-export function getPlayoffSeriesBySeason(
-  seasonId: string
-): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getPlayoffSeriesBySeason(seasonId: string): PlayoffSeriesRow[] {
+  return getCachedQueryMany<PlayoffSeriesRow[]>(
     `WITH series_games AS (
       SELECT 
         g.game_id,
@@ -102,7 +157,7 @@ export function getPlayoffSeriesBySeason(
     ORDER BY total_games DESC, home_abbrev`,
     [seasonId],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -117,8 +172,8 @@ export function getPlayoffSeriesGames(
   seasonId: string,
   team1Abbrev: string,
   team2Abbrev: string
-): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+): PlayoffSeriesGameRow[] {
+  return getCachedQueryMany<PlayoffSeriesGameRow[]>(
     `SELECT 
       g.game_id,
       g.game_date,
@@ -145,7 +200,7 @@ export function getPlayoffSeriesGames(
     ORDER BY g.game_date`,
     [seasonId, team1Abbrev, team2Abbrev, team2Abbrev, team1Abbrev],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -160,7 +215,7 @@ export function getPlayoffLeaders(
   seasonId: string,
   stat: 'pts' | 'reb' | 'ast' | 'ws' = 'pts',
   limit = 10
-): Array<Record<string, string | number | null>> {
+): PlayoffLeaderRow[] {
   const statColumn = {
     pts: 'SUM(pgl.pts)',
     reb: 'SUM(pgl.reb)',
@@ -175,7 +230,7 @@ export function getPlayoffLeaders(
     ws: 'total_ws',
   }[stat];
 
-  return getCachedQueryMany(
+  return getCachedQueryMany<PlayoffLeaderRow[]>(
     `SELECT 
       p.bref_id,
       p.full_name,
@@ -195,7 +250,7 @@ export function getPlayoffLeaders(
     LIMIT ?`,
     [seasonId, limit],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -204,10 +259,8 @@ export function getPlayoffLeaders(
  * @param seasonId - Season identifier (e.g., "2024-25")
  * @returns Finals series record or undefined if not found
  */
-export function getNBAFinals(
-  seasonId: string
-): Record<string, string | number | null> | undefined {
-  return getCachedQueryOne(
+export function getNBAFinals(seasonId: string): NbaFinalsRow | undefined {
+  return getCachedQueryOne<NbaFinalsRow | undefined>(
     `WITH finals_games AS (
       SELECT 
         g.game_id,
@@ -239,18 +292,31 @@ export function getNBAFinals(
         home_name,
         away_name,
         COUNT(*) as total_games,
-        SUM(CASE WHEN winner_id = home_team_id THEN 1 ELSE 0 END) as home_wins,
-        SUM(CASE WHEN winner_id = away_team_id THEN 1 ELSE 0 END) as away_wins
+        SUM(CASE WHEN winner_abbrev = home_abbrev THEN 1 ELSE 0 END) as home_wins,
+        SUM(CASE WHEN winner_abbrev = away_abbrev THEN 1 ELSE 0 END) as away_wins,
+        MAX(CASE WHEN game_num = 1 THEN game_id END) as series_id
       FROM finals_games
       GROUP BY home_abbrev, away_abbrev, home_name, away_name
     )
-    SELECT *
+    SELECT
+      home_abbrev,
+      away_abbrev,
+      home_name,
+      away_name,
+      total_games,
+      home_wins,
+      away_wins,
+      series_id,
+      CASE
+        WHEN home_wins > away_wins THEN home_abbrev
+        ELSE away_abbrev
+      END as winner_abbrev
     FROM series_count
     ORDER BY total_games DESC
     LIMIT 1`,
     [seasonId],
     60_000
-  ) as Record<string, string | number | null> | undefined;
+  );
 }
 
 /**
@@ -261,59 +327,90 @@ export function getNBAFinals(
  */
 export function getSeasonChampion(seasonId: string): string | undefined {
   const finals = getNBAFinals(seasonId);
-  if (!finals) return undefined;
-  
-  const homeWins = (finals['home_wins'] as number) || 0;
-  const awayWins = (finals['away_wins'] as number) || 0;
-  
+  if (finals == null) return undefined;
+
+  const homeWins = finals.home_wins;
+  const awayWins = finals.away_wins;
+
   if (homeWins >= 4) {
-    return finals['home_abbrev'] as string;
-  } else if (awayWins >= 4) {
-    return finals['away_abbrev'] as string;
+    return finals.home_abbrev;
   }
-  
+  if (awayWins >= 4) {
+    return finals.away_abbrev;
+  }
+
   return undefined;
 }
 
 /**
  * Get playoff series summary organized by round.
- * 
+ *
  * @param seasonId - Season identifier (e.g., "2024-25")
  * @returns Object with series organized by conference and round
  */
-export function getPlayoffBracket(
-  seasonId: string
-): {
-  east: Record<string, Array<Record<string, string | number | null>>>;
-  west: Record<string, Array<Record<string, string | number | null>>>;
-  finals: Record<string, string | number | null> | undefined;
+export function getPlayoffBracket(seasonId: string): {
+  east: Record<string, PlayoffSeriesRow[]>;
+  west: Record<string, PlayoffSeriesRow[]>;
+  finals: NbaFinalsRow | undefined;
 } {
   const allSeries = getPlayoffSeriesBySeason(seasonId);
-  
+
   // This is a simplified bracket - in reality, you'd need more data
   // to properly identify rounds. This assumes we can infer from game counts.
-  const east: Record<string, Array<Record<string, string | number | null>>> = {
+  const east: Record<string, PlayoffSeriesRow[]> = {
     'First Round': [],
     'Conference Semifinals': [],
     'Conference Finals': [],
   };
-  const west: Record<string, Array<Record<string, string | number | null>>> = {
+  const west: Record<string, PlayoffSeriesRow[]> = {
     'First Round': [],
     'Conference Semifinals': [],
     'Conference Finals': [],
   };
-  
+
   // Infer conference from team abbreviations (simplified)
   // East teams: BOS, BRK, NYK, PHI, TOR, CHI, CLE, IND, DET, MIL, ATL, CHO, MIA, ORL, WAS
-  const eastTeams = new Set(['BOS', 'BRK', 'NYK', 'PHI', 'TOR', 'CHI', 'CLE', 'IND', 'DET', 'MIL', 'ATL', 'CHO', 'MIA', 'ORL', 'WAS']);
+  const eastTeams = new Set([
+    'BOS',
+    'BRK',
+    'NYK',
+    'PHI',
+    'TOR',
+    'CHI',
+    'CLE',
+    'IND',
+    'DET',
+    'MIL',
+    'ATL',
+    'CHO',
+    'MIA',
+    'ORL',
+    'WAS',
+  ]);
   // West teams: DEN, MIN, OKC, POR, UTA, GSW, LAC, LAL, PHO, SAC, DAL, HOU, MEM, NOP, SAS
-  const westTeams = new Set(['DEN', 'MIN', 'OKC', 'POR', 'UTA', 'GSW', 'LAC', 'LAL', 'PHO', 'SAC', 'DAL', 'HOU', 'MEM', 'NOP', 'SAS']);
-  
+  const westTeams = new Set([
+    'DEN',
+    'MIN',
+    'OKC',
+    'POR',
+    'UTA',
+    'GSW',
+    'LAC',
+    'LAL',
+    'PHO',
+    'SAC',
+    'DAL',
+    'HOU',
+    'MEM',
+    'NOP',
+    'SAS',
+  ]);
+
   for (const series of allSeries) {
-    const homeAbbrev = series['home_abbrev'] as string;
-    const awayAbbrev = series['away_abbrev'] as string;
-    const totalGames = (series['total_games'] as number) || 0;
-    
+    const homeAbbrev = series.home_abbrev;
+    const awayAbbrev = series.away_abbrev;
+    const totalGames = series.total_games;
+
     // Infer round from series position (simplified logic)
     // This would need refinement with actual seeding data
     let round = 'First Round';
@@ -321,19 +418,19 @@ export function getPlayoffBracket(
       // Could be later rounds - need more logic
       round = 'Conference Semifinals';
     }
-    
+
     // Assign to conference
     if (eastTeams.has(homeAbbrev) && eastTeams.has(awayAbbrev)) {
-      const roundKey = round as keyof typeof east;
-      east[roundKey] = [...(east[roundKey] || []), series];
+      const roundKey = round;
+      east[roundKey] = [...(east[roundKey] ?? []), series];
     } else if (westTeams.has(homeAbbrev) && westTeams.has(awayAbbrev)) {
-      const roundKey = round as keyof typeof west;
-      west[roundKey] = [...(west[roundKey] || []), series];
+      const roundKey = round;
+      west[roundKey] = [...(west[roundKey] ?? []), series];
     }
     // Cross-conference series would be finals
   }
-  
+
   const finals = getNBAFinals(seasonId);
-  
+
   return { east, west, finals };
 }

@@ -8,6 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isIP } from 'node:net';
 
 interface RateLimitEntry {
   timestamps: number[];
@@ -21,6 +22,41 @@ const RATE_LIMIT = 100; // requests per window
 const WINDOW_MS = 60_000; // 1 minute in milliseconds
 const CLEANUP_INTERVAL_MS = 5 * 60_000; // Clean up every 5 minutes
 
+const IP_HEADER_CANDIDATES = [
+  'x-vercel-forwarded-for',
+  'x-forwarded-for',
+  'cf-connecting-ip',
+  'x-real-ip',
+];
+
+function normalizeIpCandidate(value: string): string | null {
+  const firstSegment = value.split(',')[0]?.trim();
+  if (firstSegment == null || firstSegment.length === 0) return null;
+
+  const withoutPort =
+    firstSegment.includes('.') && firstSegment.includes(':')
+      ? (firstSegment.split(':')[0] ?? firstSegment)
+      : firstSegment;
+
+  if (withoutPort.length > 45) return null;
+  if (isIP(withoutPort) !== 0) {
+    return withoutPort;
+  }
+
+  return null;
+}
+
+export function extractClientIp(req: NextRequest): string {
+  for (const header of IP_HEADER_CANDIDATES) {
+    const rawValue = req.headers.get(header);
+    if (rawValue == null || rawValue.length === 0) continue;
+    const normalized = normalizeIpCandidate(rawValue);
+    if (normalized != null) return normalized;
+  }
+
+  return 'unknown';
+}
+
 /**
  * Cleans up old entries from the rate limit store to prevent memory leaks.
  * Removes entries with no recent requests.
@@ -30,11 +66,9 @@ function cleanupOldEntries(): void {
   const windowStart = now - WINDOW_MS;
 
   for (const [key, entry] of rateLimitStore.entries()) {
-    const recentRequests = entry.timestamps.filter(timestamp => timestamp > windowStart);
-    if (recentRequests.length === 0) {
+    pruneExpiredTimestamps(entry.timestamps, windowStart);
+    if (entry.timestamps.length === 0) {
       rateLimitStore.delete(key);
-    } else {
-      entry.timestamps = recentRequests;
     }
   }
 }
@@ -48,6 +82,17 @@ function maybeCleanup(now: number): void {
   cleanupOldEntries();
 }
 
+function pruneExpiredTimestamps(timestamps: number[], windowStart: number): void {
+  let removeCount = 0;
+  for (const timestamp of timestamps) {
+    if (timestamp > windowStart) break;
+    removeCount += 1;
+  }
+  if (removeCount > 0) {
+    timestamps.splice(0, removeCount);
+  }
+}
+
 /**
  * Enforces per-IP rate limiting for an incoming request and returns a 429 response when the limit is exceeded.
  *
@@ -59,16 +104,15 @@ function maybeCleanup(now: number): void {
  * @returns `NextResponse` with status 429 and rate-limit headers when the IP is over the limit, `null` otherwise
  */
 export function checkRateLimit(req: NextRequest): NextResponse | null {
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  const realIp = req.headers.get('x-real-ip');
-  const ip = forwardedFor?.split(',')[0]?.trim() ?? realIp ?? 'unknown';
+  const ip = extractClientIp(req);
 
   const now = Date.now();
   maybeCleanup(now);
   const windowStart = now - WINDOW_MS;
 
   const entry = rateLimitStore.get(ip) ?? { timestamps: [] };
-  const recentRequests = entry.timestamps.filter(timestamp => timestamp > windowStart);
+  pruneExpiredTimestamps(entry.timestamps, windowStart);
+  const recentRequests = entry.timestamps;
 
   if (recentRequests.length >= RATE_LIMIT) {
     const oldestRequest = recentRequests[0] ?? now;
@@ -112,7 +156,8 @@ export function getRateLimitStatus(ip: string): { remaining: number; reset: numb
     return { remaining: RATE_LIMIT, reset: now + WINDOW_MS };
   }
 
-  const recentRequests = entry.timestamps.filter(timestamp => timestamp > windowStart);
+  pruneExpiredTimestamps(entry.timestamps, windowStart);
+  const recentRequests = entry.timestamps;
   const oldestRequest = recentRequests[0] ?? now;
 
   return {

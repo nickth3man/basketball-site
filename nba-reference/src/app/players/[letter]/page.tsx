@@ -54,14 +54,9 @@ export default async function PlayerLetterPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="mb-3 text-2xl font-bold">
-        Players - {normalizedLetter.toUpperCase()}
-      </h1>
+      <h1 className="mb-3 text-2xl font-bold">Players - {normalizedLetter.toUpperCase()}</h1>
       <div className="mb-4 flex flex-wrap gap-2 text-xs">
-        <Link
-          href="/players"
-          className="rounded border border-line px-2 py-1 hover:bg-button-bg"
-        >
+        <Link href="/players" className="rounded border border-line px-2 py-1 hover:bg-button-bg">
           All
         </Link>
         {letters.map(l => (
@@ -96,17 +91,12 @@ export default async function PlayerLetterPage({
                 <td className={tableCellClass('left')}>
                   <Link
                     className={tableLinkClass}
-                    href={routes.player(
-                      player.bref_id.slice(0, 1).toLowerCase(),
-                      player.bref_id
-                    )}
+                    href={routes.player(player.bref_id.slice(0, 1).toLowerCase(), player.bref_id)}
                   >
                     {player.full_name}
                   </Link>
                 </td>
-                <td className={tableCellClass('left')}>
-                  {player.position ?? '-'}
-                </td>
+                <td className={tableCellClass('left')}>{player.position ?? '-'}</td>
                 <td className={tableCellClass('left')}>
                   {player.is_active === 1 ? 'Active' : 'Retired'}
                 </td>

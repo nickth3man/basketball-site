@@ -2,6 +2,7 @@
 
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   children: ReactNode;
@@ -53,15 +54,15 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="mb-4 text-gray-600">
               We encountered an error while loading this page. Please try refreshing.
             </p>
-            <button
+            <Button
               onClick={(): void => {
                 window.location.reload();
               }}
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-              type="button"
+              variant="danger"
+              size="lg"
             >
               Reload Page
-            </button>
+            </Button>
           </div>
         )
       );

@@ -16,16 +16,59 @@
 
 import { getCachedQueryMany, getCachedQueryOne } from '@/lib/db';
 
+export interface AwardWinnerRow {
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+  team_name: string | null;
+  votes_received: number | null;
+  votes_possible: number | null;
+  vote_percentage: number | null;
+}
+
+export interface AwardHistoryRow extends AwardWinnerRow {
+  season_id: string;
+  start_year: number;
+  end_year: number;
+}
+
+export interface AllTeamSelectionRow {
+  team_number: number;
+  position: string;
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+  team_name: string | null;
+}
+
+export interface AllTeamHistoryRow {
+  season_id: string;
+  start_year: number;
+  end_year: number;
+  team_number: number;
+  team_name: string;
+  position: string;
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+}
+
+interface AwardTypeRow {
+  award_name: string;
+}
+
+export interface AwardWinnerWithTrophyRow extends AwardHistoryRow {
+  trophy_name: string | null;
+}
+
 /**
  * MVP winner for a specific season.
  *
  * @param seasonId - Season identifier (e.g., "2024-25")
  * @returns MVP winner record or undefined
  */
-export function getMVPWinner(
-  seasonId: string
-): Record<string, string | number | null> | undefined {
-  return getCachedQueryOne(
+export function getMVPWinner(seasonId: string): AwardWinnerRow | undefined {
+  return getCachedQueryOne<AwardWinnerRow | undefined>(
     `SELECT 
       p.bref_id,
       p.full_name,
@@ -48,7 +91,7 @@ export function getMVPWinner(
     LIMIT 1`,
     [seasonId],
     60_000
-  ) as Record<string, string | number | null> | undefined;
+  );
 }
 
 /**
@@ -56,8 +99,8 @@ export function getMVPWinner(
  *
  * @returns Array of MVP winner records ordered by season (newest first)
  */
-export function getMVPHistory(): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getMVPHistory(): AwardHistoryRow[] {
+  return getCachedQueryMany<AwardHistoryRow[]>(
     `SELECT 
       pa.season_id,
       s.start_year,
@@ -82,7 +125,7 @@ export function getMVPHistory(): Array<Record<string, string | number | null>> {
     ORDER BY s.start_year DESC`,
     [],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -91,10 +134,8 @@ export function getMVPHistory(): Array<Record<string, string | number | null>> {
  * @param seasonId - Season identifier (e.g., "2024-25")
  * @returns DPOY winner record or undefined
  */
-export function getDPOYWinner(
-  seasonId: string
-): Record<string, string | number | null> | undefined {
-  return getCachedQueryOne(
+export function getDPOYWinner(seasonId: string): AwardWinnerRow | undefined {
+  return getCachedQueryOne<AwardWinnerRow | undefined>(
     `SELECT 
       p.bref_id,
       p.full_name,
@@ -117,7 +158,7 @@ export function getDPOYWinner(
     LIMIT 1`,
     [seasonId],
     60_000
-  ) as Record<string, string | number | null> | undefined;
+  );
 }
 
 /**
@@ -125,8 +166,8 @@ export function getDPOYWinner(
  *
  * @returns Array of DPOY winner records ordered by season (newest first)
  */
-export function getDPOYHistory(): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getDPOYHistory(): AwardHistoryRow[] {
+  return getCachedQueryMany<AwardHistoryRow[]>(
     `SELECT 
       pa.season_id,
       s.start_year,
@@ -151,7 +192,7 @@ export function getDPOYHistory(): Array<Record<string, string | number | null>> 
     ORDER BY s.start_year DESC`,
     [],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -160,10 +201,8 @@ export function getDPOYHistory(): Array<Record<string, string | number | null>> 
  * @param seasonId - Season identifier (e.g., "2024-25")
  * @returns ROY winner record or undefined
  */
-export function getROYWinner(
-  seasonId: string
-): Record<string, string | number | null> | undefined {
-  return getCachedQueryOne(
+export function getROYWinner(seasonId: string): AwardWinnerRow | undefined {
+  return getCachedQueryOne<AwardWinnerRow | undefined>(
     `SELECT 
       p.bref_id,
       p.full_name,
@@ -186,7 +225,7 @@ export function getROYWinner(
     LIMIT 1`,
     [seasonId],
     60_000
-  ) as Record<string, string | number | null> | undefined;
+  );
 }
 
 /**
@@ -194,8 +233,8 @@ export function getROYWinner(
  *
  * @returns Array of ROY winner records ordered by season (newest first)
  */
-export function getROYHistory(): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getROYHistory(): AwardHistoryRow[] {
+  return getCachedQueryMany<AwardHistoryRow[]>(
     `SELECT 
       pa.season_id,
       s.start_year,
@@ -220,7 +259,7 @@ export function getROYHistory(): Array<Record<string, string | number | null>> {
     ORDER BY s.start_year DESC`,
     [],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -230,11 +269,11 @@ export function getROYHistory(): Array<Record<string, string | number | null>> {
  * @returns Object with first, second, and third teams
  */
 export function getAllNBATeams(seasonId: string): {
-  first: Array<Record<string, string | number | null>>;
-  second: Array<Record<string, string | number | null>>;
-  third: Array<Record<string, string | number | null>>;
+  first: AllTeamSelectionRow[];
+  second: AllTeamSelectionRow[];
+  third: AllTeamSelectionRow[];
 } {
-  const allTeams = getCachedQueryMany(
+  const allTeams = getCachedQueryMany<AllTeamSelectionRow[]>(
     `SELECT 
       an.team_number,
       an.position,
@@ -252,12 +291,12 @@ export function getAllNBATeams(seasonId: string): {
     ORDER BY an.team_number, an.position`,
     [seasonId],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 
   return {
-    first: allTeams.filter(t => t['team_number'] === 1),
-    second: allTeams.filter(t => t['team_number'] === 2),
-    third: allTeams.filter(t => t['team_number'] === 3),
+    first: allTeams.filter(team => team.team_number === 1),
+    second: allTeams.filter(team => team.team_number === 2),
+    third: allTeams.filter(team => team.team_number === 3),
   };
 }
 
@@ -266,8 +305,8 @@ export function getAllNBATeams(seasonId: string): {
  *
  * @returns Array of All-NBA selections ordered by season (newest first)
  */
-export function getAllNBAHistory(): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getAllNBAHistory(): AllTeamHistoryRow[] {
+  return getCachedQueryMany<AllTeamHistoryRow[]>(
     `SELECT 
       an.season_id,
       s.start_year,
@@ -292,7 +331,7 @@ export function getAllNBAHistory(): Array<Record<string, string | number | null>
     ORDER BY s.start_year DESC, an.team_number, an.position`,
     [],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -302,10 +341,10 @@ export function getAllNBAHistory(): Array<Record<string, string | number | null>
  * @returns Object with first and second teams
  */
 export function getAllDefensiveTeams(seasonId: string): {
-  first: Array<Record<string, string | number | null>>;
-  second: Array<Record<string, string | number | null>>;
+  first: AllTeamSelectionRow[];
+  second: AllTeamSelectionRow[];
 } {
-  const allTeams = getCachedQueryMany(
+  const allTeams = getCachedQueryMany<AllTeamSelectionRow[]>(
     `SELECT 
       an.team_number,
       an.position,
@@ -323,11 +362,11 @@ export function getAllDefensiveTeams(seasonId: string): {
     ORDER BY an.team_number, an.position`,
     [seasonId],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 
   return {
-    first: allTeams.filter(t => t['team_number'] === 1),
-    second: allTeams.filter(t => t['team_number'] === 2),
+    first: allTeams.filter(team => team.team_number === 1),
+    second: allTeams.filter(team => team.team_number === 2),
   };
 }
 
@@ -336,8 +375,8 @@ export function getAllDefensiveTeams(seasonId: string): {
  *
  * @returns Array of All-Defensive selections ordered by season (newest first)
  */
-export function getAllDefensiveHistory(): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getAllDefensiveHistory(): AllTeamHistoryRow[] {
+  return getCachedQueryMany<AllTeamHistoryRow[]>(
     `SELECT 
       an.season_id,
       s.start_year,
@@ -361,7 +400,7 @@ export function getAllDefensiveHistory(): Array<Record<string, string | number |
     ORDER BY s.start_year DESC, an.team_number, an.position`,
     [],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }
 
 /**
@@ -371,17 +410,17 @@ export function getAllDefensiveHistory(): Array<Record<string, string | number |
  * @returns Object with MVP, DPOY, ROY winners and All-NBA teams
  */
 export function getSeasonAwards(seasonId: string): {
-  mvp: Record<string, string | number | null> | undefined;
-  dpoy: Record<string, string | number | null> | undefined;
-  roy: Record<string, string | number | null> | undefined;
+  mvp: AwardWinnerRow | undefined;
+  dpoy: AwardWinnerRow | undefined;
+  roy: AwardWinnerRow | undefined;
   allNBA: {
-    first: Array<Record<string, string | number | null>>;
-    second: Array<Record<string, string | number | null>>;
-    third: Array<Record<string, string | number | null>>;
+    first: AllTeamSelectionRow[];
+    second: AllTeamSelectionRow[];
+    third: AllTeamSelectionRow[];
   };
   allDefense: {
-    first: Array<Record<string, string | number | null>>;
-    second: Array<Record<string, string | number | null>>;
+    first: AllTeamSelectionRow[];
+    second: AllTeamSelectionRow[];
   };
 } {
   return {
@@ -398,17 +437,17 @@ export function getSeasonAwards(seasonId: string): {
  *
  * @returns Array of unique award names
  */
-export function getAwardTypes(): Array<string> {
-  const results = getCachedQueryMany(
+export function getAwardTypes(): string[] {
+  const results = getCachedQueryMany<AwardTypeRow[]>(
     `SELECT DISTINCT award_name 
     FROM fact_player_award 
     WHERE award_type = 'individual'
     ORDER BY award_name`,
     [],
     300_000
-  ) as Array<{ award_name: string }>;
+  );
 
-  return results.map(r => r['award_name']);
+  return results.map(result => result.award_name);
 }
 
 /**
@@ -417,10 +456,8 @@ export function getAwardTypes(): Array<string> {
  * @param awardName - Award name (e.g., "MVP", "DPOY", "ROY")
  * @returns Array of winner records ordered by season (newest first)
  */
-export function getAwardWinners(
-  awardName: string
-): Array<Record<string, string | number | null>> {
-  return getCachedQueryMany(
+export function getAwardWinners(awardName: string): AwardWinnerWithTrophyRow[] {
+  return getCachedQueryMany<AwardWinnerWithTrophyRow[]>(
     `SELECT 
       pa.season_id,
       s.start_year,
@@ -446,5 +483,5 @@ export function getAwardWinners(
     ORDER BY s.start_year DESC`,
     [awardName],
     60_000
-  ) as Array<Record<string, string | number | null>>;
+  );
 }

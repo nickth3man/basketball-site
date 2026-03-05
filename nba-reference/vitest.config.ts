@@ -12,9 +12,26 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     unstubGlobals: true,
-    // Run test files sequentially to prevent concurrent SQLite WAL access
-    // errors (disk I/O error) when multiple workers open the same DB file.
     fileParallelism: false,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'src/test-setup.ts',
+        'src/**/*.d.ts',
+        'src/**/__tests__/**',
+        '**/*.config.*',
+        '**/*.test.{ts,tsx}',
+      ],
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 60,
+        statements: 70,
+      },
+    },
   },
   resolve: {
     alias: {

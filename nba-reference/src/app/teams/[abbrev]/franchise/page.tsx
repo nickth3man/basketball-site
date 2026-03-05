@@ -30,14 +30,14 @@ export default async function FranchisePage({
   params,
 }: FranchisePageProps): Promise<React.JSX.Element> {
   const { abbrev } = await params;
-  
+
   const teamAbbrev = validateTeamAbbrev(abbrev.toUpperCase());
   const team = getTeamByAbbrev(teamAbbrev);
-  
+
   if (!team) {
     notFound();
   }
-  
+
   const currentInfo = getCurrentFranchiseInfo(teamAbbrev);
   const history = getFranchiseHistory(teamAbbrev);
   const seasons = getFranchiseSeasons(teamAbbrev);
@@ -48,23 +48,26 @@ export default async function FranchisePage({
       <div className="mb-6">
         <Link
           href={`/teams/${teamAbbrev}` as Route}
-          className="text-link mb-2 inline-block hover:underline"
+          className="mb-2 inline-block text-link hover:underline"
         >
           ← Back to {team.full_name}
         </Link>
         <h1 className="text-3xl font-bold text-heading">Franchise History</h1>
         {currentInfo && (
-          <p className="text-muted mt-1">
-            Founded: {currentInfo.founded} | Conference: {currentInfo.conference ?? 'N/A'} | Division: {currentInfo.division ?? 'N/A'}
+          <p className="mt-1 text-muted">
+            Founded: {currentInfo.founded} | Conference: {currentInfo.conference ?? 'N/A'} |
+            Division: {currentInfo.division ?? 'N/A'}
           </p>
         )}
       </div>
 
       {championships.length > 0 && (
-        <section className="panel-paper mb-6 p-4">
-          <h2 className="mb-3 text-xl font-bold text-heading">Championships ({championships.length})</h2>
+        <section className="mb-6 panel-paper p-4">
+          <h2 className="mb-3 text-xl font-bold text-heading">
+            Championships ({championships.length})
+          </h2>
           <div className="flex flex-wrap gap-2">
-            {championships.map((champ) => (
+            {championships.map(champ => (
               <span
                 key={champ.season_id}
                 className="rounded bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800"
@@ -77,7 +80,7 @@ export default async function FranchisePage({
       )}
 
       {history.length > 1 && (
-        <section className="panel-paper mb-6 p-4">
+        <section className="mb-6 panel-paper p-4">
           <h2 className="mb-3 text-xl font-bold text-heading">Team Name History</h2>
           <div className={tableContainerClass}>
             <table className={tableClass}>
@@ -130,10 +133,10 @@ export default async function FranchisePage({
                 >
                   <td className={tableCellClass('left')}>
                     <Link
-                      href={`/teams/${teamAbbrev}/${season['end_year']}` as Route}
+                      href={`/teams/${teamAbbrev}/${season.end_year}` as Route}
                       className={tableLinkClass}
                     >
-                      {season['start_year']}-{season['end_year']}
+                      {season.start_year}-{season.end_year}
                     </Link>
                   </td>
                   <td className={tableCellClass('right')}>{season.wins}</td>

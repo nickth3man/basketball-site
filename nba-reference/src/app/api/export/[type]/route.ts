@@ -21,6 +21,18 @@ import { gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 
 const gzipAsync = promisify(gzip);
+const OPTIONS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Accept-Encoding',
+};
+
+export function OPTIONS(): Response {
+  return new Response(null, {
+    status: 204,
+    headers: OPTIONS_HEADERS,
+  });
+}
 
 /**
  * Export standings, recent games, or search results as an RFC 4180-compliant CSV attachment.

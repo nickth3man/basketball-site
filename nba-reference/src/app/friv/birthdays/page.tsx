@@ -13,8 +13,18 @@ import {
 } from '@/lib/table-styles';
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 export default function BirthdaysPage(): React.JSX.Element {
@@ -28,18 +38,20 @@ export default function BirthdaysPage(): React.JSX.Element {
       <p className="mb-5 text-sm text-muted">Find players by their birth date.</p>
 
       {todayBirthdays.length > 0 && (
-        <section className="panel-paper mb-6 border-l-4 border-accent p-4">
+        <section className="mb-6 panel-paper border-l-4 border-accent p-4">
           <h2 className="mb-3 text-xl font-bold text-heading">
-            Today's Birthdays ({MONTH_NAMES[today.getMonth()]} {today.getDate()})
+            Today&apos;s Birthdays ({MONTH_NAMES[today.getMonth()]} {today.getDate()})
           </h2>
           <div className="flex flex-wrap gap-2">
-            {todayBirthdays.map((player) => (
+            {todayBirthdays.map(player => (
               <Link
-                key={player['bref_id']}
-                href={`/players/${(player['bref_id'] as string).slice(0, 1).toLowerCase()}/${player['bref_id']}` as Route}
+                key={player.bref_id}
+                href={
+                  `/players/${player.bref_id.slice(0, 1).toLowerCase()}/${player.bref_id}` as Route
+                }
                 className="rounded bg-accent/10 px-3 py-2 text-sm font-medium text-accent hover:bg-accent/20"
               >
-                {player['full_name'] as string}
+                {player.full_name}
               </Link>
             ))}
           </div>
@@ -67,13 +79,15 @@ export default function BirthdaysPage(): React.JSX.Element {
                   </td>
                   <td className={tableCellClass('left')}>
                     <div className="flex flex-wrap gap-1">
-                      {players.slice(0, 5).map((player) => (
+                      {players.slice(0, 5).map(player => (
                         <Link
-                          key={player['bref_id']}
-                          href={`/players/${(player['bref_id'] as string).slice(0, 1).toLowerCase()}/${player['bref_id']}` as Route}
+                          key={player.bref_id}
+                          href={
+                            `/players/${player.bref_id.slice(0, 1).toLowerCase()}/${player.bref_id}` as Route
+                          }
                           className={tableLinkClass}
                         >
-                          {player['full_name']}
+                          {player.full_name}
                         </Link>
                       ))}
                       {players.length > 5 && (

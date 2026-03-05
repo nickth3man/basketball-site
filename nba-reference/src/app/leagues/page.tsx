@@ -18,7 +18,9 @@ export default function LeaguesPage(): React.JSX.Element {
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
       <h1 className="mb-3 text-2xl font-bold">Leagues</h1>
-      <p className="mb-4 text-sm text-muted-strong">NBA season index (Basketball Reference style).</p>
+      <p className="mb-4 text-sm text-muted-strong">
+        NBA season index (Basketball Reference style).
+      </p>
       <div className={tableContainerClass}>
         <table className={tableClass}>
           <thead>
@@ -40,10 +42,7 @@ export default function LeaguesPage(): React.JSX.Element {
                 >
                   <td className={tableCellClass('left')}>{season.season_id}</td>
                   <td className={tableCellClass('left')}>
-                    <Link
-                      className={tableLinkClass}
-                      href={`/leagues/${leagueSlug}` as Route}
-                    >
+                    <Link className={tableLinkClass} href={`/leagues/${leagueSlug}` as Route}>
                       {leagueSlug}
                     </Link>
                   </td>

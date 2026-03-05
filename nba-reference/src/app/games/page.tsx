@@ -60,10 +60,7 @@ export default function GamesPage(): React.JSX.Element {
                 <td className={tableCellClass('left')}>{game.home_abbrev}</td>
                 <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
                 <td className={tableCellClass('left')}>
-                  <Link
-                    className={tableLinkClass}
-                    href={`/boxscores/${game.game_id}` as Route}
-                  >
+                  <Link className={tableLinkClass} href={`/boxscores/${game.game_id}` as Route}>
                     Box
                   </Link>
                 </td>

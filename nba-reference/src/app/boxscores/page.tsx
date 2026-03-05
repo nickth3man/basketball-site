@@ -37,7 +37,8 @@ export default async function BoxscoresPage({
 
   const resolvedSearchParams = await searchParams;
   const requestedDate = resolvedSearchParams.date;
-  const selectedDate = requestedDate != null && isIsoDate(requestedDate) ? requestedDate : latestDate;
+  const selectedDate =
+    requestedDate != null && isIsoDate(requestedDate) ? requestedDate : latestDate;
 
   const games = getCompletedGamesByDate(selectedDate);
   const safeDate = games.length > 0 ? selectedDate : latestDate;
@@ -54,10 +55,7 @@ export default async function BoxscoresPage({
         {previousDate == null ? (
           <span className="rounded border border-line px-2 py-1 text-muted">Previous</span>
         ) : (
-          <Link
-            className={tableLinkClass}
-            href={`/boxscores?date=${previousDate}` as Route}
-          >
+          <Link className={tableLinkClass} href={`/boxscores?date=${previousDate}` as Route}>
             Previous ({previousDate})
           </Link>
         )}

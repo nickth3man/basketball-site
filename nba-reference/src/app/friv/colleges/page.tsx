@@ -36,29 +36,33 @@ export default function CollegesPage(): React.JSX.Element {
             </thead>
             <tbody>
               {colleges.slice(0, 100).map((college, index) => {
-                const playerIds = (college['players'] as string).split(',').slice(0, 3);
-                
+                const playerIds = college.players.split(',').slice(0, 3);
+
                 return (
                   <tr
-                    key={college['college'] as string}
+                    key={college.college}
                     className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
                   >
                     <td className={tableCellClass('left')}>{index + 1}</td>
-                    <td className={tableCellClass('left')}>{college['college'] as string}</td>
-                    <td className={tableCellClass('right')}>{college['player_count'] as number}</td>
+                    <td className={tableCellClass('left')}>{college.college}</td>
+                    <td className={tableCellClass('right')}>{college.player_count}</td>
                     <td className={tableCellClass('left')}>
                       <div className="flex flex-wrap gap-2">
-                        {playerIds.map((playerId) => (
+                        {playerIds.map(playerId => (
                           <Link
                             key={playerId}
-                            href={`/players/${playerId.slice(0, 1).toLowerCase()}/${playerId}` as Route}
+                            href={
+                              `/players/${playerId.slice(0, 1).toLowerCase()}/${playerId}` as Route
+                            }
                             className={tableLinkClass}
                           >
                             {playerId}
                           </Link>
                         ))}
-                        {(college['player_count'] as number) > 3 && (
-                          <span className="text-sm text-muted">+{(college['player_count'] as number) - 3} more</span>
+                        {college.player_count > 3 && (
+                          <span className="text-sm text-muted">
+                            +{college.player_count - 3} more
+                          </span>
                         )}
                       </div>
                     </td>

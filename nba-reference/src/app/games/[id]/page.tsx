@@ -70,8 +70,7 @@ export default async function GamePage({
     <main className="mx-auto max-w-7xl px-4 py-6">
       {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
-        <Link href="/">Home</Link> / <Link href="/boxscores">Box Scores</Link> / {' '}
-        {game['game_id']}
+        <Link href="/">Home</Link> / <Link href="/boxscores">Box Scores</Link> / {game['game_id']}
       </div>
 
       {/* Game header */}

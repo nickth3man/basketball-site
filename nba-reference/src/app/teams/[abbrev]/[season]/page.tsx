@@ -43,9 +43,9 @@ export default async function TeamSeasonPage({
   const recentGames = getTeamRecentGamesForSeason(team.team_id, seasonId, 25);
 
   const previousEndYear =
-    neighbors.prev == null ? null : seasonIdToEndYear(neighbors.prev)?.toString() ?? null;
+    neighbors.prev == null ? null : (seasonIdToEndYear(neighbors.prev)?.toString() ?? null);
   const nextEndYear =
-    neighbors.next == null ? null : seasonIdToEndYear(neighbors.next)?.toString() ?? null;
+    neighbors.next == null ? null : (seasonIdToEndYear(neighbors.next)?.toString() ?? null);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">

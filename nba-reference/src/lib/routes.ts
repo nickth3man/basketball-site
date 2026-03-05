@@ -25,12 +25,10 @@ export const routes = {
   boxscore: (gameId: string): Route => `/boxscores/${gameId}` as Route,
 
   // Players (nested: /players/[letter]/[id])
-  player: (letter: string, id: string): Route =>
-    `/players/${letter.toLowerCase()}/${id}` as Route,
+  player: (letter: string, id: string): Route => `/players/${letter.toLowerCase()}/${id}` as Route,
 
   // Player letter index (e.g., /players/j/)
-  playerLetter: (letter: string): Route =>
-    `/players/${letter.toLowerCase()}` as Route,
+  playerLetter: (letter: string): Route => `/players/${letter.toLowerCase()}` as Route,
 
   // Teams
   team: (abbrev: string): Route => `/teams/${abbrev.toUpperCase()}` as Route,

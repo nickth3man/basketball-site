@@ -57,7 +57,9 @@ export default function SeasonsPage(): React.JSX.Element {
                 <td className={tableCellClass('left')}>
                   <Link
                     className={tableLinkClass}
-                    href={`/leagues/${seasonIdToLeagueSlug(season.season_id) ?? season.season_id}` as Route}
+                    href={
+                      `/leagues/${seasonIdToLeagueSlug(season.season_id) ?? season.season_id}` as Route
+                    }
                   >
                     {season.season_id}
                   </Link>

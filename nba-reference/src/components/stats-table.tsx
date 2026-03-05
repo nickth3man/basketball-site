@@ -13,6 +13,7 @@
 import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { convertRowsToCsvWithColumns } from '@/lib/csv';
+import { Button } from '@/components/ui/button';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -173,13 +174,9 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
         <>
           {/* CSV Export button */}
           <div className="mb-2 flex justify-end">
-            <button
-              type="button"
-              onClick={handleExportCsv}
-              className="rounded border border-line bg-button-bg px-2 py-1 text-xs text-muted-strong transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
-            >
+            <Button onClick={handleExportCsv} size="sm">
               Export CSV
-            </button>
+            </Button>
           </div>
 
           {/* Data table */}

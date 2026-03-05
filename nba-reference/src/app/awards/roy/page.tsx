@@ -18,11 +18,11 @@ export default function ROYPage(): React.JSX.Element {
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
       <div className="mb-6">
-        <Link href={'/awards' as Route} className="text-link mb-2 inline-block hover:underline">
+        <Link href={'/awards' as Route} className="mb-2 inline-block text-link hover:underline">
           ← All Awards
         </Link>
         <h1 className="text-3xl font-bold text-heading">Rookie of the Year (ROY)</h1>
-        <p className="text-muted mt-1">The Wilt Chamberlain Trophy - NBA ROY Award Winners</p>
+        <p className="mt-1 text-muted">The Wilt Chamberlain Trophy - NBA ROY Award Winners</p>
       </div>
 
       <section className="panel-paper p-4">
@@ -41,37 +41,37 @@ export default function ROYPage(): React.JSX.Element {
             <tbody>
               {winners.map((winner, index) => (
                 <tr
-                  key={winner['season_id'] as string}
+                  key={winner.season_id}
                   className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
                 >
                   <td className={tableCellClass('left')}>
-                    {winner['start_year'] as number}-{winner['end_year'] as number}
+                    {winner.start_year}-{winner.end_year}
                   </td>
                   <td className={tableCellClass('left')}>
                     <Link
-                      href={`/players/${(winner['bref_id'] as string).slice(0, 1).toLowerCase()}/${winner['bref_id']}` as Route}
+                      href={
+                        `/players/${winner.bref_id.slice(0, 1).toLowerCase()}/${winner.bref_id}` as Route
+                      }
                       className={tableLinkClass}
                     >
-                      {winner['full_name'] as string}
+                      {winner.full_name}
                     </Link>
                   </td>
                   <td className={tableCellClass('left')}>
-                    {winner['team_abbrev'] ? (
+                    {winner.team_abbrev == null ? (
+                      '-'
+                    ) : (
                       <Link
-                        href={`/teams/${winner['team_abbrev']}` as Route}
+                        href={`/teams/${winner.team_abbrev}` as Route}
                         className={tableLinkClass}
                       >
-                        {winner['team_abbrev'] as string}
+                        {winner.team_abbrev}
                       </Link>
-                    ) : (
-                      '-'
                     )}
                   </td>
+                  <td className={tableCellClass('right')}>{winner.votes_received ?? '-'}</td>
                   <td className={tableCellClass('right')}>
-                    {winner['votes_received'] ?? '-'}
-                  </td>
-                  <td className={tableCellClass('right')}>
-                    {winner['vote_percentage'] ? `${winner['vote_percentage']}%` : '-'}
+                    {winner.vote_percentage == null ? '-' : `${String(winner.vote_percentage)}%`}
                   </td>
                 </tr>
               ))}

@@ -2,6 +2,8 @@ import type React from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   getStandingsAsOfDate,
   getMostRecentGameDate,
@@ -60,9 +62,7 @@ function ConferenceTable({
                 </td>
                 <td className={tableCellClass('right')}>{team.w}</td>
                 <td className={tableCellClass('right')}>{team.l}</td>
-                <td className={tableCellClass('right')}>
-                  {(team.win_pct * 100).toFixed(1)}%
-                </td>
+                <td className={tableCellClass('right')}>{(team.win_pct * 100).toFixed(1)}%</td>
                 <td className={tableCellClass('right')}>{team.gb ?? '-'}</td>
                 <td className={tableCellClass('right')}>{team.ps_g ?? '-'}</td>
                 <td className={tableCellClass('right')}>{team.pa_g ?? '-'}</td>
@@ -81,10 +81,10 @@ export default async function StandingsPage({
   const params = await searchParams;
   const seasonId = getCurrentSeasonId();
   const mostRecentDate = getMostRecentGameDate(seasonId);
-  
+
   const selectedDate = params?.date ?? mostRecentDate ?? new Date().toISOString().split('T')[0];
-  
-  if (!selectedDate) {
+
+  if (selectedDate == null || selectedDate.length === 0) {
     return (
       <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
         <h1 className="text-3xl font-bold text-heading">Standings by Date</h1>
@@ -92,11 +92,11 @@ export default async function StandingsPage({
       </main>
     );
   }
-  
+
   const standings = getStandingsAsOfDate(selectedDate, seasonId);
-  
-  const eastTeams = standings.filter((t) => t.conference === 'East');
-  const westTeams = standings.filter((t) => t.conference === 'West');
+
+  const eastTeams = standings.filter(t => t.conference === 'East');
+  const westTeams = standings.filter(t => t.conference === 'West');
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
@@ -105,29 +105,28 @@ export default async function StandingsPage({
         View NBA standings as of any date during the season.
       </p>
 
-      <section className="panel-paper mb-6 p-4">
+      <section className="mb-6 panel-paper p-4">
         <form className="flex items-center gap-4">
-          <label htmlFor="date" className="text-sm font-medium">Select Date:</label>
-          <input
+          <label htmlFor="date" className="text-sm font-medium">
+            Select Date:
+          </label>
+          <Input
             type="date"
             id="date"
             name="date"
             defaultValue={selectedDate}
-            className="rounded border border-line px-3 py-2 text-sm"
+            className="text-ink"
           />
-          <button
-            type="submit"
-            className="rounded bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
-          >
+          <Button type="submit" variant="accent" size="lg">
             Update Standings
-          </button>
+          </Button>
         </form>
         <p className="mt-2 text-xs text-muted">
           Current: {selectedDate} | Season: {seasonId}
         </p>
       </section>
 
-      <Suspense fallback={<div className="text-center py-8">Loading standings...</div>}>
+      <Suspense fallback={<div className="py-8 text-center">Loading standings...</div>}>
         <div className="grid gap-6 lg:grid-cols-2">
           <ConferenceTable title="Eastern Conference" teams={eastTeams} />
           <ConferenceTable title="Western Conference" teams={westTeams} />
