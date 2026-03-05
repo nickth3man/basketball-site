@@ -70,6 +70,22 @@ export function getPlayerDirectory(limit = 400): PlayerDirectoryRow[] {
   );
 }
 
+export function getPlayerDirectoryByLetter(letter: string, limit = 400): PlayerDirectoryRow[] {
+  const normalizedLetter = letter.trim().toLowerCase();
+  if (!/^[a-z]$/.test(normalizedLetter)) return [];
+
+  return getCachedQueryMany<PlayerDirectoryRow[]>(
+    `SELECT bref_id, full_name, position, is_active
+     FROM dim_player
+     WHERE bref_id IS NOT NULL
+       AND LOWER(SUBSTR(bref_id, 1, 1)) = ?
+     ORDER BY is_active DESC, full_name ASC
+     LIMIT ?`,
+    [normalizedLetter, limit],
+    60_000
+  );
+}
+
 /**
  * Retrieves the complete list of teams for the directory.
  *
