@@ -39,6 +39,8 @@ basketball-site/
 - All application changes belong in `nba-reference/`; root is coordination and repo metadata.
 - Database file is externalized in `db/` and consumed read-only by app code.
 - `AGENTS.md` and `CLAUDE.md` are mirrored in each directory that has both.
+- File Length: Aim for 300–500 lines maximum for components or functional modules.
+- Function Length: Keep individual functions or methods concise, ideally between 20–30 lines.
 
 ## ANTI-PATTERNS (THIS PROJECT)
 - Never add runtime database writes to app code.
