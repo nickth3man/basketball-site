@@ -117,6 +117,7 @@ const players = db.prepare('SELECT * FROM players LIMIT 10').all();
   fetching
 - **Client Components** — Add `"use client"` only when interactivity is needed
 - **Data Layer** — All SQL queries live in `src/lib/`, not in route files
+- **Feature Query Imports** — Prefer `@/lib/query` as the entrypoint
 - **Read-Only** — Never write to the database at runtime
 
 ## Testing

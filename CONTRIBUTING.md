@@ -213,6 +213,7 @@ Include:
 
 ## Questions?
 
+- Start with [docs/project-structure.md](docs/project-structure.md) for placement guidance.
 - Check existing documentation in `AGENTS.md` files
 - Review the `ARCHITECTURE.md` for system design
 - Open an issue for discussion

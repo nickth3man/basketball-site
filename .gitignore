@@ -86,6 +86,10 @@ Thumbs.db
 # Git LFS tracking (keep these)
 !db/*.db
 
+# SQLite WAL files
+*.db-shm
+*.db-wal
+
 # Skills directory (project-specific)
 /skills
 

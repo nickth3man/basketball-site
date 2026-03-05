@@ -45,6 +45,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 basketball-site/
 ├── db/                         # SQLite database (Git LFS tracked)
 │   └── nba_raw_data.db         # Pre-populated NBA statistics
+├── docs/                       # Repository documentation hub
 ├── nba-reference/              # Next.js frontend application
 │   ├── src/
 │   │   ├── app/               # Routes and API endpoints
@@ -89,6 +90,10 @@ See [nba-reference/ARCHITECTURE.md](nba-reference/ARCHITECTURE.md) for detailed 
 
 ## Documentation
 
+- **[docs/README.md](docs/README.md)** - Documentation index and navigation
+- **[docs/project-structure.md](docs/project-structure.md)** - Canonical structure map
+- **[db/README.md](db/README.md)** - Database payload and runtime path notes
+- **[scripts/README.md](scripts/README.md)** - Maintenance script reference
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to this project
 - **[nba-reference/README.md](nba-reference/README.md)** - Frontend-specific documentation
 - **[nba-reference/AGENTS.md](nba-reference/AGENTS.md)** - Development guidelines

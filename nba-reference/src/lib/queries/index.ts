@@ -22,10 +22,16 @@ export * from './franchise';
 export * from './frivolities';
 
 // Re-export feature queries for convenience
-export { getHomeStandings, getRecentGames } from '../query/home';
-export { searchEntities } from '../query/search';
 export {
+  getLatestCompletedGameDate,
+  getPreviousCompletedGameDate,
+  getNextCompletedGameDate,
+  getCompletedGamesByDate,
+  getHomeSeasonId,
+  getHomeStandings,
+  getRecentGames,
   getPlayerDirectory,
   getPlayerDirectoryByLetter,
   getTeamDirectory,
-} from '../query/directory';
+  searchEntities,
+} from '../query';
