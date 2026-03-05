@@ -13,6 +13,7 @@
  */
 
 import type React from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { getRecentGames } from '@/lib/query/home';
 import {
@@ -59,7 +60,10 @@ export default function GamesPage(): React.JSX.Element {
                 <td className={tableCellClass('left')}>{game.home_abbrev}</td>
                 <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/games/${game.game_id}`}>
+                  <Link
+                    className={tableLinkClass}
+                    href={`/boxscores/${game.game_id}` as Route}
+                  >
                     Box
                   </Link>
                 </td>

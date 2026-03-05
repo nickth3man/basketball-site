@@ -33,6 +33,36 @@ function clampPositiveLimit(limit: number, fallback: number, max: number): numbe
   return truncatedLimit;
 }
 
+function getLatestRosterSeasonId(teamId: string): string {
+  const latestRosterSeason = getDb()
+    .prepare(
+      `SELECT season_id
+       FROM fact_roster
+       WHERE team_id = ?
+       ORDER BY season_id DESC
+       LIMIT 1`
+    )
+    .get(teamId) as { season_id: string } | undefined;
+
+  return latestRosterSeason?.season_id ?? getLatestSeasonId();
+}
+
+function getLatestGameSeasonId(teamId: string): string | undefined {
+  const latestGameSeason = getDb()
+    .prepare(
+      `SELECT fg.season_id
+       FROM fact_game fg
+       WHERE (fg.home_team_id = ? OR fg.away_team_id = ?)
+         AND fg.home_score IS NOT NULL
+         AND fg.away_score IS NOT NULL
+       ORDER BY fg.game_date DESC
+       LIMIT 1`
+    )
+    .get(teamId, teamId) as { season_id: string } | undefined;
+
+  return latestGameSeason?.season_id;
+}
+
 /**
  * Retrieves team information by abbreviation.
  *
@@ -86,16 +116,7 @@ export function getTeamByAbbrev(abbrev: string):
  * @returns An array of player records for the roster. Each record contains `bref_id`, `full_name`, `position`, `height_cm`, `weight_kg`, and `birth_date` (values may be `null` where unknown)
  */
 export function getTeamRoster(teamId: string): Array<Record<string, string | number | null>> {
-  const latestRosterSeason = getDb()
-    .prepare(
-      `SELECT season_id
-       FROM fact_roster
-       WHERE team_id = ?
-       ORDER BY season_id DESC
-       LIMIT 1`
-    )
-    .get(teamId) as { season_id: string } | undefined;
-  const seasonId = latestRosterSeason?.season_id ?? getLatestSeasonId();
+  const seasonId = getLatestRosterSeasonId(teamId);
 
   return getDb()
     .prepare(
@@ -117,17 +138,14 @@ export function getTeamRoster(teamId: string): Array<Record<string, string | num
 export function getTeamRosterWithStats(
   teamId: string
 ): Array<Record<string, string | number | null>> {
-  const latestRosterSeason = getDb()
-    .prepare(
-      `SELECT season_id
-       FROM fact_roster
-       WHERE team_id = ?
-       ORDER BY season_id DESC
-       LIMIT 1`
-    )
-    .get(teamId) as { season_id: string } | undefined;
-  const seasonId = latestRosterSeason?.season_id ?? getLatestSeasonId();
+  const seasonId = getLatestRosterSeasonId(teamId);
+  return getTeamRosterWithStatsForSeason(teamId, seasonId);
+}
 
+export function getTeamRosterWithStatsForSeason(
+  teamId: string,
+  seasonId: string
+): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
       `SELECT p.bref_id,
@@ -147,7 +165,7 @@ export function getTeamRosterWithStats(
         AND fs.season_id = r.season_id
         AND fs.team_abbrev IN (SELECT abbreviation FROM dim_team WHERE team_id = r.team_id)
        WHERE r.team_id = ? AND r.season_id = ?
-       ORDER BY COALESCE(pts_pg, -999) DESC, p.last_name ASC`
+        ORDER BY COALESCE(pts_pg, -999) DESC, p.last_name ASC`
     )
     .all(teamId, seasonId) as Array<Record<string, string | number | null>>;
 }
@@ -163,6 +181,17 @@ export function getTeamRosterWithStats(
 export function getTeamFourFactorsComparison(
   teamAbbrev: string
 ): Record<string, string | number | null> | undefined {
+  const current = getTeamCurrentSeasonSummary(teamAbbrev);
+  const seasonId = typeof current?.['season_id'] === 'string' ? current['season_id'] : null;
+  if (seasonId == null) return undefined;
+
+  return getTeamFourFactorsComparisonForSeason(teamAbbrev, seasonId);
+}
+
+export function getTeamFourFactorsComparisonForSeason(
+  teamAbbrev: string,
+  seasonId: string
+): Record<string, string | number | null> | undefined {
   return getDb()
     .prepare(
       `SELECT season_id,
@@ -171,15 +200,15 @@ export function getTeamFourFactorsComparison(
               orb_pct,
               ft_fga,
               opp_e_fg_pct,
-              opp_tov_pct,
-              drb_pct,
-              opp_ft_fga
-       FROM fact_team_season
-       WHERE bref_abbrev = ?
-       ORDER BY season_id DESC
-       LIMIT 1`
+               opp_tov_pct,
+               drb_pct,
+               opp_ft_fga
+        FROM fact_team_season
+        WHERE bref_abbrev = ?
+          AND season_id = ?
+        LIMIT 1`
     )
-    .get(teamAbbrev) as Record<string, string | number | null> | undefined;
+    .get(teamAbbrev, seasonId) as Record<string, string | number | null> | undefined;
 }
 
 /**
@@ -261,6 +290,24 @@ export function getTeamCurrentSeasonSummary(
     .get(teamAbbrev) as Record<string, string | number | null> | undefined;
 }
 
+export function getTeamSeasonSummary(
+  teamAbbrev: string,
+  seasonId: string
+): Record<string, string | number | null> | undefined {
+  return getDb()
+    .prepare(
+      `SELECT season_id, w, l, mov, srs, o_rtg, d_rtg, n_rtg, pace,
+              ts_pct, e_fg_pct, tov_pct, orb_pct, ft_fga,
+              opp_e_fg_pct, opp_tov_pct, drb_pct, opp_ft_fga,
+              arena, attend, attend_g
+       FROM fact_team_season
+       WHERE bref_abbrev = ?
+         AND season_id = ?
+       LIMIT 1`
+    )
+    .get(teamAbbrev, seasonId) as Record<string, string | number | null> | undefined;
+}
+
 /**
  * Retrieves recent completed games for a team.
  *
@@ -277,6 +324,19 @@ export function getTeamRecentGames(
   limit = 20
 ): Array<Record<string, string | number | null>> {
   const safeLimit = clampPositiveLimit(limit, 20, 100);
+  const seasonId = getLatestGameSeasonId(teamId);
+  if (seasonId === undefined) return [];
+
+  return getTeamRecentGamesForSeason(teamId, seasonId, safeLimit);
+}
+
+export function getTeamRecentGamesForSeason(
+  teamId: string,
+  seasonId: string,
+  limit = 20
+): Array<Record<string, string | number | null>> {
+  const safeLimit = clampPositiveLimit(limit, 20, 100);
+
   return getDb()
     .prepare(
       `SELECT g.game_id, g.game_date,
@@ -300,13 +360,14 @@ export function getTeamRecentGames(
                 THEN 'L'
                 ELSE 'T'
               END AS result
-       FROM fact_game g
-       JOIN dim_team ht ON ht.team_id = g.home_team_id
-       JOIN dim_team at ON at.team_id = g.away_team_id
-       WHERE (g.home_team_id = ? OR g.away_team_id = ?)
-         AND g.home_score IS NOT NULL
-         AND g.away_score IS NOT NULL
-       ORDER BY g.game_date DESC
+        FROM fact_game g
+        JOIN dim_team ht ON ht.team_id = g.home_team_id
+        JOIN dim_team at ON at.team_id = g.away_team_id
+        WHERE (g.home_team_id = ? OR g.away_team_id = ?)
+          AND g.season_id = ?
+          AND g.home_score IS NOT NULL
+          AND g.away_score IS NOT NULL
+        ORDER BY g.game_date DESC
        LIMIT ?`
     )
     .all(
@@ -321,6 +382,7 @@ export function getTeamRecentGames(
       teamId,
       teamId,
       teamId,
+      seasonId,
       safeLimit
     ) as Array<Record<string, string | number | null>>;
 }
@@ -332,19 +394,16 @@ export function getTeamRecentGames(
  * @returns An object containing per-game averages: `pts`, `reb`, `ast`, `stl`, `blk`, `tov`, `fg3m`, `fg3a`, `fg_pct`, and `ft_pct` (each a number or `null`), or `undefined` if the team has no games for any season
  */
 export function getTeamPerGameAverages(teamId: string): Record<string, number | null> | undefined {
-  const latestGameSeason = getDb()
-    .prepare(
-      `SELECT fg.season_id
-       FROM fact_game fg
-       WHERE fg.home_team_id = ? OR fg.away_team_id = ?
-       ORDER BY fg.game_date DESC
-       LIMIT 1`
-    )
-    .get(teamId, teamId) as { season_id: string } | undefined;
-
-  const seasonId = latestGameSeason?.season_id;
+  const seasonId = getLatestGameSeasonId(teamId);
   if (seasonId === undefined) return undefined;
 
+  return getTeamPerGameAveragesForSeason(teamId, seasonId);
+}
+
+export function getTeamPerGameAveragesForSeason(
+  teamId: string,
+  seasonId: string
+): Record<string, number | null> | undefined {
   return getDb()
     .prepare(
       `SELECT
@@ -359,8 +418,8 @@ export function getTeamPerGameAverages(teamId: string): Record<string, number | 
           ROUND(AVG(CASE WHEN tgl.fga > 0 THEN 1.0 * tgl.fgm / tgl.fga END), 3) AS fg_pct,
           ROUND(AVG(CASE WHEN tgl.fta > 0 THEN 1.0 * tgl.ftm / tgl.fta END), 3) AS ft_pct
        FROM team_game_log tgl
-       JOIN fact_game fg ON fg.game_id = tgl.game_id
-       WHERE tgl.team_id = ? AND fg.season_id = ?`
+        JOIN fact_game fg ON fg.game_id = tgl.game_id
+        WHERE tgl.team_id = ? AND fg.season_id = ?`
     )
     .get(teamId, seasonId) as Record<string, number | null>;
 }
@@ -379,18 +438,18 @@ export function getTeamPlayerLeaders(
   limit = 8
 ): Array<Record<string, string | number | null>> {
   const safeLimit = clampPositiveLimit(limit, 8, 100);
-  const latestGameSeason = getDb()
-    .prepare(
-      `SELECT fg.season_id
-       FROM fact_game fg
-       WHERE fg.home_team_id = ? OR fg.away_team_id = ?
-       ORDER BY fg.game_date DESC
-       LIMIT 1`
-    )
-    .get(teamId, teamId) as { season_id: string } | undefined;
-
-  const seasonId = latestGameSeason?.season_id;
+  const seasonId = getLatestGameSeasonId(teamId);
   if (seasonId === undefined) return [];
+
+  return getTeamPlayerLeadersForSeason(teamId, seasonId, safeLimit);
+}
+
+export function getTeamPlayerLeadersForSeason(
+  teamId: string,
+  seasonId: string,
+  limit = 8
+): Array<Record<string, string | number | null>> {
+  const safeLimit = clampPositiveLimit(limit, 8, 100);
 
   return getDb()
     .prepare(

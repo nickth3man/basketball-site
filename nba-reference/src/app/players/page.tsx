@@ -12,8 +12,9 @@
  */
 
 import type React from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
-import { getPlayerDirectory } from '@/lib/query/directory';
+import { getPlayerDirectory, getPlayerDirectoryByLetter } from '@/lib/query/directory';
 import {
   tableCellClass,
   tableClass,
@@ -31,12 +32,48 @@ import {
  *
  * @returns The page JSX containing the players table
  */
-export default function PlayersPage(): React.JSX.Element {
-  const players = getPlayerDirectory(400);
+export default async function PlayersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ letter?: string }>;
+}): Promise<React.JSX.Element> {
+  const resolvedSearchParams = await searchParams;
+  const requestedLetter = (resolvedSearchParams.letter ?? '').trim().toLowerCase();
+  const activeLetter = /^[a-z]$/.test(requestedLetter) ? requestedLetter : null;
+  const players =
+    activeLetter == null ? getPlayerDirectory(400) : getPlayerDirectoryByLetter(activeLetter, 400);
+  const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="mb-3 text-2xl font-bold">Players</h1>
+      <h1 className="mb-3 text-2xl font-bold">
+        Players{activeLetter == null ? '' : ` - ${activeLetter.toUpperCase()}`}
+      </h1>
+      <div className="mb-4 flex flex-wrap gap-2 text-xs">
+        <Link
+          href="/players"
+          className={
+            activeLetter == null
+              ? 'rounded border border-line bg-button-bg px-2 py-1 font-semibold'
+              : 'rounded border border-line px-2 py-1 hover:bg-button-bg'
+          }
+        >
+          All
+        </Link>
+        {letters.map(letter => (
+              <Link
+                key={letter}
+                href={`/players/${letter}` as Route}
+                className={
+                  activeLetter === letter
+                    ? 'rounded border border-line bg-button-bg px-2 py-1 font-semibold'
+                    : 'rounded border border-line px-2 py-1 hover:bg-button-bg'
+                }
+              >
+                {letter.toUpperCase()}
+              </Link>
+        ))}
+      </div>
       <div className={tableContainerClass}>
         <table className={tableClass}>
           <thead>
@@ -53,7 +90,10 @@ export default function PlayersPage(): React.JSX.Element {
                 className={playerIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
               >
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/players/${player.bref_id}`}>
+                  <Link
+                    className={tableLinkClass}
+                    href={`/players/${player.bref_id.slice(0, 1).toLowerCase()}/${player.bref_id}` as Route}
+                  >
                     {player.full_name}
                   </Link>
                 </td>

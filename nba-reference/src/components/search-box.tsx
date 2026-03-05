@@ -12,6 +12,7 @@
 
 import type { JSX } from 'react';
 import Link from 'next/link';
+import type { Route } from 'next';
 import { useEffect, useState, useCallback } from 'react';
 
 /**
@@ -95,7 +96,11 @@ export function SearchBox(): JSX.Element {
           {results.map(result => (
             <Link
               key={`${result.type}-${result.id}`}
-              href={result.type === 'player' ? `/players/${result.id}` : `/teams/${result.id}`}
+              href={
+                result.type === 'player'
+                  ? (`/players/${result.id.slice(0, 1).toLowerCase()}/${result.id}` as Route)
+                  : (`/teams/${result.id}` as Route)
+              }
               className="block border-b border-dropdown-line px-3 py-2 text-sm transition-colors duration-150 last:border-b-0 hover:bg-paper-soft"
             >
               {/* Type badge (player/team) */}

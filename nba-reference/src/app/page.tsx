@@ -15,9 +15,11 @@
 
 import type React from 'react';
 import Link from 'next/link';
+import type { Route } from 'next';
 import { SearchBox } from '@/components/search-box';
 import { StatsTable } from '@/components/stats-table';
 import { getHomeSeasonId, getHomeStandings, getRecentGames } from '@/lib/query/home';
+import { seasonIdToLeagueSlug } from '@/lib/season-utils';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -37,6 +39,7 @@ import {
  */
 export default function Home(): React.JSX.Element {
   const seasonId = getHomeSeasonId();
+  const leagueSlug = seasonIdToLeagueSlug(seasonId);
   const standings = getHomeStandings(30);
   const games = getRecentGames(12);
 
@@ -71,7 +74,17 @@ export default function Home(): React.JSX.Element {
 
       {/* Standings section */}
       <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">
-        <h2 className="mb-2 text-xl font-bold text-heading">{seasonId} NBA Standings</h2>
+        <h2 className="mb-2 text-xl font-bold text-heading">
+          {seasonId} NBA Standings
+          {leagueSlug == null ? null : (
+            <Link
+              href={`/leagues/${leagueSlug}` as Route}
+              className="ml-2 text-sm font-normal text-link"
+            >
+              Season Page
+            </Link>
+          )}
+        </h2>
         <StatsTable
           columns={[
             { key: 'bref_abbrev', label: 'Team' },
@@ -108,7 +121,10 @@ export default function Home(): React.JSX.Element {
                   <td className={tableCellClass('left')}>{game.home_abbrev}</td>
                   <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
                   <td className={tableCellClass('left')}>
-                    <Link className={tableLinkClass} href={`/games/${game.game_id}`}>
+                    <Link
+                      className={tableLinkClass}
+                      href={`/boxscores/${game.game_id}` as Route}
+                    >
                       Box Score
                     </Link>
                   </td>

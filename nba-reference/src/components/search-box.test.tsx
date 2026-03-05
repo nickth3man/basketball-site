@@ -65,7 +65,7 @@ describe('SearchBox', () => {
     expect(screen.getByText('player')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /LeBron James/i })).toHaveAttribute(
       'href',
-      '/players/lebron-james'
+      '/players/l/lebron-james'
     );
   });
 
@@ -89,7 +89,10 @@ describe('SearchBox', () => {
 
     expect(screen.getByText('Lakers')).toBeInTheDocument();
     expect(screen.getByText('team')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Lakers/i })).toHaveAttribute('href', '/teams/LAL');
+    expect(screen.getByRole('link', { name: /Lakers/i })).toHaveAttribute(
+      'href',
+      '/teams/LAL'
+    );
   });
 
   it('does not fetch if query is less than 2 chars', async () => {

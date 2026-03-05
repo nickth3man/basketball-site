@@ -13,8 +13,10 @@
  */
 
 import type React from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { getSeasonList } from '@/lib/queries';
+import { seasonIdToLeagueSlug } from '@/lib/season-utils';
 import {
   tableCellClass,
   tableClass,
@@ -53,7 +55,10 @@ export default function SeasonsPage(): React.JSX.Element {
                 className={seasonIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
               >
                 <td className={tableCellClass('left')}>
-                  <Link className={tableLinkClass} href={`/seasons/${season.season_id}`}>
+                  <Link
+                    className={tableLinkClass}
+                    href={`/leagues/${seasonIdToLeagueSlug(season.season_id) ?? season.season_id}` as Route}
+                  >
                     {season.season_id}
                   </Link>
                 </td>
