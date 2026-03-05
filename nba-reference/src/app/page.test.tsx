@@ -51,6 +51,6 @@ test('renders page component', () => {
   expect(screen.getByText('BOS')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /Box Score/i })).toHaveAttribute(
     'href',
-    '/games/0022400001'
+    '/boxscores/0022400001'
   );
 });

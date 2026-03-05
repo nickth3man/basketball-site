@@ -18,12 +18,13 @@
  * Data is fetched server-side in parallel for optimal performance.
  * Uses sticky navigation sidebar for section jumping.
  *
- * @module @/app/players/[id]/page
+ * @module @/app/players/[letter]/[id]/page
  */
 
 import type React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { StatsTable } from '@/components/stats-table';
 import {
   getPlayerAdjustedShootingStats,
@@ -35,30 +36,35 @@ import {
   getPlayerGameHighs,
   getPlayerPer100Stats,
   getPlayerPerGameStats,
+  getPlayerPer36Stats,
+  getPlayerPbpSeasonStats,
   getPlayerSalaries,
   getPlayerSeasonStats,
   getPlayerShootingSeasonStats,
-  getPlayerPbpSeasonStats,
-  getPlayerPer36Stats,
 } from '@/lib/queries';
 import { formatPercentage, formatUsd } from '@/lib/formatters';
-import { notFound } from 'next/navigation';
 import { validateBrefId } from '@/lib/validation';
 
 /**
  * Render a server-side player detail page presenting biography, seasonal and advanced statistics, shooting breakdowns, play-by-play metrics, game logs, awards, salary history, a career summary, and career game highs.
  *
+ * Validates that the player ID starts with the provided letter (BBR-style canonical URL).
  * Triggers a 404 via `notFound()` when the requested player cannot be found.
  *
- * @param params - Promise resolving to route params containing the player's Basketball-Reference `id`
+ * @param params - Promise resolving to route params containing the `letter` and player `id`
  * @returns The player detail page JSX element
  */
 export default async function PlayerPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ letter: string; id: string }>;
 }): Promise<React.JSX.Element> {
-  const { id } = await params;
+  const { letter, id } = await params;
+
+  // Validate letter matches player ID first letter (canonical URL validation)
+  if (!/^[a-z]$/i.test(letter) || id.slice(0, 1).toLowerCase() !== letter.toLowerCase()) {
+    notFound();
+  }
 
   // Validate the player ID format before querying
   validateBrefId(id);

@@ -16,6 +16,7 @@
  */
 
 import type { JSX } from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
 import {
@@ -31,6 +32,7 @@ import {
 import { formatSignedNumber } from '@/lib/formatters';
 import { notFound } from 'next/navigation';
 import { validateTeamAbbrev } from '@/lib/validation';
+import { seasonIdToEndYear } from '@/lib/season-utils';
 
 /**
  * Render the team detail dashboard for the team identified by the route abbreviation.
@@ -63,6 +65,10 @@ export default async function TeamPage({
 
   // Determine which season label to display
   const seasonLabel = current?.['season_id'] ?? seasonStats[0]?.['season_id'] ?? 'Current';
+  const seasonLinks = seasonStats
+    .map(row => String(row['season_id'] ?? ''))
+    .filter((rowSeasonId): rowSeasonId is string => /^\d{4}-\d{2}$/.test(rowSeasonId))
+    .slice(0, 10);
 
   // Navigation anchors for sticky sidebar
   const anchors = [
@@ -137,6 +143,24 @@ export default async function TeamPage({
             </div>
           </div>
         ) : null}
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-semibold text-muted-strong">Season Pages:</span>
+          {seasonLinks.map(rowSeasonId => {
+            const endYear = seasonIdToEndYear(rowSeasonId);
+            if (endYear == null) return null;
+
+            return (
+              <Link
+                key={rowSeasonId}
+                href={`/teams/${team.abbreviation}/${endYear}` as Route}
+                className="rounded border border-line bg-button-bg px-2 py-1"
+              >
+                {rowSeasonId}
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       {/* Main content with sticky sidebar */}
