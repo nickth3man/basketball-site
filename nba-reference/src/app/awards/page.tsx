@@ -38,6 +38,12 @@ export default function AwardsPage(): React.JSX.Element {
       href: '/awards/all_league',
       trophy: 'Annual Selection',
     },
+    {
+      name: 'All-Defensive Teams',
+      description: "The league's best defenders, selected to First and Second teams each season",
+      href: '/awards/all_defense',
+      trophy: 'Annual Selection',
+    },
   ];
 
   return (

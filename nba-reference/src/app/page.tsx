@@ -16,10 +16,13 @@
 import type React from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
+import { HomeExploreLinks } from '@/components/home-explore-links';
 import { SearchBox } from '@/components/search-box';
 import { StatsTable } from '@/components/stats-table';
+import { StructuredData } from '@/components/structured-data';
 import { getHomeSeasonId, getHomeStandings, getRecentGames } from '@/lib/query/home';
 import { seasonIdToLeagueSlug } from '@/lib/season-utils';
+import { getSiteUrl } from '@/lib/site-config';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -29,6 +32,24 @@ import {
   tableHeaderCellClass,
   tableLinkClass,
 } from '@/lib/table-styles';
+
+function getHomeJsonLd(): Record<string, unknown> {
+  const siteUrl = getSiteUrl();
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'NBA Reference',
+    description:
+      'Basketball-reference style NBA stats explorer for standings, players, teams, awards, and playoff history.',
+    url: siteUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteUrl}/api/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
 
 /**
  * Renders the homepage displaying the current season standings, search/export controls, and a list of recent games.
@@ -45,6 +66,7 @@ export default function Home(): React.JSX.Element {
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
+      <StructuredData data={getHomeJsonLd()} />
       {/* Page header */}
       <h1 className="mb-1 fade-slide-in text-3xl font-bold text-heading">
         Basketball Stats and History
@@ -71,6 +93,8 @@ export default function Home(): React.JSX.Element {
           </Link>
         </div>
       </div>
+
+      <HomeExploreLinks />
 
       {/* Standings section */}
       <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">

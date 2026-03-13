@@ -14,8 +14,13 @@
 
 import type React from 'react';
 import Link from 'next/link';
+import { SeasonAwardsSummary } from '@/components/season-awards-summary';
+import { SeasonStandingsSection } from '@/components/season-standings-section';
 import { StatsTable } from '@/components/stats-table';
 import {
+  getDPOYWinner,
+  getMVPWinner,
+  getROYWinner,
   getSeasonAssistLeaders,
   getSeasonLeagueSummary,
   getSeasonRecentGames,
@@ -50,6 +55,9 @@ export default async function SeasonPage({
   const assistLeaders = getSeasonAssistLeaders(year, 30);
   const leagueSummary = getSeasonLeagueSummary(year);
   const games = getSeasonRecentGames(year, 50);
+  const mvp = getMVPWinner(year);
+  const dpoy = getDPOYWinner(year);
+  const roy = getROYWinner(year);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -81,24 +89,8 @@ export default async function SeasonPage({
         </div>
       </section>
 
-      {/* Standings Section */}
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Standings</h2>
-        <StatsTable
-          columns={[
-            { key: 'bref_abbrev', label: 'Team' },
-            { key: 'w', label: 'W', align: 'right' },
-            { key: 'l', label: 'L', align: 'right' },
-            { key: 'srs', label: 'SRS', align: 'right' },
-            { key: 'o_rtg', label: 'ORtg', align: 'right' },
-            { key: 'd_rtg', label: 'DRtg', align: 'right' },
-            { key: 'n_rtg', label: 'NRtg', align: 'right' },
-            { key: 'pace', label: 'Pace', align: 'right' },
-          ]}
-          rows={standings}
-          initialSort="w"
-        />
-      </section>
+      <SeasonAwardsSummary mvp={mvp} dpoy={dpoy} roy={roy} />
+      <SeasonStandingsSection standings={standings} />
 
       {/* Scoring Leaders Section */}
       <section className="mb-8">

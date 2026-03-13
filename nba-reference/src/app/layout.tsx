@@ -16,6 +16,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/site-header';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { getSiteUrl, getSiteUrlObject } from '@/lib/site-config';
 import { cn } from '@/lib/utils';
 
 /**
@@ -36,12 +37,29 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const siteUrl = getSiteUrl();
+
 /**
  * Application metadata for SEO and browser display.
  */
 export const metadata: Metadata = {
   title: 'NBA Reference',
   description: 'Basketball-reference style NBA stats explorer',
+  metadataBase: getSiteUrlObject(),
+  openGraph: {
+    title: 'NBA Reference',
+    description:
+      'Basketball-reference style NBA stats explorer for players, teams, seasons, awards, and playoffs.',
+    url: siteUrl,
+    siteName: 'NBA Reference',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NBA Reference',
+    description:
+      'Basketball-reference style NBA stats explorer for players, teams, seasons, awards, and playoffs.',
+  },
 };
 
 /**
