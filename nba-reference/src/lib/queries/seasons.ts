@@ -46,7 +46,7 @@ export function getSeasonList(
  * Results are ordered by wins (descending) then losses (ascending).
  *
  * @param seasonId - Season identifier (for example, "2024-25")
- * @returns An array of records for each team containing: `bref_abbrev` (team abbreviation), `w` (wins), `l` (losses), `srs` (Simple Rating System), `o_rtg` (offensive rating), `d_rtg` (defensive rating), `n_rtg` (net rating), and `pace`. Numeric fields may be `null`.
+ * @returns An array of records for each team containing: `bref_abbrev` (team abbreviation), `full_name`, `conference`, `division`, `w` (wins), `l` (losses), `srs` (Simple Rating System), `o_rtg` (offensive rating), `d_rtg` (defensive rating), `n_rtg` (net rating), and `pace`. String and numeric fields may be `null`.
  */
 export function getSeasonStandings(
   seasonId: string
@@ -68,7 +68,7 @@ export function getSeasonStandings(
        LEFT JOIN dim_team dt ON dt.bref_abbrev = ts.bref_abbrev
        WHERE ts.season_id = ?
          AND (ts.lg = 'NBA' OR ts.lg IS NULL)
-       ORDER BY w DESC, l ASC`
+       ORDER BY ts.w DESC, ts.l ASC`
     )
     .all(seasonId) as Array<Record<string, string | number | null>>;
 }

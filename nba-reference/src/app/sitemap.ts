@@ -4,13 +4,10 @@ import { getDraftSeasons } from '@/lib/queries/draft';
 import { getPlayoffSeasons } from '@/lib/queries/playoffs';
 import { getSeasonList } from '@/lib/queries/seasons';
 import { getTeamDirectory } from '@/lib/query/directory';
+import { getSiteUrl } from '@/lib/site-config';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const configuredBaseUrl = process.env['NEXT_PUBLIC_SITE_URL']?.trim();
-  const baseUrl =
-    configuredBaseUrl != null && configuredBaseUrl.length > 0
-      ? configuredBaseUrl
-      : 'https://nba-reference.com';
+  const baseUrl = getSiteUrl();
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [

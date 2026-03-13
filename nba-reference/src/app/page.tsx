@@ -16,10 +16,13 @@
 import type React from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
+import { HomeExploreLinks } from '@/components/home-explore-links';
 import { SearchBox } from '@/components/search-box';
 import { StatsTable } from '@/components/stats-table';
+import { StructuredData } from '@/components/structured-data';
 import { getHomeSeasonId, getHomeStandings, getRecentGames } from '@/lib/query/home';
 import { seasonIdToLeagueSlug } from '@/lib/season-utils';
+import { getSiteUrl } from '@/lib/site-config';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -29,6 +32,24 @@ import {
   tableHeaderCellClass,
   tableLinkClass,
 } from '@/lib/table-styles';
+
+function getHomeJsonLd(): Record<string, unknown> {
+  const siteUrl = getSiteUrl();
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'NBA Reference',
+    description:
+      'Basketball-reference style NBA stats explorer for standings, players, teams, awards, and playoff history.',
+    url: siteUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteUrl}/api/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
 
 /**
  * Renders the homepage displaying the current season standings, search/export controls, and a list of recent games.
@@ -42,26 +63,10 @@ export default function Home(): React.JSX.Element {
   const leagueSlug = seasonIdToLeagueSlug(seasonId);
   const standings = getHomeStandings(30);
   const games = getRecentGames(12);
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'NBA Reference',
-    description:
-      'Basketball-reference style NBA stats explorer for standings, players, teams, awards, and playoff history.',
-    url: 'https://nba-reference.com',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: 'https://nba-reference.com/players',
-      'query-input': 'required name=search_term_string',
-    },
-  };
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <StructuredData data={getHomeJsonLd()} />
       {/* Page header */}
       <h1 className="mb-1 fade-slide-in text-3xl font-bold text-heading">
         Basketball Stats and History
@@ -89,26 +94,7 @@ export default function Home(): React.JSX.Element {
         </div>
       </div>
 
-      <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:170ms]">
-        <h2 className="mb-2 text-xl font-bold text-heading">Explore More</h2>
-        <div className="flex flex-wrap gap-2 text-sm">
-          {[
-            { href: '/playoffs', label: 'Playoffs' },
-            { href: '/awards', label: 'Awards' },
-            { href: '/allstar', label: 'All-Star' },
-            { href: '/standings', label: 'Standings by Date' },
-            { href: '/draft', label: 'Draft' },
-          ].map(link => (
-            <Link
-              key={link.href}
-              href={link.href as Route}
-              className="rounded border border-line bg-button-bg px-3 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      </section>
+      <HomeExploreLinks />
 
       {/* Standings section */}
       <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">
