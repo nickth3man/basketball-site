@@ -60,6 +60,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/leagues/salary-cap`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
       url: `${baseUrl}/standings`,
       lastModified: new Date(),
       changeFrequency: 'daily',
@@ -74,6 +80,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.8,
+  }));
+
+  const teamSalaryRoutes: MetadataRoute.Sitemap = teams.map((team: { abbreviation: string }) => ({
+    url: `${baseUrl}/teams/${team.abbreviation}/salaries`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly',
+    priority: 0.6,
   }));
 
   // Dynamic routes - Seasons
@@ -143,13 +156,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  const allLeagueVoteRoutes: MetadataRoute.Sitemap = seasons.map(
+    (season: { season_id: string }) => ({
+      url: `${baseUrl}/awards/all_league/${season.season_id}/votes`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    })
+  );
+
   return [
     ...staticRoutes,
     ...teamRoutes,
+    ...teamSalaryRoutes,
     ...seasonRoutes,
     ...draftRoutes,
     ...playoffRoutes,
     ...allStarRoutes,
     ...awardRoutes,
+    ...allLeagueVoteRoutes,
   ];
 }

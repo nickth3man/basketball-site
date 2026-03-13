@@ -27,7 +27,8 @@ export function getPlayerCareerSummary(brefId: string): Record<string, number | 
           CASE WHEN SUM(x3pa) > 0 THEN ROUND(1.0 * SUM(x3p) / SUM(x3pa), 3) END AS fg3_pct,
           CASE WHEN SUM(fta) > 0 THEN ROUND(1.0 * SUM(ft) / SUM(fta), 3) END AS ft_pct
        FROM fact_player_season_stats
-       WHERE bref_player_id = ?`
+       WHERE bref_player_id = ?
+         AND (lg = 'NBA' OR lg IS NULL)`
     )
     .get(brefId) as Record<string, number | null>;
 }
@@ -63,7 +64,8 @@ export function getPlayerCareerTotals(brefId: string): Record<string, number | n
           SUM(pf) AS pf,
           SUM(pts) AS pts
        FROM fact_player_season_stats
-       WHERE bref_player_id = ?`
+       WHERE bref_player_id = ?
+         AND (lg = 'NBA' OR lg IS NULL)`
     )
     .get(brefId) as Record<string, number | null>;
 }

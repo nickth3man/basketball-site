@@ -28,6 +28,12 @@ export function getSeasonList(
     .prepare(
       `SELECT season_id, start_year, end_year
        FROM dim_season
+       WHERE EXISTS (
+         SELECT 1
+         FROM fact_team_season ts
+         WHERE ts.season_id = dim_season.season_id
+           AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+       )
        ORDER BY start_year DESC
        LIMIT ?`
     )
@@ -50,6 +56,7 @@ export function getSeasonStandings(
       `SELECT bref_abbrev, w, l, srs, o_rtg, d_rtg, n_rtg, pace
        FROM fact_team_season
        WHERE season_id = ?
+         AND (lg = 'NBA' OR lg IS NULL)
        ORDER BY w DESC, l ASC`
     )
     .all(seasonId) as Array<Record<string, string | number | null>>;
@@ -76,9 +83,10 @@ export function getSeasonScoringLeaders(
               ROUND(1.0 * SUM(fpss.pts) / SUM(fpss.g), 1) as pts_pg
        FROM fact_player_season_stats fpss
        JOIN dim_player p ON p.bref_id = fpss.bref_player_id
-       WHERE fpss.season_id = ?
-         AND fpss.team_abbrev NOT LIKE '%TM'
-       GROUP BY p.bref_id, p.full_name
+        WHERE fpss.season_id = ?
+          AND fpss.team_abbrev NOT LIKE '%TM'
+          AND (fpss.lg = 'NBA' OR fpss.lg IS NULL)
+        GROUP BY p.bref_id, p.full_name
        HAVING SUM(fpss.g) >= 10
        ORDER BY pts_pg DESC
        LIMIT ?`
@@ -107,9 +115,10 @@ export function getSeasonReboundLeaders(
               ROUND(1.0 * SUM(fpss.reb) / SUM(fpss.g), 1) as reb_pg
        FROM fact_player_season_stats fpss
        JOIN dim_player p ON p.bref_id = fpss.bref_player_id
-       WHERE fpss.season_id = ?
-         AND fpss.team_abbrev NOT LIKE '%TM'
-       GROUP BY p.bref_id, p.full_name
+        WHERE fpss.season_id = ?
+          AND fpss.team_abbrev NOT LIKE '%TM'
+          AND (fpss.lg = 'NBA' OR fpss.lg IS NULL)
+        GROUP BY p.bref_id, p.full_name
        HAVING SUM(fpss.g) >= 10
        ORDER BY reb_pg DESC
        LIMIT ?`
@@ -144,9 +153,10 @@ export function getSeasonAssistLeaders(
               ROUND(1.0 * SUM(fpss.ast) / SUM(fpss.g), 1) as ast_pg
        FROM fact_player_season_stats fpss
        JOIN dim_player p ON p.bref_id = fpss.bref_player_id
-       WHERE fpss.season_id = ?
-         AND fpss.team_abbrev NOT LIKE '%TM'
-       GROUP BY p.bref_id, p.full_name
+        WHERE fpss.season_id = ?
+          AND fpss.team_abbrev NOT LIKE '%TM'
+          AND (fpss.lg = 'NBA' OR fpss.lg IS NULL)
+        GROUP BY p.bref_id, p.full_name
        HAVING SUM(fpss.g) >= 10
        ORDER BY ast_pg DESC
        LIMIT ?`

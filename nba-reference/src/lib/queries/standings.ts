@@ -236,9 +236,11 @@ export function getSeasonsWithGames(): Array<{
     `SELECT DISTINCT s.season_id, s.start_year, s.end_year
      FROM dim_season s
      JOIN fact_game g ON g.season_id = s.season_id
+     JOIN fact_team_season ts ON ts.season_id = s.season_id
      WHERE g.status = 'Final'
        AND g.home_score IS NOT NULL
        AND g.away_score IS NOT NULL
+       AND (ts.lg = 'NBA' OR ts.lg IS NULL)
      ORDER BY s.start_year DESC`,
     [],
     60_000

@@ -160,6 +160,12 @@ export default async function TeamPage({
               </Link>
             );
           })}
+          <Link
+            href={`/teams/${team.abbreviation}/salaries` as Route}
+            className="rounded border border-line bg-button-bg px-2 py-1"
+          >
+            Salaries
+          </Link>
         </div>
       </section>
 

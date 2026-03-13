@@ -30,7 +30,8 @@ export function getFranchiseHistory(teamAbbrev: string): FranchiseHistoryEntry[]
       th.league
     FROM dim_team_history th
     JOIN dim_team t ON t.team_id = th.team_id
-    WHERE t.bref_abbrev = ? OR t.abbreviation = ?
+    WHERE (t.bref_abbrev = ? OR t.abbreviation = ?)
+      AND th.league = 'NBA'
     ORDER BY th.season_founded ASC`,
     [teamAbbrev, teamAbbrev],
     60_000
@@ -53,6 +54,7 @@ export function getFranchiseSeasons(teamAbbrev: string): FranchiseSeason[] {
     FROM fact_team_season ts
     JOIN dim_season s ON s.season_id = ts.season_id
     WHERE ts.bref_abbrev = ?
+      AND (ts.lg = 'NBA' OR ts.lg IS NULL)
     ORDER BY s.start_year DESC`,
     [teamAbbrev],
     60_000

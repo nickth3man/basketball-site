@@ -60,9 +60,15 @@ export interface TeamDirectoryRow {
  */
 export function getPlayerDirectory(limit = 400): PlayerDirectoryRow[] {
   return getCachedQueryMany<PlayerDirectoryRow[]>(
-    `SELECT bref_id, full_name, position, is_active
-     FROM dim_player
-     WHERE bref_id IS NOT NULL
+    `SELECT p.bref_id, p.full_name, p.position, p.is_active
+     FROM dim_player p
+     WHERE p.bref_id IS NOT NULL
+       AND EXISTS (
+         SELECT 1
+         FROM fact_player_season_stats fps
+         WHERE fps.bref_player_id = p.bref_id
+           AND fps.lg = 'NBA'
+       )
      ORDER BY is_active DESC, full_name ASC
      LIMIT ?`,
     [limit],
@@ -75,10 +81,16 @@ export function getPlayerDirectoryByLetter(letter: string, limit = 400): PlayerD
   if (!/^[a-z]$/.test(normalizedLetter)) return [];
 
   return getCachedQueryMany<PlayerDirectoryRow[]>(
-    `SELECT bref_id, full_name, position, is_active
-     FROM dim_player
-     WHERE bref_id IS NOT NULL
-       AND LOWER(SUBSTR(bref_id, 1, 1)) = ?
+    `SELECT p.bref_id, p.full_name, p.position, p.is_active
+     FROM dim_player p
+     WHERE p.bref_id IS NOT NULL
+       AND LOWER(SUBSTR(p.bref_id, 1, 1)) = ?
+       AND EXISTS (
+         SELECT 1
+         FROM fact_player_season_stats fps
+         WHERE fps.bref_player_id = p.bref_id
+           AND fps.lg = 'NBA'
+       )
      ORDER BY is_active DESC, full_name ASC
      LIMIT ?`,
     [normalizedLetter, limit],
@@ -103,9 +115,15 @@ export function getPlayerDirectoryByLetter(letter: string, limit = 400): PlayerD
  */
 export function getTeamDirectory(): TeamDirectoryRow[] {
   return getCachedQueryMany<TeamDirectoryRow[]>(
-    `SELECT abbreviation, full_name, conference, division
-     FROM dim_team
-     ORDER BY full_name ASC`,
+    `SELECT t.abbreviation, t.full_name, t.conference, t.division
+     FROM dim_team t
+     WHERE EXISTS (
+       SELECT 1
+       FROM fact_team_season ts
+       WHERE ts.bref_abbrev = t.bref_abbrev
+         AND ts.lg = 'NBA'
+     )
+     ORDER BY t.full_name ASC`,
     [],
     60_000
   );

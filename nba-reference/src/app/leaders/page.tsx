@@ -2,8 +2,10 @@ import type React from 'react';
 import {
   getAllTimeLeadersByTotal,
   getLatestSeasonWithPlayerStats,
+  getSalaryLeadersBySeason,
   getSeasonLeadersByPerGame,
 } from '@/lib/queries';
+import { formatUsd } from '@/lib/formatters';
 import { StatsTable } from '@/components/stats-table';
 
 export default function LeadersPage(): React.JSX.Element {
@@ -25,6 +27,7 @@ export default function LeadersPage(): React.JSX.Element {
   const allTimePoints = getAllTimeLeadersByTotal('pts', 25, 100);
   const allTimeRebounds = getAllTimeLeadersByTotal('reb', 25, 100);
   const allTimeAssists = getAllTimeLeadersByTotal('ast', 25, 100);
+  const salaryLeaders = getSalaryLeadersBySeason(latestSeasonId, 15);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -117,6 +120,23 @@ export default function LeadersPage(): React.JSX.Element {
           ]}
           rows={allTimeAssists}
           initialSort="stat_total"
+        />
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-2 text-xl font-bold">{latestSeasonId} Salary Leaders</h2>
+        <StatsTable
+          columns={[
+            { key: 'full_name', label: 'Player' },
+            { key: 'team_abbrev', label: 'Tm' },
+            { key: 'salary_fmt', label: 'Salary', align: 'right' },
+          ]}
+          rows={salaryLeaders.map(row => ({
+            ...row,
+            salary_fmt:
+              typeof row['salary'] === 'number' ? formatUsd(row['salary']) : (row['salary'] ?? '-'),
+          }))}
+          initialSort="salary"
         />
       </section>
     </main>

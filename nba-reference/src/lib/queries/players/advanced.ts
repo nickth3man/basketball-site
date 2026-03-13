@@ -38,6 +38,14 @@ export function getPlayerAdvancedSeasonStats(
               usg_pct, ows, dws, ws, ws_48, obpm, dbpm, bpm, vorp
        FROM fact_player_advanced_season
        WHERE bref_player_id = ?
+         AND EXISTS (
+           SELECT 1
+           FROM fact_player_season_stats fps
+           WHERE fps.bref_player_id = fact_player_advanced_season.bref_player_id
+             AND fps.season_id = fact_player_advanced_season.season_id
+             AND fps.team_abbrev = fact_player_advanced_season.team_abbrev
+             AND (fps.lg = 'NBA' OR fps.lg IS NULL)
+         )
        ORDER BY season_id DESC
        LIMIT ?`
     )
@@ -75,6 +83,14 @@ export function getPlayerShootingSeasonStats(
               pct_corner3_3pa, corner3_pct
        FROM fact_player_shooting_season
        WHERE bref_player_id = ?
+         AND EXISTS (
+           SELECT 1
+           FROM fact_player_season_stats fps
+           WHERE fps.bref_player_id = fact_player_shooting_season.bref_player_id
+             AND fps.season_id = fact_player_shooting_season.season_id
+             AND fps.team_abbrev = fact_player_shooting_season.team_abbrev
+             AND (fps.lg = 'NBA' OR fps.lg IS NULL)
+         )
        ORDER BY season_id DESC
        LIMIT ?`
     )
@@ -122,17 +138,18 @@ export function getPlayerAdjustedShootingStats(
               CASE WHEN pss.fga > 0 THEN ROUND(1.0 * pss.x3pa / pss.fga, 3) END AS x3p_ar,
               CASE WHEN pss.fga > 0 THEN ROUND(1.0 * pss.fta / pss.fga, 3) END AS f_tr
        FROM fact_player_season_stats pss
-       LEFT JOIN (
-         -- Calculate league averages per season from team game logs
-         SELECT season_id,
-                CASE WHEN SUM(fga) > 0 THEN 1.0 * SUM(fgm + 0.5 * fg3m) / SUM(fga) END AS avg_efg,
-                CASE WHEN SUM(fga + 0.44 * fta) > 0 THEN 1.0 * SUM(pts) / (2 * SUM(fga + 0.44 * fta)) END AS avg_ts
-         FROM team_game_log tgl
-         JOIN fact_game fg ON fg.game_id = tgl.game_id
-         WHERE fg.season_type = 'Regular Season'
-         GROUP BY fg.season_id
-       ) lg ON lg.season_id = pss.season_id
-       WHERE pss.bref_player_id = ?
+        LEFT JOIN (
+          -- Calculate league averages per season from team game logs
+          SELECT season_id,
+                 CASE WHEN SUM(fga) > 0 THEN 1.0 * SUM(fgm + 0.5 * fg3m) / SUM(fga) END AS avg_efg,
+                 CASE WHEN SUM(fga + 0.44 * fta) > 0 THEN 1.0 * SUM(pts) / (2 * SUM(fga + 0.44 * fta)) END AS avg_ts
+          FROM team_game_log tgl
+          JOIN fact_game fg ON fg.game_id = tgl.game_id
+          WHERE fg.season_type = 'Regular Season'
+          GROUP BY fg.season_id
+        ) lg ON lg.season_id = pss.season_id
+        WHERE pss.bref_player_id = ?
+          AND (pss.lg = 'NBA' OR pss.lg IS NULL)
        ORDER BY pss.season_id DESC
        LIMIT ?`
     )
@@ -167,6 +184,14 @@ export function getPlayerPbpSeasonStats(
               shoot_foul_drawn, off_foul_drawn, and1
        FROM fact_player_pbp_season
        WHERE bref_player_id = ?
+         AND EXISTS (
+           SELECT 1
+           FROM fact_player_season_stats fps
+           WHERE fps.bref_player_id = fact_player_pbp_season.bref_player_id
+             AND fps.season_id = fact_player_pbp_season.season_id
+             AND fps.team_abbrev = fact_player_pbp_season.team_abbrev
+             AND (fps.lg = 'NBA' OR fps.lg IS NULL)
+         )
        ORDER BY season_id DESC
        LIMIT ?`
     )

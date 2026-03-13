@@ -47,8 +47,23 @@ export interface PlayerProfile {
 export function getPlayerByBrefId(brefId: string): PlayerProfile | undefined {
   return getDb()
     .prepare(
-      `SELECT player_id, bref_id, full_name, first_name, last_name,
-              COALESCE(
+      `SELECT player_id,
+               bref_id,
+               full_name,
+               first_name,
+               last_name,
+               height_cm,
+               weight_kg,
+               birth_date,
+               birth_city,
+               birth_country,
+               college,
+               draft_year,
+               draft_round,
+               draft_number,
+               is_active,
+               hof,
+  COALESCE(
                 NULLIF(position, ''),
                 (
                   -- Fallback: get most recent non-null/non-empty position from stats
@@ -57,14 +72,13 @@ export function getPlayerByBrefId(brefId: string): PlayerProfile | undefined {
                   WHERE fps.bref_player_id = dim_player.bref_id
                     AND fps.pos IS NOT NULL
                     AND fps.pos <> ''
+                    AND (fps.lg = 'NBA' OR fps.lg IS NULL)
                   ORDER BY fps.season_id DESC
                   LIMIT 1
                 )
-              ) AS position,
-              height_cm, weight_kg, birth_date, birth_city, birth_country,
-              college, draft_year, draft_round, draft_number, is_active, hof
-       FROM dim_player
-       WHERE bref_id = ?`
+              ) AS position
+        FROM dim_player
+        WHERE bref_id = ?`
     )
     .get(brefId) as PlayerProfile | undefined;
 }

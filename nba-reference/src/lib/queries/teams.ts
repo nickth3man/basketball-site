@@ -90,7 +90,13 @@ export function getTeamByAbbrev(abbrev: string):
       `SELECT team_id, abbreviation, full_name, city, nickname,
               conference, division, arena_name, founded_year
        FROM dim_team
-       WHERE abbreviation = ? OR bref_abbrev = ?`
+       WHERE (abbreviation = ? OR bref_abbrev = ?)
+         AND EXISTS (
+           SELECT 1
+           FROM fact_team_season ts
+           WHERE ts.bref_abbrev = dim_team.bref_abbrev
+             AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+         )`
     )
     .get(abbrev, abbrev) as
     | {
@@ -160,12 +166,13 @@ export function getTeamRosterWithStatsForSeason(
               CASE WHEN fs.g > 0 THEN ROUND(1.0 * fs.ast / fs.g, 1) END AS ast_pg
        FROM fact_roster r
        JOIN dim_player p ON p.player_id = r.player_id
-       LEFT JOIN fact_player_season_stats fs
-         ON fs.bref_player_id = p.bref_id
-        AND fs.season_id = r.season_id
-        AND fs.team_abbrev IN (SELECT abbreviation FROM dim_team WHERE team_id = r.team_id)
-       WHERE r.team_id = ? AND r.season_id = ?
-        ORDER BY COALESCE(pts_pg, -999) DESC, p.last_name ASC`
+        LEFT JOIN fact_player_season_stats fs
+          ON fs.bref_player_id = p.bref_id
+         AND fs.season_id = r.season_id
+         AND fs.team_abbrev IN (SELECT abbreviation FROM dim_team WHERE team_id = r.team_id)
+         AND (fs.lg = 'NBA' OR fs.lg IS NULL)
+        WHERE r.team_id = ? AND r.season_id = ?
+         ORDER BY COALESCE(pts_pg, -999) DESC, p.last_name ASC`
     )
     .all(teamId, seasonId) as Array<Record<string, string | number | null>>;
 }
@@ -205,6 +212,7 @@ export function getTeamFourFactorsComparisonForSeason(
                opp_ft_fga
         FROM fact_team_season
         WHERE bref_abbrev = ?
+          AND (lg = 'NBA' OR lg IS NULL)
           AND season_id = ?
         LIMIT 1`
     )
@@ -230,6 +238,7 @@ export function getTeamSeasonStats(
               ts_pct, e_fg_pct, tov_pct
        FROM fact_team_season
        WHERE bref_abbrev = ?
+         AND (lg = 'NBA' OR lg IS NULL)
        ORDER BY season_id DESC
        LIMIT 20`
     )
@@ -252,6 +261,7 @@ export function getTeamSeasonNeighbors(
       `SELECT DISTINCT season_id
        FROM fact_team_season
        WHERE bref_abbrev = ?
+         AND (lg = 'NBA' OR lg IS NULL)
        ORDER BY season_id DESC`
     )
     .all(teamAbbrev) as Array<{ season_id: string }>;
@@ -284,6 +294,7 @@ export function getTeamCurrentSeasonSummary(
               ts_pct, e_fg_pct, tov_pct, arena, attend, attend_g
        FROM fact_team_season
        WHERE bref_abbrev = ?
+         AND (lg = 'NBA' OR lg IS NULL)
        ORDER BY season_id DESC
        LIMIT 1`
     )
@@ -302,7 +313,8 @@ export function getTeamSeasonSummary(
               arena, attend, attend_g
        FROM fact_team_season
        WHERE bref_abbrev = ?
-         AND season_id = ?
+          AND (lg = 'NBA' OR lg IS NULL)
+          AND season_id = ?
        LIMIT 1`
     )
     .get(teamAbbrev, seasonId) as Record<string, string | number | null> | undefined;

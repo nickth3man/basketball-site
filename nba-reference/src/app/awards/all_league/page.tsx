@@ -36,6 +36,7 @@ export default function AllLeaguePage(): React.JSX.Element {
                 <th className={tableHeaderCellClass('left')}>Position</th>
                 <th className={tableHeaderCellClass('left')}>Player</th>
                 <th className={tableHeaderCellClass('left')}>Team</th>
+                <th className={tableHeaderCellClass('left')}>Votes</th>
               </tr>
             </thead>
             <tbody>
@@ -69,6 +70,14 @@ export default function AllLeaguePage(): React.JSX.Element {
                         {sel.team_abbrev}
                       </Link>
                     )}
+                  </td>
+                  <td className={tableCellClass('left')}>
+                    <Link
+                      href={`/awards/all_league/${sel.season_id}/votes` as Route}
+                      className={tableLinkClass}
+                    >
+                      View
+                    </Link>
                   </td>
                 </tr>
               ))}

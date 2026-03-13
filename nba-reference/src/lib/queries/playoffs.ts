@@ -82,6 +82,12 @@ export function getPlayoffSeasons(): PlayoffSeasonRow[] {
      FROM dim_season s
      JOIN fact_game g ON g.season_id = s.season_id
      WHERE g.season_type = 'Playoffs'
+       AND EXISTS (
+         SELECT 1
+         FROM fact_team_season ts
+         WHERE ts.season_id = g.season_id
+           AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+       )
      ORDER BY s.start_year DESC`,
     [],
     60_000
@@ -126,6 +132,12 @@ export function getPlayoffSeriesBySeason(seasonId: string): PlayoffSeriesRow[] {
       WHERE g.season_id = ?
         AND g.season_type = 'Playoffs'
         AND g.status = 'Final'
+        AND EXISTS (
+          SELECT 1
+          FROM fact_team_season ts
+          WHERE ts.season_id = g.season_id
+            AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+        )
     ),
     series_summary AS (
       SELECT 
@@ -193,6 +205,12 @@ export function getPlayoffSeriesGames(
     WHERE g.season_id = ?
       AND g.season_type = 'Playoffs'
       AND g.status = 'Final'
+      AND EXISTS (
+        SELECT 1
+        FROM fact_team_season ts
+        WHERE ts.season_id = g.season_id
+          AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+      )
       AND (
         (ht.bref_abbrev = ? AND at.bref_abbrev = ?) OR
         (ht.bref_abbrev = ? AND at.bref_abbrev = ?)
@@ -244,6 +262,12 @@ export function getPlayoffLeaders(
     JOIN fact_game g ON g.game_id = pgl.game_id
     WHERE g.season_id = ?
       AND g.season_type = 'Playoffs'
+      AND EXISTS (
+        SELECT 1
+        FROM fact_team_season ts
+        WHERE ts.season_id = g.season_id
+          AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+      )
     GROUP BY p.bref_id, p.full_name, t.bref_abbrev
     HAVING COUNT(DISTINCT pgl.game_id) >= 3
     ORDER BY ${statName} DESC
@@ -284,6 +308,12 @@ export function getNBAFinals(seasonId: string): NbaFinalsRow | undefined {
       WHERE g.season_id = ?
         AND g.season_type = 'Playoffs'
         AND g.status = 'Final'
+        AND EXISTS (
+          SELECT 1
+          FROM fact_team_season ts
+          WHERE ts.season_id = g.season_id
+            AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+        )
     ),
     series_count AS (
       SELECT 

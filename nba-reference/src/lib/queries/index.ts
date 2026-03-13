@@ -20,6 +20,7 @@ export * from './team-schedule';
 export * from './player-splits';
 export * from './franchise';
 export * from './frivolities';
+export * from './salaries';
 
 // Re-export feature queries for convenience
 export {

@@ -15,6 +15,7 @@ export function getLatestSeasonWithPlayerStats(): string | null {
     .prepare(
       `SELECT season_id
        FROM fact_player_season_stats
+       WHERE lg = 'NBA'
        ORDER BY season_id DESC
        LIMIT 1`
     )
@@ -43,6 +44,7 @@ export function getSeasonLeadersByPerGame(
        JOIN dim_player p ON p.bref_id = fpss.bref_player_id
        WHERE fpss.season_id = ?
          AND fpss.team_abbrev NOT LIKE '%TM'
+         AND (fpss.lg = 'NBA' OR fpss.lg IS NULL)
        GROUP BY p.bref_id, p.full_name
        HAVING SUM(fpss.g) >= ?
        ORDER BY stat_per_game DESC, stat_total DESC
@@ -68,9 +70,10 @@ export function getAllTimeLeadersByTotal(
        FROM fact_player_season_stats fpss
        JOIN dim_player p ON p.bref_id = fpss.bref_player_id
        WHERE fpss.team_abbrev NOT LIKE '%TM'
+         AND (fpss.lg = 'NBA' OR fpss.lg IS NULL)
        GROUP BY p.bref_id, p.full_name
        HAVING SUM(fpss.g) >= ?
-       ORDER BY stat_total DESC
+       ORDER BY stat_total DESC, stat_per_game DESC
        LIMIT ?`
     )
     .all(minimumGames, limit) as Array<Record<string, string | number | null>>;

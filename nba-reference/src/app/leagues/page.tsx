@@ -21,6 +21,11 @@ export default function LeaguesPage(): React.JSX.Element {
       <p className="mb-4 text-sm text-muted-strong">
         NBA season index (Basketball Reference style).
       </p>
+      <div className="mb-4 text-sm">
+        <Link href={'/leagues/salary-cap' as Route} className={tableLinkClass}>
+          View NBA salary cap history
+        </Link>
+      </div>
       <div className={tableContainerClass}>
         <table className={tableClass}>
           <thead>

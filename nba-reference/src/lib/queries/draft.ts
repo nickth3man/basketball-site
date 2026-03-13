@@ -11,7 +11,8 @@ export function getDraftSeasons(limit = 40): Array<{
                        ds.start_year,
                        ds.end_year
        FROM fact_draft fd
-       JOIN dim_season ds ON ds.season_id = fd.season_id
+        JOIN dim_season ds ON ds.season_id = fd.season_id
+       WHERE (fd.lg = 'NBA' OR fd.lg IS NULL)
        ORDER BY ds.end_year DESC
        LIMIT ?`
     )
@@ -33,9 +34,10 @@ export function getDraftBySeason(seasonId: string): Array<Record<string, string 
               fd.player_name,
               fd.college,
               fd.lg
-       FROM fact_draft fd
-       WHERE fd.season_id = ?
-       ORDER BY fd.overall_pick ASC`
+        FROM fact_draft fd
+        WHERE fd.season_id = ?
+          AND (fd.lg = 'NBA' OR fd.lg IS NULL)
+        ORDER BY fd.overall_pick ASC`
     )
     .all(seasonId) as Array<Record<string, string | number | null>>;
 }

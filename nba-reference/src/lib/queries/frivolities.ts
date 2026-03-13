@@ -26,6 +26,12 @@ export function getPlayersByBirthday(month: number, day: number): PlayerBirthday
     WHERE strftime('%m', birth_date) = ?
       AND strftime('%d', birth_date) = ?
       AND birth_date IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM fact_player_season_stats fps
+        WHERE fps.bref_player_id = dim_player.bref_id
+          AND (fps.lg = 'NBA' OR fps.lg IS NULL)
+      )
     ORDER BY full_name`,
     [month.toString().padStart(2, '0'), day.toString().padStart(2, '0')],
     60_000
@@ -46,6 +52,12 @@ export function getAllBirthdaysGrouped(): Array<{
       CAST(strftime('%d', birth_date) AS INTEGER) as birth_day
     FROM dim_player
     WHERE birth_date IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM fact_player_season_stats fps
+        WHERE fps.bref_player_id = dim_player.bref_id
+          AND (fps.lg = 'NBA' OR fps.lg IS NULL)
+      )
     ORDER BY birth_month, birth_day, full_name`,
     [],
     300_000
@@ -88,6 +100,12 @@ export function getPlayersByCollege(): CollegeInfo[] {
     WHERE college IS NOT NULL 
       AND college != ''
       AND college != 'None'
+      AND EXISTS (
+        SELECT 1
+        FROM fact_player_season_stats fps
+        WHERE fps.bref_player_id = dim_player.bref_id
+          AND (fps.lg = 'NBA' OR fps.lg IS NULL)
+      )
     GROUP BY college
     ORDER BY player_count DESC, college`,
     [],

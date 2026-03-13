@@ -59,6 +59,14 @@ export default async function TeamSeasonPage({
           {seasonId} {team.full_name}
         </h1>
         <div className="flex items-center gap-2 text-sm">
+          <Link
+            href={
+              `/teams/${team.abbreviation}/salaries?season=${encodeURIComponent(seasonId)}` as Route
+            }
+            className="rounded border border-line bg-button-bg px-2 py-1"
+          >
+            Salaries
+          </Link>
           {previousEndYear == null ? (
             <span className="rounded border border-line px-2 py-1 text-muted">Previous Season</span>
           ) : (

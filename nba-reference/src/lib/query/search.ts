@@ -40,9 +40,16 @@ export function searchEntities(query: string): SearchEntityResult[] {
 
   // Search players by name (cached for 5s)
   const players = getCachedQueryMany<Array<{ type: 'player'; id: string; label: string }>>(
-    `SELECT 'player' as type, bref_id as id, full_name as label
-     FROM dim_player
-     WHERE bref_id IS NOT NULL AND LOWER(full_name) LIKE ?
+    `SELECT 'player' as type, p.bref_id as id, p.full_name as label
+     FROM dim_player p
+     WHERE p.bref_id IS NOT NULL
+       AND LOWER(p.full_name) LIKE ?
+       AND EXISTS (
+         SELECT 1
+         FROM fact_player_season_stats fps
+         WHERE fps.bref_player_id = p.bref_id
+           AND fps.lg = 'NBA'
+       )
      LIMIT 10`,
     [likeQuery],
     5_000
@@ -50,9 +57,15 @@ export function searchEntities(query: string): SearchEntityResult[] {
 
   // Search teams by name or abbreviation (cached for 5s)
   const teams = getCachedQueryMany<Array<{ type: 'team'; id: string; label: string }>>(
-    `SELECT 'team' as type, abbreviation as id, full_name as label
-     FROM dim_team
-     WHERE LOWER(full_name) LIKE ? OR LOWER(abbreviation) LIKE ?
+    `SELECT 'team' as type, t.abbreviation as id, t.full_name as label
+     FROM dim_team t
+     WHERE (LOWER(t.full_name) LIKE ? OR LOWER(t.abbreviation) LIKE ?)
+       AND EXISTS (
+         SELECT 1
+         FROM fact_team_season ts
+         WHERE ts.bref_abbrev = t.bref_abbrev
+           AND ts.lg = 'NBA'
+       )
      LIMIT 10`,
     [likeQuery, likeQuery],
     5_000
