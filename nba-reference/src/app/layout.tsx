@@ -36,12 +36,36 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const configuredBaseUrl = process.env['NEXT_PUBLIC_SITE_URL']?.trim();
+const siteUrl =
+  configuredBaseUrl != null && configuredBaseUrl.length > 0
+    ? configuredBaseUrl
+    : 'https://nba-reference.com';
+
 /**
  * Application metadata for SEO and browser display.
  */
 export const metadata: Metadata = {
   title: 'NBA Reference',
   description: 'Basketball-reference style NBA stats explorer',
+  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'NBA Reference',
+    description:
+      'Basketball-reference style NBA stats explorer for players, teams, seasons, awards, and playoffs.',
+    url: siteUrl,
+    siteName: 'NBA Reference',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NBA Reference',
+    description:
+      'Basketball-reference style NBA stats explorer for players, teams, seasons, awards, and playoffs.',
+  },
 };
 
 /**

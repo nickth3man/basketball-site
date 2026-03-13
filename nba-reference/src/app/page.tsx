@@ -42,9 +42,26 @@ export default function Home(): React.JSX.Element {
   const leagueSlug = seasonIdToLeagueSlug(seasonId);
   const standings = getHomeStandings(30);
   const games = getRecentGames(12);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'NBA Reference',
+    description:
+      'Basketball-reference style NBA stats explorer for standings, players, teams, awards, and playoff history.',
+    url: 'https://nba-reference.com',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://nba-reference.com/players',
+      'query-input': 'required name=search_term_string',
+    },
+  };
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Page header */}
       <h1 className="mb-1 fade-slide-in text-3xl font-bold text-heading">
         Basketball Stats and History
@@ -71,6 +88,27 @@ export default function Home(): React.JSX.Element {
           </Link>
         </div>
       </div>
+
+      <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:170ms]">
+        <h2 className="mb-2 text-xl font-bold text-heading">Explore More</h2>
+        <div className="flex flex-wrap gap-2 text-sm">
+          {[
+            { href: '/playoffs', label: 'Playoffs' },
+            { href: '/awards', label: 'Awards' },
+            { href: '/allstar', label: 'All-Star' },
+            { href: '/standings', label: 'Standings by Date' },
+            { href: '/draft', label: 'Draft' },
+          ].map(link => (
+            <Link
+              key={link.href}
+              href={link.href as Route}
+              className="rounded border border-line bg-button-bg px-3 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Standings section */}
       <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">

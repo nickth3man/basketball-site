@@ -16,6 +16,7 @@ import type React from 'react';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
 import {
+  getSeasonAwards,
   getSeasonAssistLeaders,
   getSeasonLeagueSummary,
   getSeasonRecentGames,
@@ -50,6 +51,19 @@ export default async function SeasonPage({
   const assistLeaders = getSeasonAssistLeaders(year, 30);
   const leagueSummary = getSeasonLeagueSummary(year);
   const games = getSeasonRecentGames(year, 50);
+  const awards = getSeasonAwards(year);
+  const eastStandings = standings.filter(team => team['conference'] === 'East');
+  const westStandings = standings.filter(team => team['conference'] === 'West');
+  const standingsColumns = [
+    { key: 'bref_abbrev', label: 'Team' },
+    { key: 'w', label: 'W', align: 'right' as const },
+    { key: 'l', label: 'L', align: 'right' as const },
+    { key: 'srs', label: 'SRS', align: 'right' as const },
+    { key: 'o_rtg', label: 'ORtg', align: 'right' as const },
+    { key: 'd_rtg', label: 'DRtg', align: 'right' as const },
+    { key: 'n_rtg', label: 'NRtg', align: 'right' as const },
+    { key: 'pace', label: 'Pace', align: 'right' as const },
+  ];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -81,23 +95,44 @@ export default async function SeasonPage({
         </div>
       </section>
 
+      <section className="mb-8 border border-line-mid bg-paper-soft p-3 text-sm">
+        <h2 className="mb-2 text-lg font-bold">Season Awards</h2>
+        <div className="grid gap-3 md:grid-cols-3">
+          <div>
+            <div className="text-xs tracking-wide text-crumb uppercase">MVP</div>
+            <div className="font-semibold">{awards.mvp?.full_name ?? '-'}</div>
+            <div className="text-muted-strong">{awards.mvp?.team_abbrev ?? '-'}</div>
+          </div>
+          <div>
+            <div className="text-xs tracking-wide text-crumb uppercase">DPOY</div>
+            <div className="font-semibold">{awards.dpoy?.full_name ?? '-'}</div>
+            <div className="text-muted-strong">{awards.dpoy?.team_abbrev ?? '-'}</div>
+          </div>
+          <div>
+            <div className="text-xs tracking-wide text-crumb uppercase">ROY</div>
+            <div className="font-semibold">{awards.roy?.full_name ?? '-'}</div>
+            <div className="text-muted-strong">{awards.roy?.team_abbrev ?? '-'}</div>
+          </div>
+        </div>
+      </section>
+
       {/* Standings Section */}
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">Standings</h2>
-        <StatsTable
-          columns={[
-            { key: 'bref_abbrev', label: 'Team' },
-            { key: 'w', label: 'W', align: 'right' },
-            { key: 'l', label: 'L', align: 'right' },
-            { key: 'srs', label: 'SRS', align: 'right' },
-            { key: 'o_rtg', label: 'ORtg', align: 'right' },
-            { key: 'd_rtg', label: 'DRtg', align: 'right' },
-            { key: 'n_rtg', label: 'NRtg', align: 'right' },
-            { key: 'pace', label: 'Pace', align: 'right' },
-          ]}
-          rows={standings}
-          initialSort="w"
-        />
+        {eastStandings.length > 0 || westStandings.length > 0 ? (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <h3 className="mb-2 text-lg font-semibold">Eastern Conference</h3>
+              <StatsTable columns={standingsColumns} rows={eastStandings} initialSort="w" />
+            </div>
+            <div>
+              <h3 className="mb-2 text-lg font-semibold">Western Conference</h3>
+              <StatsTable columns={standingsColumns} rows={westStandings} initialSort="w" />
+            </div>
+          </div>
+        ) : (
+          <StatsTable columns={standingsColumns} rows={standings} initialSort="w" />
+        )}
       </section>
 
       {/* Scoring Leaders Section */}

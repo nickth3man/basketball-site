@@ -53,10 +53,21 @@ export function getSeasonStandings(
 ): Array<Record<string, string | number | null>> {
   return getDb()
     .prepare(
-      `SELECT bref_abbrev, w, l, srs, o_rtg, d_rtg, n_rtg, pace
-       FROM fact_team_season
-       WHERE season_id = ?
-         AND (lg = 'NBA' OR lg IS NULL)
+      `SELECT ts.bref_abbrev,
+              dt.full_name,
+              dt.conference,
+              dt.division,
+              ts.w,
+              ts.l,
+              ts.srs,
+              ts.o_rtg,
+              ts.d_rtg,
+              ts.n_rtg,
+              ts.pace
+       FROM fact_team_season ts
+       LEFT JOIN dim_team dt ON dt.bref_abbrev = ts.bref_abbrev
+       WHERE ts.season_id = ?
+         AND (ts.lg = 'NBA' OR ts.lg IS NULL)
        ORDER BY w DESC, l ASC`
     )
     .all(seasonId) as Array<Record<string, string | number | null>>;
