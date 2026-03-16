@@ -18,18 +18,11 @@
 import type { JSX } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { RelatedLinksPanel } from '@/components/related-links-panel';
 import { StatsTable } from '@/components/stats-table';
-import {
-  getTeamByAbbrev,
-  getTeamCurrentSeasonSummary,
-  getTeamFourFactorsComparison,
-  getTeamPerGameAverages,
-  getTeamPlayerLeaders,
-  getTeamRecentGames,
-  getTeamRosterWithStats,
-  getTeamSeasonStats,
-} from '@/lib/queries';
 import { formatSignedNumber } from '@/lib/formatters';
+import { getTeamPageData } from '@/lib/query';
+import { routes } from '@/lib/routes';
 import { notFound } from 'next/navigation';
 import { validateTeamAbbrev } from '@/lib/validation';
 import { seasonIdToEndYear } from '@/lib/season-utils';
@@ -50,25 +43,51 @@ export default async function TeamPage({
   // Validate team abbreviation format before querying
   validateTeamAbbrev(abbrev.toUpperCase());
 
-  // Primary team lookup - normalize to uppercase for matching
-  const team = getTeamByAbbrev(abbrev.toUpperCase());
-  if (!team) notFound();
-
-  // Fetch all team data in parallel
-  const roster = getTeamRosterWithStats(team.team_id);
-  const seasonStats = getTeamSeasonStats(team.abbreviation);
-  const current = getTeamCurrentSeasonSummary(team.abbreviation);
-  const fourFactors = getTeamFourFactorsComparison(team.abbreviation);
-  const recentGames = getTeamRecentGames(team.team_id, 20);
-  const averages = getTeamPerGameAverages(team.team_id);
-  const leaders = getTeamPlayerLeaders(team.team_id, 12);
-
-  // Determine which season label to display
-  const seasonLabel = current?.['season_id'] ?? seasonStats[0]?.['season_id'] ?? 'Current';
-  const seasonLinks = seasonStats
-    .map(row => String(row['season_id'] ?? ''))
-    .filter((rowSeasonId): rowSeasonId is string => /^\d{4}-\d{2}$/.test(rowSeasonId))
-    .slice(0, 10);
+  const teamPageData = getTeamPageData(abbrev.toUpperCase());
+  if (teamPageData?.team == null) notFound();
+  const {
+    averages,
+    current,
+    fourFactors,
+    leaders,
+    recentGames,
+    roster,
+    seasonLabel,
+    seasonLinks,
+    seasonStats,
+    team,
+  } = teamPageData;
+  const currentSeasonEndYear =
+    typeof seasonLabel === 'string' ? (seasonIdToEndYear(seasonLabel)?.toString() ?? null) : null;
+  const relatedLinks = [
+    currentSeasonEndYear == null
+      ? null
+      : {
+          href: `/teams/${team.abbreviation}/${currentSeasonEndYear}` as Route,
+          label: 'Current Season Page',
+          description: 'Jump into the team-specific breakdown for the latest season.',
+        },
+    {
+      href: `/teams/${team.abbreviation}/franchise` as Route,
+      label: 'Franchise History',
+      description: 'Browse the franchise timeline, relocations, and historical summary.',
+    },
+    {
+      href: `/teams/${team.abbreviation}/salaries` as Route,
+      label: 'Salary History',
+      description: 'Review team salary commitments across seasons.',
+    },
+    {
+      href: routes.search(team.full_name),
+      label: 'Search This Team',
+      description: 'Use site-wide search to find seasons, games, and related pages for this team.',
+    },
+    {
+      href: '/standings' as Route,
+      label: 'Standings By Date',
+      description: 'Compare this team against historical standings snapshots.',
+    },
+  ].filter(link => link != null);
 
   // Navigation anchors for sticky sidebar
   const anchors = [
@@ -176,7 +195,7 @@ export default async function TeamPage({
           <div className="mb-2 text-xs font-bold tracking-wide text-crumb uppercase">
             On this page
           </div>
-          <nav className="space-y-1 text-sm">
+          <nav aria-label="Team page sections" className="space-y-1 text-sm">
             {anchors.map(anchor => (
               <a
                 key={anchor.id}
@@ -198,17 +217,18 @@ export default async function TeamPage({
               columns={[
                 { key: 'game_date', label: 'Date' },
                 { key: 'result', label: 'W/L' },
-                { key: 'opp_abbrev', label: 'Opp' },
+                { key: 'opp_abbrev', label: 'Opp', link: { type: 'team' } },
                 { key: 'is_home', label: 'Site' },
                 { key: 'team_score', label: 'Team', align: 'right' },
                 { key: 'opp_score', label: 'Opp', align: 'right' },
-                { key: 'game_id', label: 'Game ID' },
+                { key: 'game_id', label: 'Game ID', link: { type: 'boxscore' } },
               ]}
               rows={recentGames.map(recentGame => ({
                 ...recentGame,
                 is_home: Number(recentGame['is_home']) === 1 ? 'Home' : 'Away',
               }))}
               initialSort="game_date"
+              tableId="team-recent-games"
             />
           </section>
 
@@ -217,7 +237,11 @@ export default async function TeamPage({
             <h2 className="mb-2 text-xl font-bold">Roster</h2>
             <StatsTable
               columns={[
-                { key: 'full_name', label: 'Player' },
+                {
+                  key: 'full_name',
+                  label: 'Player',
+                  link: { type: 'player', valueKey: 'bref_id' },
+                },
                 { key: 'position', label: 'Pos' },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'pts_pg', label: 'PTS', align: 'right' },
@@ -229,6 +253,7 @@ export default async function TeamPage({
               ]}
               rows={roster}
               initialSort="pts_pg"
+              tableId="team-roster"
             />
           </section>
 
@@ -276,7 +301,7 @@ export default async function TeamPage({
             <h2 className="mb-2 text-xl font-bold">Team Misc / Efficiency</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
                 { key: 'w', label: 'W', align: 'right' },
                 { key: 'l', label: 'L', align: 'right' },
                 { key: 'mov', label: 'MOV', align: 'right' },
@@ -291,6 +316,7 @@ export default async function TeamPage({
               ]}
               rows={seasonStats}
               initialSort="season_id"
+              tableId="team-stats"
             />
           </section>
 
@@ -299,7 +325,11 @@ export default async function TeamPage({
             <h2 className="mb-2 text-xl font-bold">Player Leaders (Current Season)</h2>
             <StatsTable
               columns={[
-                { key: 'full_name', label: 'Player' },
+                {
+                  key: 'full_name',
+                  label: 'Player',
+                  link: { type: 'player', valueKey: 'bref_id' },
+                },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'pts_pg', label: 'PTS', align: 'right' },
                 { key: 'reb_pg', label: 'REB', align: 'right' },
@@ -308,6 +338,7 @@ export default async function TeamPage({
               ]}
               rows={leaders}
               initialSort="pts_pg"
+              tableId="team-leaders"
             />
           </section>
 
@@ -316,7 +347,7 @@ export default async function TeamPage({
             <h2 className="mb-2 text-xl font-bold">Season History</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
                 { key: 'w', label: 'W', align: 'right' },
                 { key: 'l', label: 'L', align: 'right' },
                 { key: 'o_rtg', label: 'ORtg', align: 'right' },
@@ -326,8 +357,10 @@ export default async function TeamPage({
               ]}
               rows={seasonStats}
               initialSort="season_id"
+              tableId="team-history"
             />
           </section>
+          <RelatedLinksPanel links={relatedLinks} title="Related Links" />
         </div>
       </div>
     </main>

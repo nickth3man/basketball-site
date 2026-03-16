@@ -16,15 +16,7 @@
 import type React from 'react';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
-import {
-  getGameById,
-  getGameLineScore,
-  getGamePlayerAdvancedBoxScore,
-  getGamePbpEvents,
-  getGamePlayerBoxScore,
-  getGameTeamFourFactors,
-  getGameTeamBoxScores,
-} from '@/lib/queries';
+import { getGamePageData } from '@/lib/query';
 import { notFound } from 'next/navigation';
 
 /**
@@ -46,25 +38,21 @@ export default async function GamePage({
 }): Promise<React.JSX.Element> {
   const { id } = await params;
 
-  // Primary game lookup - 404 if not found
-  const game = getGameById(id);
-  if (!game) notFound();
-
-  // Fetch all game data in parallel
-  const box = getGameTeamBoxScores(id);
-  const players = getGamePlayerBoxScore(id);
-  const playerAdvanced = getGamePlayerAdvancedBoxScore(id);
-  const lineScore = getGameLineScore(id);
-  const fourFactors = getGameTeamFourFactors(id);
-  const pbp = getGamePbpEvents(id, 50);
-
-  // Separate players by team for display
-  const awayTeam = String(game['away_abbrev'] ?? '');
-  const homeTeam = String(game['home_abbrev'] ?? '');
-  const awayPlayers = players.filter(player => String(player['team']) === awayTeam);
-  const homePlayers = players.filter(player => String(player['team']) === homeTeam);
-  const awayAdvanced = playerAdvanced.filter(player => String(player['team']) === awayTeam);
-  const homeAdvanced = playerAdvanced.filter(player => String(player['team']) === homeTeam);
+  const gamePageData = getGamePageData(id);
+  if (gamePageData?.game == null) notFound();
+  const {
+    awayAdvanced,
+    awayPlayers,
+    awayTeam,
+    box,
+    fourFactors,
+    game,
+    homeAdvanced,
+    homePlayers,
+    homeTeam,
+    lineScore,
+    pbp,
+  } = gamePageData;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">

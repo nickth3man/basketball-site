@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Route } from 'next';
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -35,6 +36,22 @@ function createExportRequest(pathname: string, acceptEncoding?: string): NextReq
   });
 }
 
+function createSearchResult(href: Route): {
+  description: null;
+  href: Route;
+  id: string;
+  label: string;
+  type: 'player';
+} {
+  return {
+    description: null,
+    href,
+    type: 'player' as const,
+    id: 'jamesle01',
+    label: 'LeBron James',
+  };
+}
+
 describe('GET /api/export/[type]', () => {
   beforeEach(() => {
     checkRateLimitMock.mockReturnValue(null);
@@ -58,13 +75,7 @@ describe('GET /api/export/[type]', () => {
         away_score: 105,
       },
     ]);
-    searchEntitiesMock.mockReturnValue([
-      {
-        type: 'player',
-        id: 'jamesle01',
-        label: 'LeBron James',
-      },
-    ]);
+    searchEntitiesMock.mockReturnValue([createSearchResult('/players/j/jamesle01' as Route)]);
   });
 
   it('returns standings data', async () => {

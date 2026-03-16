@@ -21,6 +21,20 @@ import type { Route } from 'next';
  * query-param-based URLs.
  */
 export const routes = {
+  // Search
+  search: (query?: string, type?: string): Route => {
+    const params = new URLSearchParams();
+    if (query != null && query.trim().length > 0) {
+      params.set('q', query.trim());
+    }
+    if (type != null && type !== 'all' && type.trim().length > 0) {
+      params.set('type', type.trim());
+    }
+
+    const search = params.toString();
+    return (search.length > 0 ? `/search?${search}` : '/search') as Route;
+  },
+
   // Box scores
   boxscore: (gameId: string): Route => `/boxscores/${gameId}` as Route,
 

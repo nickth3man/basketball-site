@@ -1,8 +1,8 @@
 # NBA Reference
 
 Next.js frontend application for basketball statistics. Serves comprehensive NBA
-data including player stats, team records, game logs, awards, and historical
-data from a local SQLite database.
+data including player stats, team records, game logs, awards, season indexes,
+and cross-entity search from a local SQLite database.
 
 ## Quick Start
 
@@ -37,6 +37,7 @@ src/
 │   ├── layout.tsx         # Root layout
 │   ├── globals.css        # Global styles
 │   ├── api/               # API routes
+│   ├── search/            # Dedicated search results page
 │   ├── players/           # Player pages
 │   ├── teams/             # Team pages
 │   ├── games/             # Game logs
@@ -53,8 +54,8 @@ src/
 ├── components/            # Shared UI components
 │   ├── ui/                # Base UI components
 │   ├── site-header.tsx    # Navigation header
-│   ├── search-box.tsx     # Player/team search
-│   ├── stats-table.tsx    # Statistics table
+│   ├── search-box.tsx     # Global search entry point
+│   ├── stats-table.tsx    # Statistics table with linkable cells
 │   └── error-boundary.tsx # Error handling
 └── lib/                   # Data layer
     ├── db.ts              # Database connection
@@ -80,6 +81,7 @@ src/
 | `npm run type-check:watch` | Run TypeScript check in watch mode                   |
 | `npm run test`             | Run Vitest test suite                                |
 | `npm run test:watch`       | Run tests in watch mode                              |
+| `npm run verify:db`        | Verify the SQLite payload is present and readable    |
 | `npm run ci`               | Full CI pipeline (type-check + lint + format + test) |
 
 ## Development
@@ -107,9 +109,9 @@ const players = db.prepare('SELECT * FROM players LIMIT 10').all();
 
 ### Environment Variables
 
-| Variable  | Description             | Default             |
-| --------- | ----------------------- | ------------------- |
-| `DB_PATH` | Path to SQLite database | `./nba_raw_data.db` |
+| Variable  | Description             | Default                 |
+| --------- | ----------------------- | ----------------------- |
+| `DB_PATH` | Path to SQLite database | `../db/nba_raw_data.db` |
 
 ### Key Conventions
 
@@ -136,6 +138,9 @@ route-local `__tests__/` folders.
 ## Building for Production
 
 ```bash
+# Verify the database payload first
+npm run verify:db
+
 # Create production build
 npm run build
 
@@ -153,7 +158,6 @@ npm start
 
 - [AGENTS.md](./AGENTS.md) — Development guidelines and conventions
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — System architecture and patterns
-- [CLAUDE.md](./CLAUDE.md) — Mirror of AGENTS.md for AI assistants
 
 ## License
 

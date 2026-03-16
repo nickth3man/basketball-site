@@ -32,7 +32,13 @@ export function SiteHeader(): JSX.Element {
         </Link>
 
         {/* Main navigation */}
-        <nav className="flex items-center gap-4 text-sm">
+        <nav aria-label="Primary" className="flex items-center gap-4 text-sm">
+          <Link
+            href={'/search' as Route}
+            className="transition-colors duration-200 hover:text-white"
+          >
+            Search
+          </Link>
           <Link href="/players" className="transition-colors duration-200 hover:text-white">
             Players
           </Link>
@@ -50,6 +56,12 @@ export function SiteHeader(): JSX.Element {
           </Link>
           <Link href="/draft" className="transition-colors duration-200 hover:text-white">
             Draft
+          </Link>
+          <Link
+            href={'/allstar' as Route}
+            className="transition-colors duration-200 hover:text-white"
+          >
+            All-Star
           </Link>
           <Link
             href={'/playoffs' as Route}

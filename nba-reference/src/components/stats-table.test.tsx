@@ -15,26 +15,33 @@
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatsTable } from './stats-table';
 
 describe('StatsTable', () => {
   // Test data
   const columns = [
-    { key: 'name', label: 'Name' },
+    { key: 'name', label: 'Name', link: { type: 'player' as const, valueKey: 'bref_id' } },
     { key: 'pts', label: 'Points', align: 'right' as const },
   ];
   const rows = [
-    { name: 'LeBron', pts: 25 },
-    { name: 'Steph', pts: 30 },
+    { bref_id: 'jamesle01', name: 'LeBron', pts: 25 },
+    { bref_id: 'curryst01', name: 'Steph', pts: 30 },
   ];
+
+  beforeEach(() => {
+    window.history.replaceState(null, '', '/leaders');
+  });
 
   /**
    * Verifies that the table renders with all data visible.
    */
   it('renders the table correctly', () => {
     render(<StatsTable columns={columns} rows={rows} />);
-    expect(screen.getByText('LeBron')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'LeBron' })).toHaveAttribute(
+      'href',
+      '/players/j/jamesle01'
+    );
     expect(screen.getByText('Steph')).toBeInTheDocument();
     expect(screen.getByText('25')).toBeInTheDocument();
     expect(screen.getByText('30')).toBeInTheDocument();
@@ -66,6 +73,19 @@ describe('StatsTable', () => {
     tableRows = screen.getAllByRole('row').slice(1);
     expect(tableRows[0]).toHaveTextContent('Steph'); // 30
     expect(tableRows[1]).toHaveTextContent('LeBron'); // 25
+  });
+
+  it('persists sort state to the URL when tableId is present', () => {
+    const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
+    render(<StatsTable columns={columns} rows={rows} tableId="leaders" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Points/i }));
+
+    expect(replaceStateSpy).toHaveBeenLastCalledWith(
+      null,
+      '',
+      '/leaders?leaders-sort=pts&leaders-dir=desc'
+    );
   });
 
   /**
@@ -113,5 +133,15 @@ describe('StatsTable', () => {
   it('renders safely with no columns', () => {
     render(<StatsTable columns={[]} rows={rows} />);
     expect(screen.queryByRole('button', { name: /Export CSV/i })).not.toBeInTheDocument();
+  });
+
+  it('hydrates sort state from the URL when tableId is present', () => {
+    window.history.replaceState(null, '', '/leaders?leaders-sort=pts&leaders-dir=asc');
+
+    render(<StatsTable columns={columns} rows={rows} tableId="leaders" />);
+
+    const tableRows = screen.getAllByRole('row').slice(1);
+    expect(tableRows[0]).toHaveTextContent('LeBron');
+    expect(tableRows[1]).toHaveTextContent('Steph');
   });
 });

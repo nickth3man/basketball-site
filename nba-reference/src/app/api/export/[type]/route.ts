@@ -66,7 +66,15 @@ export async function GET(
   if (type === 'games') rows = castToDbRows(getRecentGames(100));
   if (type === 'search') {
     const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
-    rows = castToDbRows(searchEntities(query));
+    rows = castToDbRows(
+      searchEntities(query).map(result => ({
+        type: result.type,
+        id: result.id,
+        label: result.label,
+        description: result.description,
+        href: result.href,
+      }))
+    );
   }
 
   const csv = convertRowsToCsv(rows);

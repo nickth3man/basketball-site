@@ -14,8 +14,7 @@ basketball-site/
 ├── nba-reference/      # Next.js app (all feature work)
 ├── db/                 # SQLite payload (Git LFS)
 ├── scripts/            # Repo maintenance scripts
-├── AGENTS.md           # Root guidance (this file)
-└── CLAUDE.md           # Mirror of AGENTS.md
+└── AGENTS.md           # Root guidance (this file)
 ```
 
 ## WHERE TO LOOK
@@ -25,7 +24,6 @@ basketball-site/
 | Query/data logic | `nba-reference/src/lib/` | Layer boundary and DB access |
 | App-level constraints | `nba-reference/AGENTS.md` | Primary contributor guide |
 | Database payload issues | `db/nba_raw_data.db` | Read-only runtime model |
-| Keep docs mirrored | `scripts/sync-claude-agents.sh` | Syncs AGENTS/CLAUDE pairs |
 
 ## CODE MAP
 | Symbol | Type | Location | Refs | Role |
@@ -38,7 +36,6 @@ basketball-site/
 ## CONVENTIONS
 - All application changes belong in `nba-reference/`; root is coordination and repo metadata.
 - Database file is externalized in `db/` and consumed read-only by app code.
-- `AGENTS.md` and `CLAUDE.md` are mirrored in each directory that has both.
 - File Length: Aim for 300–500 lines maximum for components or functional modules.
 - Function Length: Keep individual functions or methods concise, ideally between 20–30 lines.
 
@@ -53,9 +50,6 @@ basketball-site/
 
 ## COMMANDS
 ```bash
-# From repo root
-bash scripts/sync-claude-agents.sh
-
 # App pipeline (runs in app workspace)
 npm --prefix nba-reference run ci
 ```

@@ -19,4 +19,4 @@ This directory is the navigation hub for repository-level documentation.
 ## Maintenance
 
 - Keep links in this index current when adding or moving docs.
-- If AGENTS/CLAUDE files are updated, run `bash scripts/sync-claude-agents.sh`.
+- Keep repository and app-level docs aligned when commands, paths, or architecture decisions change.

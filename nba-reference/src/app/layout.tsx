@@ -76,8 +76,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
+        <a
+          href="#main-content"
+          className="sr-only absolute top-4 left-4 z-50 rounded bg-paper px-3 py-2 text-sm text-heading shadow-popover focus:not-sr-only"
+        >
+          Skip to main content
+        </a>
         <SiteHeader />
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <ErrorBoundary>
+          <div id="main-content" tabIndex={-1}>
+            {children}
+          </div>
+        </ErrorBoundary>
       </body>
     </html>
   );

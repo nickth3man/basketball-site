@@ -8,7 +8,7 @@
  * @module @/app/api/search/route
  */
 
-import { searchEntities } from '@/lib/query/search';
+import { SEARCH_RESULT_TYPES, searchEntities } from '@/lib/query/search';
 import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -40,9 +40,18 @@ export function GET(req: NextRequest): NextResponse {
   if (rateLimitResponse) return rateLimitResponse;
 
   const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
+  const requestedType = req.nextUrl.searchParams.get('type')?.trim().toLowerCase();
   if (query.length < 2) {
     return NextResponse.json({ results: [] });
   }
 
-  return NextResponse.json({ results: searchEntities(query) });
+  const matchedType =
+    requestedType != null ? SEARCH_RESULT_TYPES.find(type => type === requestedType) : undefined;
+
+  return NextResponse.json({
+    results: searchEntities(
+      query,
+      matchedType != null ? { limit: 8, types: [matchedType] } : { limit: 8 }
+    ),
+  });
 }

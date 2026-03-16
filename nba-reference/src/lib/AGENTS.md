@@ -17,7 +17,11 @@ src/lib/
 ├── validation.ts          # Route-param coercion + notFound guards
 ├── types.ts               # Shared row/value types
 ├── formatters.ts          # Display formatting helpers
-└── table-styles.ts        # Shared table class constants
+├── table-styles.ts        # Shared table class constants
+├── routes.ts              # Route definitions and URL builders
+├── season-utils.ts        # Season formatting and calculation helpers
+├── site-config.ts         # Global site configuration
+└── utils.ts               # General utility functions (e.g., cn for Tailwind)
 ```
 
 ## WHERE TO LOOK

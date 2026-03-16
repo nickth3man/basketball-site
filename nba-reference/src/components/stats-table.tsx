@@ -2,8 +2,9 @@
  * @fileoverview Sortable data table with CSV export functionality.
  *
  * Provides a reusable table component for displaying statistical data
- * with client-side sorting and CSV export. Uses CSS custom properties
- * for consistent styling with the rest of the application.
+ * with client-side sorting, optional URL-backed sort state, drill-down links,
+ * and CSV export. Uses CSS custom properties for consistent styling with the
+ * rest of the application.
  *
  * @module @/components/stats-table
  */
@@ -11,9 +12,13 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Route } from 'next';
+import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { convertRowsToCsvWithColumns } from '@/lib/csv';
 import { Button } from '@/components/ui/button';
+import { routes } from '@/lib/routes';
+import { seasonIdToLeagueSlug } from '@/lib/season-utils';
 import {
   tableBodyRowClass,
   tableCellClass,
@@ -22,23 +27,124 @@ import {
   tableHeadRowClass,
   tableHeaderButtonClass,
   tableHeaderCellClass,
+  tableLinkClass,
 } from '@/lib/table-styles';
 import type { DbRows } from '@/lib/types';
+
+type SortDirection = 'asc' | 'desc';
+type SearchParamsLike = Pick<URLSearchParams, 'get' | 'toString'> | null;
+const tableUrlChangeEvent = 'stats-table-url-change';
+
+interface StatsTableColumnLink {
+  type: 'player' | 'team' | 'league' | 'boxscore' | 'game';
+  valueKey?: string;
+}
 
 /**
  * Props for the StatsTable component.
  */
 interface StatsTableProps {
-  /** Column definitions with key, label, and optional alignment */
-  columns: Array<{ key: string; label: string; align?: 'left' | 'right' }>;
+  /** Column definitions with key, label, optional alignment, and optional link behavior */
+  columns: Array<{
+    key: string;
+    label: string;
+    align?: 'left' | 'right';
+    link?: StatsTableColumnLink;
+  }>;
   /** Array of data rows to display */
   rows: DbRows;
   /** Initial column to sort by (defaults to first column) */
   initialSort?: string;
+  /** Optional table id used to persist sort state in the URL */
+  tableId?: string;
+}
+
+function getSortDirection(value: string | null): SortDirection {
+  return value === 'asc' ? 'asc' : 'desc';
+}
+
+function getInitialSortKey(
+  columns: StatsTableProps['columns'],
+  initialSort: string | undefined,
+  searchParams: SearchParamsLike,
+  tableId: string | undefined
+): string {
+  if (tableId != null) {
+    const paramValue = searchParams?.get(`${tableId}-sort`);
+    if (paramValue != null && columns.some(column => column.key === paramValue)) {
+      return paramValue;
+    }
+  }
+
+  return initialSort ?? columns[0]?.key ?? '';
+}
+
+function subscribeToUrlState(onStoreChange: () => void): () => void {
+  if (typeof window === 'undefined') {
+    return () => undefined;
+  }
+
+  const handleStoreChange = (): void => {
+    onStoreChange();
+  };
+
+  window.addEventListener('popstate', handleStoreChange);
+  window.addEventListener(tableUrlChangeEvent, handleStoreChange);
+
+  return () => {
+    window.removeEventListener('popstate', handleStoreChange);
+    window.removeEventListener(tableUrlChangeEvent, handleStoreChange);
+  };
+}
+
+function getSearchSnapshot(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return window.location.search;
+}
+
+function getPathnameSnapshot(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return window.location.pathname;
+}
+
+function resolveLinkedHref(
+  row: DbRows[number],
+  link: StatsTableColumnLink | undefined,
+  columnKey: string
+): Route | null {
+  if (link == null) {
+    return null;
+  }
+
+  const rawValue = row[link.valueKey ?? columnKey];
+  if (typeof rawValue !== 'string' || rawValue.length === 0) {
+    return null;
+  }
+
+  switch (link.type) {
+    case 'player':
+      return routes.player(rawValue.slice(0, 1), rawValue);
+    case 'team':
+      return routes.team(rawValue);
+    case 'league': {
+      const leagueSlug = seasonIdToLeagueSlug(rawValue) ?? rawValue;
+      return routes.league(leagueSlug);
+    }
+    case 'boxscore':
+      return routes.boxscore(rawValue);
+    case 'game':
+      return routes.game(rawValue);
+  }
 }
 
 /**
- * Render a sortable data table with a client-side CSV export button.
+ * Render a sortable data table with optional drill-down links, URL-backed sorting, and a client-side CSV export button.
  *
  * Supports per-column sorting (click header to toggle ascending/descending), places null/undefined
  * values at the end of sorted results, compares string values case-insensitively, and generates
@@ -48,14 +154,22 @@ interface StatsTableProps {
  * @param columns - Column definitions (each with `key`, `label`, and optional `align`)
  * @param rows - Table rows to display (DbRows)
  * @param initialSort - Optional initial column key to sort by; defaults to the first column key if present
+ * @param tableId - Optional stable identifier for persisting sort state in the URL
  * @returns The rendered stats table element
  */
-export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX.Element {
+export function StatsTable({ columns, rows, initialSort, tableId }: StatsTableProps): JSX.Element {
   const hasColumns = columns.length > 0;
-  const [sortKey, setSortKey] = useState<string>(initialSort ?? columns[0]?.key ?? '');
-  const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
+  const locationSearch = useSyncExternalStore(subscribeToUrlState, getSearchSnapshot, () => '');
+  const pathname = useSyncExternalStore(subscribeToUrlState, getPathnameSnapshot, () => '');
+  const searchParams = useMemo(() => new URLSearchParams(locationSearch), [locationSearch]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingUrlRef = useRef<string | null>(null);
+  const [localSortKey, setLocalSortKey] = useState<string>(initialSort ?? columns[0]?.key ?? '');
+  const [localDirection, setLocalDirection] = useState<SortDirection>('desc');
+  const sortKey =
+    tableId != null ? getInitialSortKey(columns, initialSort, searchParams, tableId) : localSortKey;
+  const direction =
+    tableId != null ? getSortDirection(searchParams.get(`${tableId}-dir`)) : localDirection;
 
   /**
    * Sorted rows based on current sort key and direction.
@@ -63,6 +177,10 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
    */
   const sorted = useMemo(() => {
     const copy = [...rows];
+    if (sortKey.length === 0) {
+      return copy;
+    }
+
     copy.sort((leftRow, rightRow) => {
       const leftValue = leftRow[sortKey];
       const rightValue = rightRow[sortKey];
@@ -168,6 +286,23 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
     };
   }, []);
 
+  const persistSortInUrl = (nextSortKey: string, nextDirection: SortDirection): void => {
+    if (tableId == null) {
+      setLocalSortKey(nextSortKey);
+      setLocalDirection(nextDirection);
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(`${tableId}-sort`, nextSortKey);
+    params.set(`${tableId}-dir`, nextDirection);
+    const nextPath = params.toString().length > 0 ? `${pathname}?${params.toString()}` : pathname;
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', nextPath as Route);
+      window.dispatchEvent(new Event(tableUrlChangeEvent));
+    }
+  };
+
   return (
     <div className={tableContainerClass}>
       {!hasColumns ? null : (
@@ -184,24 +319,42 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
             <thead>
               <tr className={tableHeadRowClass}>
                 {columns.map(column => (
-                  <th key={column.key} className={tableHeaderCellClass(column.align)}>
+                  <th
+                    key={column.key}
+                    className={tableHeaderCellClass(column.align)}
+                    aria-sort={
+                      sortKey === column.key
+                        ? direction === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    }
+                  >
                     <button
                       type="button"
                       onClick={() => {
+                        let nextSortKey = column.key;
+                        let nextDirection: SortDirection = 'desc';
+
                         if (sortKey === column.key) {
                           // Toggle direction if clicking same column
-                          setDirection(currentDirection =>
-                            currentDirection === 'asc' ? 'desc' : 'asc'
-                          );
+                          nextDirection = direction === 'asc' ? 'desc' : 'asc';
                         } else {
                           // New column: default to descending
-                          setSortKey(column.key);
-                          setDirection('desc');
+                          nextSortKey = column.key;
                         }
+
+                        persistSortInUrl(nextSortKey, nextDirection);
                       }}
                       className={tableHeaderButtonClass}
+                      aria-label={`Sort by ${column.label}`}
                     >
-                      {column.label}
+                      <span className="inline-flex items-center gap-1">
+                        <span>{column.label}</span>
+                        {sortKey === column.key ? (
+                          <span aria-hidden="true">{direction === 'asc' ? '▲' : '▼'}</span>
+                        ) : null}
+                      </span>
                     </button>
                   </th>
                 ))}
@@ -211,11 +364,26 @@ export function StatsTable({ columns, rows, initialSort }: StatsTableProps): JSX
               {keyedRows.map(({ row, rowKey }) => {
                 return (
                   <tr key={rowKey} className={tableBodyRowClass}>
-                    {columns.map(column => (
-                      <td key={`${rowKey}-${column.key}`} className={tableCellClass(column.align)}>
-                        {row[column.key] == null ? '-' : String(row[column.key])}
-                      </td>
-                    ))}
+                    {columns.map(column => {
+                      const rawValue = row[column.key];
+                      const displayValue = rawValue == null ? '-' : String(rawValue);
+                      const href = resolveLinkedHref(row, column.link, column.key);
+
+                      return (
+                        <td
+                          key={`${rowKey}-${column.key}`}
+                          className={tableCellClass(column.align)}
+                        >
+                          {href != null && rawValue != null ? (
+                            <Link className={tableLinkClass} href={href}>
+                              {displayValue}
+                            </Link>
+                          ) : (
+                            displayValue
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}

@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Route } from 'next';
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 vi.mock('@/lib/query/search', () => ({
+  SEARCH_RESULT_TYPES: ['player', 'team', 'season', 'game', 'award'],
   searchEntities: vi.fn(),
 }));
 
@@ -15,7 +17,13 @@ import { checkRateLimit } from '@/middleware/rate-limit';
 import { GET } from '@/app/api/search/route';
 
 interface SearchResponse {
-  results: Array<{ type: 'player' | 'team'; id: string; label: string }>;
+  results: Array<{
+    description: string | null;
+    href: Route;
+    type: 'player' | 'team' | 'season' | 'game' | 'award';
+    id: string;
+    label: string;
+  }>;
 }
 
 const searchEntitiesMock = vi.mocked(searchEntities);
@@ -23,6 +31,18 @@ const checkRateLimitMock = vi.mocked(checkRateLimit);
 
 function createSearchRequest(query: string): NextRequest {
   return new NextRequest(`http://localhost/api/search?q=${encodeURIComponent(query)}`);
+}
+
+function createResult(
+  overrides: Partial<SearchResponse['results'][number]> &
+    Pick<SearchResponse['results'][number], 'id' | 'label'>
+): SearchResponse['results'][number] {
+  return {
+    description: null,
+    href: '/search' as Route,
+    type: 'player',
+    ...overrides,
+  };
 }
 
 describe('GET /api/search', () => {
@@ -42,7 +62,11 @@ describe('GET /api/search', () => {
 
   it('trims query and returns search results', async () => {
     const expectedResults: SearchResponse['results'] = [
-      { type: 'player', id: 'jamesle01', label: 'LeBron James' },
+      createResult({
+        id: 'jamesle01',
+        label: 'LeBron James',
+        href: '/players/j/jamesle01' as Route,
+      }),
     ];
     searchEntitiesMock.mockReturnValue(expectedResults);
 
@@ -50,7 +74,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith('james');
+    expect(searchEntitiesMock).toHaveBeenCalledWith('james', { limit: 8, types: undefined });
     expect(payload.results).toEqual(expectedResults);
   });
 
@@ -79,7 +103,11 @@ describe('GET /api/search', () => {
 
   it('executes search for exact 2-character query', async () => {
     const expectedResults: SearchResponse['results'] = [
-      { type: 'player', id: 'jamesle01', label: 'LeBron James' },
+      createResult({
+        id: 'jamesle01',
+        label: 'LeBron James',
+        href: '/players/j/jamesle01' as Route,
+      }),
     ];
     searchEntitiesMock.mockReturnValue(expectedResults);
 
@@ -87,7 +115,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith('ja');
+    expect(searchEntitiesMock).toHaveBeenCalledWith('ja', { limit: 8, types: undefined });
     expect(payload.results).toEqual(expectedResults);
   });
 
@@ -116,15 +144,28 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith('nonexistent');
+    expect(searchEntitiesMock).toHaveBeenCalledWith('nonexistent', { limit: 8, types: undefined });
     expect(payload.results).toEqual([]);
   });
 
   it('handles multiple search results', async () => {
     const expectedResults: SearchResponse['results'] = [
-      { type: 'player', id: 'jamesle01', label: 'LeBron James' },
-      { type: 'player', id: 'jamesha02', label: 'Harden James' },
-      { type: 'team', id: 'LAL', label: 'Los Angeles Lakers' },
+      createResult({
+        id: 'jamesle01',
+        label: 'LeBron James',
+        href: '/players/j/jamesle01' as Route,
+      }),
+      createResult({
+        id: 'jamesha02',
+        label: 'Harden James',
+        href: '/players/j/jamesha02' as Route,
+      }),
+      createResult({
+        id: 'LAL',
+        label: 'Los Angeles Lakers',
+        href: '/teams/LAL' as Route,
+        type: 'team',
+      }),
     ];
     searchEntitiesMock.mockReturnValue(expectedResults);
 
@@ -138,7 +179,12 @@ describe('GET /api/search', () => {
 
   it('returns team results', async () => {
     const expectedResults: SearchResponse['results'] = [
-      { type: 'team', id: 'LAL', label: 'Los Angeles Lakers' },
+      createResult({
+        id: 'LAL',
+        label: 'Los Angeles Lakers',
+        href: '/teams/LAL' as Route,
+        type: 'team',
+      }),
     ];
     searchEntitiesMock.mockReturnValue(expectedResults);
 
@@ -152,7 +198,11 @@ describe('GET /api/search', () => {
 
   it('returns player results', async () => {
     const expectedResults: SearchResponse['results'] = [
-      { type: 'player', id: 'jamesle01', label: 'LeBron James' },
+      createResult({
+        id: 'jamesle01',
+        label: 'LeBron James',
+        href: '/players/j/jamesle01' as Route,
+      }),
     ];
     searchEntitiesMock.mockReturnValue(expectedResults);
 
@@ -172,13 +222,17 @@ describe('GET /api/search', () => {
     const response = GET(request);
     await response.json();
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith(longQuery);
+    expect(searchEntitiesMock).toHaveBeenCalledWith(longQuery, { limit: 8, types: undefined });
   });
 
   it('handles special characters in query', async () => {
     const specialQuery = "O'Neal";
     const expectedResults: SearchResponse['results'] = [
-      { type: 'player', id: 'onealsh01', label: "Shaquille O'Neal" },
+      createResult({
+        id: 'onealsh01',
+        label: "Shaquille O'Neal",
+        href: '/players/o/onealsh01' as Route,
+      }),
     ];
     searchEntitiesMock.mockReturnValue(expectedResults);
 
@@ -186,13 +240,27 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith(specialQuery);
+    expect(searchEntitiesMock).toHaveBeenCalledWith(specialQuery, { limit: 8, types: undefined });
     expect(payload.results).toEqual(expectedResults);
+  });
+
+  it('passes a recognized type filter through to searchEntities', async () => {
+    searchEntitiesMock.mockReturnValue([]);
+
+    const request = new NextRequest('http://localhost/api/search?q=james&type=player');
+    const response = GET(request);
+    await response.json();
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith('james', { limit: 8, types: ['player'] });
   });
 
   it('returns 200 status for successful search', () => {
     searchEntitiesMock.mockReturnValue([
-      { type: 'player', id: 'jamesle01', label: 'LeBron James' },
+      createResult({
+        id: 'jamesle01',
+        label: 'LeBron James',
+        href: '/players/j/jamesle01' as Route,
+      }),
     ]);
 
     const request = createSearchRequest('james');

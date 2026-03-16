@@ -3,11 +3,18 @@ import Link from 'next/link';
 import type { Route } from 'next';
 
 const exploreLinks = [
+  { href: '/search' as Route, label: 'Search' },
+  { href: '/players', label: 'Players' },
+  { href: '/teams', label: 'Teams' },
+  { href: '/leaders', label: 'Leaders' },
   { href: '/playoffs', label: 'Playoffs' },
   { href: '/awards', label: 'Awards' },
   { href: '/allstar', label: 'All-Star' },
   { href: '/standings', label: 'Standings by Date' },
   { href: '/draft', label: 'Draft' },
+  { href: '/friv/birthdays', label: 'Birthdays' },
+  { href: '/friv/colleges', label: 'Colleges' },
+  { href: '/leagues/salary-cap', label: 'Salary Cap' },
 ] satisfies Array<{ href: Route; label: string }>;
 
 export function HomeExploreLinks(): React.JSX.Element {
