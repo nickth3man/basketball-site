@@ -45,7 +45,7 @@ function getHomeJsonLd(): Record<string, unknown> {
     url: siteUrl,
     potentialAction: {
       '@type': 'SearchAction',
-      target: `${siteUrl}/api/search?q={search_term_string}`,
+      target: `${siteUrl}/search?q={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   };
@@ -111,7 +111,7 @@ export default function Home(): React.JSX.Element {
         </h2>
         <StatsTable
           columns={[
-            { key: 'bref_abbrev', label: 'Team' },
+            { key: 'bref_abbrev', label: 'Team', link: { type: 'team' } },
             { key: 'w', label: 'W', align: 'right' },
             { key: 'l', label: 'L', align: 'right' },
             { key: 'n_rtg', label: 'NetRtg', align: 'right' },
@@ -119,6 +119,7 @@ export default function Home(): React.JSX.Element {
           ]}
           rows={standings}
           initialSort="w"
+          tableId="home-standings"
         />
       </section>
 

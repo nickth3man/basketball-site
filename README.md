@@ -12,7 +12,7 @@ A full-stack basketball statistics website built with Next.js and SQLite. Access
 - **Team Information** - Franchise history, rosters, and team records
 - **Game Data** - Box scores, schedules, and historical games
 - **Awards & Leaders** - NBA awards, statistical leaders, and records
-- **Search Functionality** - Find players and teams quickly
+- **Search Functionality** - Search players, teams, seasons, games, and awards
 - **Export Data** - Download statistics in CSV format
 
 ## Quick Start
@@ -75,6 +75,7 @@ From the `nba-reference/` directory:
 | `npm run format` | Format code with Prettier |
 | `npm run test` | Run test suite with Vitest |
 | `npm run test:coverage` | Run tests with coverage report |
+| `npm run verify:db` | Verify the SQLite payload is present and readable |
 | `npm run ci` | Run full CI pipeline |
 
 ### Database Architecture
@@ -86,12 +87,13 @@ The application uses a **read-only database** architecture. The SQLite database 
 - App only reads from the database
 - Updates happen through separate ETL processes
 
-See [nba-reference/ARCHITECTURE.md](nba-reference/ARCHITECTURE.md) for detailed system design.
+See [nba-reference/ARCHITECTURE.md](nba-reference/ARCHITECTURE.md) for the app architecture and layer boundaries.
 
 ## Documentation
 
 - **[docs/README.md](docs/README.md)** - Documentation index and navigation
 - **[docs/project-structure.md](docs/project-structure.md)** - Canonical structure map
+- **[docs/data-pipeline-contract.md](docs/data-pipeline-contract.md)** - Data refresh contract and ownership model
 - **[db/README.md](db/README.md)** - Database payload and runtime path notes
 - **[scripts/README.md](scripts/README.md)** - Maintenance script reference
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to this project

@@ -11,27 +11,46 @@
  * @module @/app/api/export/[type]/route
  */
 
+import { createApiErrorResponse, createApiOptionsResponse, logApiError } from '@/lib/api-response';
+import { API_CORS_HEADERS, API_NO_STORE_HEADERS } from '@/lib/api-headers';
 import { convertRowsToCsv, castToDbRows } from '@/lib/csv';
 import { getHomeStandings, getRecentGames } from '@/lib/query/home';
 import { searchEntities } from '@/lib/query/search';
 import type { DbRows } from '@/lib/types';
-import { checkRateLimit } from '@/middleware/rate-limit';
+import {
+  checkRateLimit,
+  extractClientIp,
+  getRateLimitStatus,
+  RATE_LIMIT,
+} from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 import { gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 
 const gzipAsync = promisify(gzip);
-const OPTIONS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Accept-Encoding',
-};
 
 export function OPTIONS(): Response {
-  return new Response(null, {
-    status: 204,
-    headers: OPTIONS_HEADERS,
-  });
+  return createApiOptionsResponse();
+}
+
+function buildExportHeaders(
+  req: NextRequest,
+  type: string,
+  extraHeaders: Record<string, string> = {}
+): Record<string, string> {
+  const rateLimitStatus = getRateLimitStatus(extractClientIp(req));
+
+  return {
+    ...API_CORS_HEADERS,
+    ...API_NO_STORE_HEADERS,
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${type}.csv"`,
+    Vary: 'Accept-Encoding',
+    'X-RateLimit-Limit': String(RATE_LIMIT),
+    'X-RateLimit-Remaining': String(rateLimitStatus.remaining),
+    'X-RateLimit-Reset': String(Math.ceil(rateLimitStatus.reset / 1000)),
+    ...extraHeaders,
+  };
 }
 
 /**
@@ -55,41 +74,54 @@ export async function GET(
   const rateLimitResponse = checkRateLimit(req);
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { type } = await params;
-  if (type !== 'standings' && type !== 'games' && type !== 'search') {
-    return new Response('Invalid export type', { status: 400 });
-  }
+  try {
+    const { type } = await params;
+    if (type !== 'standings' && type !== 'games' && type !== 'search') {
+      return createApiErrorResponse(req, 400, 'invalid_export_type', 'Invalid export type.');
+    }
 
-  let rows: DbRows = [];
+    let rows: DbRows = [];
 
-  if (type === 'standings') rows = castToDbRows(getHomeStandings(30));
-  if (type === 'games') rows = castToDbRows(getRecentGames(100));
-  if (type === 'search') {
-    const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
-    rows = castToDbRows(searchEntities(query));
-  }
+    if (type === 'standings') rows = castToDbRows(getHomeStandings(30));
+    if (type === 'games') rows = castToDbRows(getRecentGames(100));
+    if (type === 'search') {
+      const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
+      rows = castToDbRows(
+        searchEntities(query).map(result => ({
+          type: result.type,
+          id: result.id,
+          label: result.label,
+          description: result.description,
+          href: result.href,
+        }))
+      );
+    }
 
-  const csv = convertRowsToCsv(rows);
-  const acceptEncoding = req.headers.get('accept-encoding') ?? '';
-  const supportsGzip = acceptEncoding.includes('gzip');
+    const csv = convertRowsToCsv(rows);
+    const acceptEncoding = req.headers.get('accept-encoding') ?? '';
+    const supportsGzip = acceptEncoding.includes('gzip');
 
-  if (supportsGzip && csv.length > 1024) {
-    const compressed = await gzipAsync(Buffer.from(csv, 'utf-8'));
-    return new Response(compressed, {
-      headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Encoding': 'gzip',
-        'Content-Disposition': `attachment; filename="${type}.csv"`,
-        Vary: 'Accept-Encoding',
-      },
+    if (supportsGzip && csv.length > 1024) {
+      const compressed = await gzipAsync(Buffer.from(csv, 'utf-8'));
+      return new Response(compressed, {
+        headers: buildExportHeaders(req, type, { 'Content-Encoding': 'gzip' }),
+      });
+    }
+
+    return new Response(csv, {
+      headers: buildExportHeaders(req, type),
     });
+  } catch (error) {
+    const routeParams = await params;
+    logApiError('export', error, {
+      exportType: routeParams.type,
+      query: req.nextUrl.searchParams.get('q')?.trim() ?? null,
+    });
+    return createApiErrorResponse(
+      req,
+      500,
+      'export_failed',
+      'CSV export is temporarily unavailable.'
+    );
   }
-
-  return new Response(csv, {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${type}.csv"`,
-      Vary: 'Accept-Encoding',
-    },
-  });
 }

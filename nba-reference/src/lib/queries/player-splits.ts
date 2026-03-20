@@ -263,6 +263,23 @@ export function getPlayerLatestSeason(playerId: string): string | undefined {
   return row?.season_id;
 }
 
+export function getPlayerSplitSeasons(playerId: string): string[] {
+  const rows = getCachedQueryMany<Array<{ season_id: string }>>(
+    `SELECT DISTINCT g.season_id AS season_id
+     FROM fact_game g
+     JOIN player_game_log pgl ON pgl.game_id = g.game_id
+     WHERE pgl.player_id = ?
+       AND g.season_id IS NOT NULL
+     ORDER BY g.season_id DESC`,
+    [playerId],
+    60_000
+  );
+
+  return rows
+    .map(row => row.season_id)
+    .filter((seasonId): seasonId is string => seasonId.length > 0);
+}
+
 function hasSeasonId(seasonId: string | undefined): seasonId is string {
   return seasonId != null && seasonId.length > 0;
 }

@@ -3,6 +3,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
+  getPlayerSplitSeasons,
   getPlayerHomeAwaySplits,
   getPlayerMonthlySplits,
   getPlayerOpponentSplits,
@@ -90,12 +91,17 @@ interface PlayerSplitsPageProps {
     letter: string;
     id: string;
   }>;
+  searchParams: Promise<{
+    season?: string;
+  }>;
 }
 
 export default async function PlayerSplitsPage({
   params,
+  searchParams,
 }: PlayerSplitsPageProps): Promise<React.JSX.Element> {
   const { letter, id } = await params;
+  const resolvedSearchParams = await searchParams;
 
   let playerId: string;
   try {
@@ -105,11 +111,17 @@ export default async function PlayerSplitsPage({
   }
 
   const latestSeason = getPlayerLatestSeason(playerId);
+  const availableSeasons = getPlayerSplitSeasons(playerId);
+  const requestedSeason = resolvedSearchParams.season?.trim();
+  const activeSeason =
+    requestedSeason != null && availableSeasons.includes(requestedSeason)
+      ? requestedSeason
+      : latestSeason;
 
-  const homeAway = getPlayerHomeAwaySplits(playerId, latestSeason);
-  const monthly = getPlayerMonthlySplits(playerId, latestSeason);
-  const opponents = getPlayerOpponentSplits(playerId, latestSeason).slice(0, 10);
-  const divisions = getPlayerDivisionSplits(playerId, latestSeason);
+  const homeAway = getPlayerHomeAwaySplits(playerId, activeSeason);
+  const monthly = getPlayerMonthlySplits(playerId, activeSeason);
+  const opponents = getPlayerOpponentSplits(playerId, activeSeason);
+  const divisions = getPlayerDivisionSplits(playerId, activeSeason);
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
@@ -121,15 +133,38 @@ export default async function PlayerSplitsPage({
           ← Back to Player
         </Link>
         <h1 className="text-3xl font-bold text-heading">Player Splits</h1>
-        {latestSeason != null && latestSeason.length > 0 && (
-          <p className="mt-1 text-muted">Season: {latestSeason}</p>
+        {activeSeason != null && activeSeason.length > 0 && (
+          <p className="mt-1 text-muted">Season: {activeSeason}</p>
         )}
       </div>
+
+      {availableSeasons.length > 0 ? (
+        <section className="mb-6 panel-paper p-4">
+          <h2 className="mb-3 text-lg font-bold text-heading">Season Selector</h2>
+          <div className="flex flex-wrap gap-2 text-sm">
+            {availableSeasons.map(seasonId => (
+              <Link
+                key={seasonId}
+                href={
+                  `/players/${letter}/${id}/splits${seasonId === latestSeason ? '' : `?season=${encodeURIComponent(seasonId)}`}` as Route
+                }
+                className={
+                  seasonId === activeSeason
+                    ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
+                    : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
+                }
+              >
+                {seasonId}
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SplitsTable title="Home vs Away" splits={homeAway} />
         <SplitsTable title="By Month" splits={monthly} />
-        <SplitsTable title="By Opponent (Top 10)" splits={opponents} />
+        <SplitsTable title="By Opponent" splits={opponents} />
         <SplitsTable title="By Division" splits={divisions} />
       </div>
     </main>

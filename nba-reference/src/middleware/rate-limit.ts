@@ -6,6 +6,7 @@
  * for distributed rate limiting across multiple server instances.
  */
 
+import { API_CORS_HEADERS, API_NO_STORE_HEADERS } from '@/lib/api-headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isIP } from 'node:net';
@@ -18,8 +19,8 @@ interface RateLimitEntry {
 // In production, use Redis or similar distributed cache
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
-const RATE_LIMIT = 100; // requests per window
-const WINDOW_MS = 60_000; // 1 minute in milliseconds
+export const RATE_LIMIT = 100; // requests per window
+export const WINDOW_MS = 60_000; // 1 minute in milliseconds
 const CLEANUP_INTERVAL_MS = 5 * 60_000; // Clean up every 5 minutes
 
 const IP_HEADER_CANDIDATES = [
@@ -120,12 +121,16 @@ export function checkRateLimit(req: NextRequest): NextResponse | null {
     const retryAfterSec = Math.max(0, resetEpochSec - Math.ceil(now / 1000));
     return NextResponse.json(
       {
-        error: 'Too many requests',
-        message: `Rate limit exceeded. Try again in ${retryAfterSec} seconds.`,
+        error: {
+          code: 'rate_limited',
+          message: `Rate limit exceeded. Try again in ${retryAfterSec} seconds.`,
+        },
       },
       {
         status: 429,
         headers: {
+          ...API_CORS_HEADERS,
+          ...API_NO_STORE_HEADERS,
           'X-RateLimit-Limit': String(RATE_LIMIT),
           'X-RateLimit-Remaining': '0',
           'X-RateLimit-Reset': String(resetEpochSec),

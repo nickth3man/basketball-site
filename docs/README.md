@@ -10,6 +10,7 @@ This directory is the navigation hub for repository-level documentation.
 
 - [../README.md](../README.md): project overview, setup, and commands.
 - [../CONTRIBUTING.md](../CONTRIBUTING.md): branch, commit, and PR workflow.
+- [./data-pipeline-contract.md](./data-pipeline-contract.md): data refresh ownership and payload contract.
 - [../db/README.md](../db/README.md): database payload notes and runtime path.
 - [../scripts/README.md](../scripts/README.md): maintenance script usage.
 - [../AGENTS.md](../AGENTS.md): repository conventions and constraints.
@@ -19,4 +20,4 @@ This directory is the navigation hub for repository-level documentation.
 ## Maintenance
 
 - Keep links in this index current when adding or moving docs.
-- If AGENTS/CLAUDE files are updated, run `bash scripts/sync-claude-agents.sh`.
+- Keep repository and app-level docs aligned when commands, paths, or architecture decisions change.

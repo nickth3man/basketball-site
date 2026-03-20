@@ -20,26 +20,14 @@
  */
 
 import type React from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { RelatedLinksPanel } from '@/components/related-links-panel';
 import { StatsTable } from '@/components/stats-table';
-import {
-  getPlayerAdjustedShootingStats,
-  getPlayerAdvancedSeasonStats,
-  getPlayerAwards,
-  getPlayerByBrefId,
-  getPlayerCareerSummary,
-  getPlayerFullGameLog,
-  getPlayerGameHighs,
-  getPlayerPer100Stats,
-  getPlayerPerGameStats,
-  getPlayerPer36Stats,
-  getPlayerPbpSeasonStats,
-  getPlayerSalaries,
-  getPlayerSeasonStats,
-  getPlayerShootingSeasonStats,
-} from '@/lib/queries';
 import { formatUsd } from '@/lib/formatters';
+import { getPlayerPageData } from '@/lib/query';
+import { routes } from '@/lib/routes';
 import { validateBrefId } from '@/lib/validation';
 import { AwardsBadges, GameHighs, PlayerBioHeader } from './components';
 
@@ -78,20 +66,6 @@ function validateLetterMatch(letter: string, id: string): boolean {
 }
 
 /**
- * Aggregates awards by name for display badges.
- */
-function aggregateAwards(awards: Array<{ award_name: string }>): Array<[string, number]> {
-  const counts = awards.reduce<Record<string, number>>((acc, award) => {
-    acc[award.award_name] = (acc[award.award_name] ?? 0) + 1;
-    return acc;
-  }, {});
-
-  return Object.entries(counts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 8);
-}
-
-/**
  * Render a server-side player detail page.
  */
 export default async function PlayerPage({ params }: PlayerPageProps): Promise<React.JSX.Element> {
@@ -103,25 +77,47 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
 
   validateBrefId(id);
 
-  const player = getPlayerByBrefId(id);
-  if (!player) notFound();
-
-  // Fetch all player statistics (synchronous - better-sqlite3)
-  const perGameStats = getPlayerPerGameStats(id, 25);
-  const per36Stats = getPlayerPer36Stats(id, 25);
-  const per100Stats = getPlayerPer100Stats(id, 25);
-  const seasonStats = getPlayerSeasonStats(id, 25);
-  const advancedStats = getPlayerAdvancedSeasonStats(id, 25);
-  const shootingStats = getPlayerShootingSeasonStats(id, 25);
-  const adjustedShootingStats = getPlayerAdjustedShootingStats(id, 25);
-  const pbpStats = getPlayerPbpSeasonStats(id, 25);
-  const fullGameLog = getPlayerFullGameLog(player.player_id, 100);
-  const awards = getPlayerAwards(player.player_id, 100);
-  const salaries = getPlayerSalaries(player.player_id, 30);
-  const summary = getPlayerCareerSummary(id);
-  const highs = getPlayerGameHighs(player.player_id);
-
-  const awardCounts = aggregateAwards(awards);
+  const playerPageData = getPlayerPageData(id);
+  if (playerPageData?.player == null) notFound();
+  const {
+    adjustedShootingStats,
+    advancedStats,
+    awardCounts,
+    awards,
+    fullGameLog,
+    highs,
+    pbpStats,
+    per100Stats,
+    per36Stats,
+    perGameStats,
+    player,
+    salaries,
+    seasonStats,
+    shootingStats,
+    summary,
+  } = playerPageData;
+  const playerRelatedLinks = [
+    {
+      href: `/players/${letter}/${id}/splits` as Route,
+      label: 'Player Splits',
+      description: 'Opponent and situational split tables for this player.',
+    },
+    {
+      href: routes.search(player.full_name),
+      label: 'Search Similar Results',
+      description: 'Jump back into search using this player name as the starting point.',
+    },
+    {
+      href: '/leaders' as Route,
+      label: 'League Leaders',
+      description: 'Compare this player against current and all-time league leaders.',
+    },
+    {
+      href: `/players/${letter}` as Route,
+      label: `More ${letter.toUpperCase()} Players`,
+      description: 'Browse the alphabetical player directory around this profile.',
+    },
+  ];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -140,7 +136,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           <div className="mb-2 text-xs font-bold tracking-wide text-crumb uppercase">
             On this page
           </div>
-          <nav className="space-y-1 text-sm">
+          <nav aria-label="Player page sections" className="space-y-1 text-sm">
             {ANCHOR_SECTIONS.map(section => (
               <a
                 key={section.id}
@@ -160,8 +156,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Per Game</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'gs', label: 'GS', align: 'right' },
                 { key: 'mp_pg', label: 'MP', align: 'right' },
@@ -186,8 +182,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Per 36 Minutes</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'pts_36', label: 'PTS', align: 'right' },
                 { key: 'reb_36', label: 'TRB', align: 'right' },
@@ -207,8 +203,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Totals</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'gs', label: 'GS', align: 'right' },
                 { key: 'mp', label: 'MP', align: 'right' },
@@ -236,8 +232,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Per 100 Possessions</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'pts_100', label: 'PTS', align: 'right' },
                 { key: 'reb_100', label: 'TRB', align: 'right' },
@@ -262,8 +258,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Advanced</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'per', label: 'PER', align: 'right' },
                 { key: 'ts_pct', label: 'TS%', align: 'right' },
@@ -296,8 +292,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Shooting</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'avg_dist_fga', label: 'AvgDist', align: 'right' },
                 { key: 'pct_fga_0_3', label: '%0-3', align: 'right' },
                 { key: 'pct_fga_3_10', label: '%3-10', align: 'right' },
@@ -326,8 +322,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Adjusted Shooting</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'g', label: 'G', align: 'right' },
                 { key: 'fg_pct', label: 'FG%', align: 'right' },
                 { key: 'fg3_pct', label: '3P%', align: 'right' },
@@ -349,8 +345,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Play-by-Play</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Tm' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
                 { key: 'pg_pct', label: 'PG%', align: 'right' },
                 { key: 'sg_pct', label: 'SG%', align: 'right' },
                 { key: 'sf_pct', label: 'SF%', align: 'right' },
@@ -386,9 +382,13 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Game Log</h2>
             <StatsTable
               columns={[
-                { key: 'game_date', label: 'Date' },
-                { key: 'team_abbrev', label: 'Tm' },
-                { key: 'opp_abbrev', label: 'Opp' },
+                {
+                  key: 'game_date',
+                  label: 'Date',
+                  link: { type: 'boxscore', valueKey: 'game_id' },
+                },
+                { key: 'team_abbrev', label: 'Tm', link: { type: 'team' } },
+                { key: 'opp_abbrev', label: 'Opp', link: { type: 'team' } },
                 { key: 'is_home', label: 'Site' },
                 { key: 'result', label: 'W/L' },
                 { key: 'team_score', label: 'Tm PTS', align: 'right' },
@@ -422,7 +422,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Awards History</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
                 { key: 'award_name', label: 'Award' },
                 { key: 'award_type', label: 'Type' },
               ]}
@@ -436,8 +436,8 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
             <h2 className="mb-2 text-xl font-bold">Salaries</h2>
             <StatsTable
               columns={[
-                { key: 'season_id', label: 'Season' },
-                { key: 'team_abbrev', label: 'Team' },
+                { key: 'season_id', label: 'Season', link: { type: 'league' } },
+                { key: 'team_abbrev', label: 'Team', link: { type: 'team' } },
                 { key: 'salary_fmt', label: 'Salary', align: 'right' },
               ]}
               rows={salaries.map(salaryRow => ({
@@ -449,6 +449,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           </section>
 
           <GameHighs highs={highs} />
+          <RelatedLinksPanel links={playerRelatedLinks} title="Related Links" />
         </div>
       </div>
     </main>

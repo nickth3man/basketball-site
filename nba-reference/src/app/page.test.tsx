@@ -3,6 +3,15 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock('@/lib/query/home', () => ({
   getHomeSeasonId: vi.fn(),
   getHomeStandings: vi.fn(),
@@ -49,7 +58,7 @@ test('renders page component', () => {
   expect(screen.getByText(/Season 2024-25 standings/i)).toBeInTheDocument();
   expect(screen.getAllByText('LAL').length).toBeGreaterThan(0);
   expect(screen.getByText('BOS')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: /Box Score/i })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: /^Box Score$/i })).toHaveAttribute(
     'href',
     '/boxscores/0022400001'
   );

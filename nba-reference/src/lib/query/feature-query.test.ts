@@ -19,11 +19,12 @@ describe('feature query modules', () => {
 
     const results = searchEntities('james');
     expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBeLessThanOrEqual(12);
+    expect(results.length).toBeLessThanOrEqual(24);
     if (results.length > 0) {
       expect(results[0]).toHaveProperty('type');
       expect(results[0]).toHaveProperty('id');
       expect(results[0]).toHaveProperty('label');
+      expect(results[0]).toHaveProperty('href');
     }
   });
 

@@ -95,6 +95,8 @@ This project uses strict TypeScript and ESLint configurations. All code must pas
 
 ```bash
 # From nba-reference/
+npm run verify:db    # Confirm the SQLite payload is readable
+npm run build        # Production build validation
 npm run ci           # Run full pipeline
 npm run type-check   # TypeScript check
 npm run lint         # ESLint

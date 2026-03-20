@@ -60,6 +60,12 @@ export default async function TeamSeasonPage({
         </h1>
         <div className="flex items-center gap-2 text-sm">
           <Link
+            href={`/teams/${team.abbreviation}/${seasonId}/schedule` as Route}
+            className="rounded border border-line bg-button-bg px-2 py-1"
+          >
+            Schedule
+          </Link>
+          <Link
             href={
               `/teams/${team.abbreviation}/salaries?season=${encodeURIComponent(seasonId)}` as Route
             }
@@ -144,7 +150,7 @@ export default async function TeamSeasonPage({
         <h2 className="mb-2 text-xl font-bold">Roster</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'position', label: 'Pos' },
             { key: 'g', label: 'G', align: 'right' },
             { key: 'pts_pg', label: 'PTS', align: 'right' },
@@ -197,7 +203,7 @@ export default async function TeamSeasonPage({
         <h2 className="mb-2 text-xl font-bold">Player Leaders</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'g', label: 'G', align: 'right' },
             { key: 'pts_pg', label: 'PTS', align: 'right' },
             { key: 'reb_pg', label: 'REB', align: 'right' },
@@ -215,11 +221,11 @@ export default async function TeamSeasonPage({
           columns={[
             { key: 'game_date', label: 'Date' },
             { key: 'result', label: 'W/L' },
-            { key: 'opp_abbrev', label: 'Opp' },
+            { key: 'opp_abbrev', label: 'Opp', link: { type: 'team' } },
             { key: 'is_home', label: 'Site' },
             { key: 'team_score', label: 'Team', align: 'right' },
             { key: 'opp_score', label: 'Opp', align: 'right' },
-            { key: 'game_id', label: 'Game ID' },
+            { key: 'game_id', label: 'Game ID', link: { type: 'boxscore' } },
           ]}
           rows={recentGames.map(row => ({
             ...row,

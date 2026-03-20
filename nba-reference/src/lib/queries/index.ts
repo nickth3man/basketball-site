@@ -34,5 +34,8 @@ export {
   getPlayerDirectory,
   getPlayerDirectoryByLetter,
   getTeamDirectory,
+  getSearchTypeLabel,
+  SEARCH_RESULT_TYPES,
   searchEntities,
 } from '../query';
+export type { SearchEntitiesOptions, SearchEntityResult, SearchResultType } from '../query';

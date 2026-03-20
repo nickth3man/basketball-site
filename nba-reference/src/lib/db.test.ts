@@ -10,8 +10,8 @@
  * @module @/lib/db.test
  */
 
-import { describe, expect, it } from 'vitest';
-import { getLatestSeasonId } from '@/lib/db';
+import { describe, expect, it, vi } from 'vitest';
+import { clearQueryCache, getCachedQueryMany, getDb, getLatestSeasonId } from '@/lib/db';
 import { getHomeStandings, getRecentGames } from '@/lib/query/home';
 import { searchEntities } from '@/lib/query/search';
 
@@ -60,5 +60,25 @@ describe('db utilities', () => {
     expect(results[0]).toHaveProperty('type');
     expect(results[0]).toHaveProperty('id');
     expect(results[0]).toHaveProperty('label');
+    expect(results[0]).toHaveProperty('href');
+  });
+
+  it('honors helper cache TTLs without statement-level overlap', () => {
+    vi.useFakeTimers();
+    clearQueryCache();
+
+    const db = getDb();
+    const prepareSpy = vi.spyOn(db, 'prepare');
+    const sql = 'SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT ?';
+
+    getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
+    getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
+    expect(prepareSpy).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(1_001);
+    getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
+    expect(prepareSpy).toHaveBeenCalledTimes(2);
+
+    clearQueryCache();
   });
 });

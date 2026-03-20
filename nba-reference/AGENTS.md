@@ -15,8 +15,7 @@ nba-reference/
 ├── src/lib/                 # Data access and query orchestration
 ├── vitest.config.ts         # Test configuration
 ├── eslint.config.mjs        # Lint rules
-├── AGENTS.md                # Mirrors CLAUDE.md
-└── CLAUDE.md                # This file (mirrors AGENTS.md)
+└── AGENTS.md                # This file
 ```
 
 ## WHERE TO LOOK
@@ -62,6 +61,3 @@ npm run ci
 
 - DB path resolution order: `DB_PATH`, then local `nba_raw_data.db` in this
   directory.
-- Root docs are mirrored (`AGENTS.md` <-> `CLAUDE.md`) via
-  `bash ../scripts/sync-claude-agents.sh` from this directory or
-  `bash scripts/sync-claude-agents.sh` from repo root.
