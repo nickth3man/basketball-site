@@ -18,6 +18,7 @@
 import type { JSX } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { StarButton } from '@/components/favorites';
 import { RelatedLinksPanel } from '@/components/related-links-panel';
 import { StatsTable } from '@/components/stats-table';
 import { formatSignedNumber } from '@/lib/formatters';
@@ -110,7 +111,10 @@ export default async function TeamPage({
       {/* Team profile header */}
       <section id="summary" className="mb-5 border border-line bg-paper-soft p-4">
         <div className="mb-2 text-xs text-crumb">{seasonLabel} Team Profile</div>
-        <h1 className="mb-2 text-3xl font-bold">{team.full_name}</h1>
+        <div className="mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold">{team.full_name}</h1>
+          <StarButton id={team.abbreviation} type="team" name={team.full_name} />
+        </div>
 
         {/* Team metadata grid */}
         <div className="grid gap-2 text-sm text-muted-strong md:grid-cols-3">

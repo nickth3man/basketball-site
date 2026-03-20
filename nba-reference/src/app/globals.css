@@ -32,6 +32,50 @@
   --row-alt: #faf8f2;
   --row-hover: #efe7d8;
   --thead: #ece5d7;
+  --chart-1: 38 100% 55%;
+  --chart-2: 210 80% 55%;
+  --chart-3: 140 60% 50%;
+  --chart-4: 280 60% 60%;
+  --chart-5: 0 70% 55%;
+}
+
+.dark {
+  --background: #1a1814;
+  --foreground: #f2ede1;
+  --heading: #fdfbf5;
+  --muted: #a69b85;
+  --muted-strong: #ccc2ad;
+  --crumb: #9a8e78;
+  --paper: #2a2620;
+  --paper-soft: #363029;
+  --paper-alt: #3d362e;
+  --line: #4a4339;
+  --line-mid: #5a5246;
+  --line-soft: #6a6256;
+  --line-subtle: #7a7266;
+  --accent: #ffb11b;
+  --link: #6ba3e0;
+  --nav-hover: #3a3329;
+  --dropdown-line: #4a4339;
+  --label: #c4a44e;
+  --placeholder: #8a7e68;
+  --focus-border: #8f7f61;
+  --focus-ring: #5a5246;
+  --header-start: #1a1814;
+  --header-mid: #2a2620;
+  --header-text: #f2ede1;
+  --image-line: #6a5a3e;
+  --ink: #f2ede1;
+  --button-bg: #363029;
+  --button-hover: #4a4339;
+  --row-alt: #2a2620;
+  --row-hover: #3a3329;
+  --thead: #363029;
+  --chart-1: 38 100% 60%;
+  --chart-2: 210 80% 65%;
+  --chart-3: 140 60% 55%;
+  --chart-4: 280 60% 65%;
+  --chart-5: 0 70% 60%;
 }
 
 @theme inline {

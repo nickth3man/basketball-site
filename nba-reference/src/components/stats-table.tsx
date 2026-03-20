@@ -315,80 +315,82 @@ export function StatsTable({ columns, rows, initialSort, tableId }: StatsTablePr
           </div>
 
           {/* Data table */}
-          <table className={tableClass}>
-            <thead>
-              <tr className={tableHeadRowClass}>
-                {columns.map(column => (
-                  <th
-                    key={column.key}
-                    className={tableHeaderCellClass(column.align)}
-                    aria-sort={
-                      sortKey === column.key
-                        ? direction === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : 'none'
-                    }
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        let nextSortKey = column.key;
-                        let nextDirection: SortDirection = 'desc';
-
-                        if (sortKey === column.key) {
-                          // Toggle direction if clicking same column
-                          nextDirection = direction === 'asc' ? 'desc' : 'asc';
-                        } else {
-                          // New column: default to descending
-                          nextSortKey = column.key;
-                        }
-
-                        persistSortInUrl(nextSortKey, nextDirection);
-                      }}
-                      className={tableHeaderButtonClass}
-                      aria-label={`Sort by ${column.label}`}
+          <div className="overflow-x-auto">
+            <table className={tableClass}>
+              <thead>
+                <tr className={tableHeadRowClass}>
+                  {columns.map(column => (
+                    <th
+                      key={column.key}
+                      className={tableHeaderCellClass(column.align)}
+                      aria-sort={
+                        sortKey === column.key
+                          ? direction === 'asc'
+                            ? 'ascending'
+                            : 'descending'
+                          : 'none'
+                      }
                     >
-                      <span className="inline-flex items-center gap-1">
-                        <span>{column.label}</span>
-                        {sortKey === column.key ? (
-                          <span aria-hidden="true">{direction === 'asc' ? '▲' : '▼'}</span>
-                        ) : null}
-                      </span>
-                    </button>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {keyedRows.map(({ row, rowKey }) => {
-                return (
-                  <tr key={rowKey} className={tableBodyRowClass}>
-                    {columns.map(column => {
-                      const rawValue = row[column.key];
-                      const displayValue = rawValue == null ? '-' : String(rawValue);
-                      const href = resolveLinkedHref(row, column.link, column.key);
+                      <button
+                        type="button"
+                        onClick={() => {
+                          let nextSortKey = column.key;
+                          let nextDirection: SortDirection = 'desc';
 
-                      return (
-                        <td
-                          key={`${rowKey}-${column.key}`}
-                          className={tableCellClass(column.align)}
-                        >
-                          {href != null && rawValue != null ? (
-                            <Link className={tableLinkClass} href={href}>
-                              {displayValue}
-                            </Link>
-                          ) : (
-                            displayValue
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                          if (sortKey === column.key) {
+                            // Toggle direction if clicking same column
+                            nextDirection = direction === 'asc' ? 'desc' : 'asc';
+                          } else {
+                            // New column: default to descending
+                            nextSortKey = column.key;
+                          }
+
+                          persistSortInUrl(nextSortKey, nextDirection);
+                        }}
+                        className={tableHeaderButtonClass}
+                        aria-label={`Sort by ${column.label}`}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          <span>{column.label}</span>
+                          {sortKey === column.key ? (
+                            <span aria-hidden="true">{direction === 'asc' ? '▲' : '▼'}</span>
+                          ) : null}
+                        </span>
+                      </button>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {keyedRows.map(({ row, rowKey }) => {
+                  return (
+                    <tr key={rowKey} className={tableBodyRowClass}>
+                      {columns.map(column => {
+                        const rawValue = row[column.key];
+                        const displayValue = rawValue == null ? '-' : String(rawValue);
+                        const href = resolveLinkedHref(row, column.link, column.key);
+
+                        return (
+                          <td
+                            key={`${rowKey}-${column.key}`}
+                            className={tableCellClass(column.align)}
+                          >
+                            {href != null && rawValue != null ? (
+                              <Link className={tableLinkClass} href={href}>
+                                {displayValue}
+                              </Link>
+                            ) : (
+                              displayValue
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>

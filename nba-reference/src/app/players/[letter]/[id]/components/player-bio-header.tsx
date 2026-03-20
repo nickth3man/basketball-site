@@ -5,6 +5,7 @@
  */
 
 import Image from 'next/image';
+import { StarButton } from '@/components/favorites';
 import { formatPercentage } from '@/lib/formatters';
 import type { PlayerProfile } from '@/lib/queries/players/profile';
 
@@ -33,7 +34,10 @@ export function PlayerBioHeader({ player, summary }: PlayerBioHeaderProps): Reac
 
         {/* Basic player info grid */}
         <div>
-          <h1 className="mb-2 text-3xl font-bold">{player.full_name}</h1>
+          <div className="mb-2 flex items-center gap-2">
+            <h1 className="text-3xl font-bold">{player.full_name}</h1>
+            <StarButton id={player.bref_id} type="player" name={player.full_name} />
+          </div>
           <div className="grid gap-1 text-sm text-muted-strong sm:grid-cols-2">
             <div>Position: {player.position ?? '-'}</div>
             <div>Birth: {player.birth_date ?? '-'}</div>

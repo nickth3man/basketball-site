@@ -60,4 +60,13 @@ export const routes = {
 
   // Games
   game: (gameId: string): Route => `/games/${gameId}` as Route,
+
+  // Compare players
+  compare: (p1?: string, p2?: string): Route => {
+    const params = new URLSearchParams();
+    if (p1 != null && p1.length > 0) params.set('p1', p1);
+    if (p2 != null && p2.length > 0) params.set('p2', p2);
+    const qs = params.toString();
+    return (qs.length > 0 ? `/compare?${qs}` : '/compare') as Route;
+  },
 } as const;

@@ -14,10 +14,13 @@
  */
 
 import type React from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
+import { FavoritesWidget } from '@/components/favorites';
 import { HomeExploreLinks } from '@/components/home-explore-links';
 import { SearchBox } from '@/components/search-box';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StatsTable } from '@/components/stats-table';
 import { StructuredData } from '@/components/structured-data';
 import { getHomeSeasonId, getHomeStandings, getRecentGames } from '@/lib/query/home';
@@ -94,68 +97,74 @@ export default function Home(): React.JSX.Element {
         </div>
       </div>
 
+      <FavoritesWidget />
+
       <HomeExploreLinks />
 
       {/* Standings section */}
-      <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">
-        <h2 className="mb-2 text-xl font-bold text-heading">
-          {seasonId} NBA Standings
-          {leagueSlug == null ? null : (
-            <Link
-              href={`/leagues/${leagueSlug}` as Route}
-              className="ml-2 text-sm font-normal text-link"
-            >
-              Season Page
-            </Link>
-          )}
-        </h2>
-        <StatsTable
-          columns={[
-            { key: 'bref_abbrev', label: 'Team', link: { type: 'team' } },
-            { key: 'w', label: 'W', align: 'right' },
-            { key: 'l', label: 'L', align: 'right' },
-            { key: 'n_rtg', label: 'NetRtg', align: 'right' },
-            { key: 'pace', label: 'Pace', align: 'right' },
-          ]}
-          rows={standings}
-          initialSort="w"
-          tableId="home-standings"
-        />
-      </section>
+      <Suspense fallback={<Skeleton className="mb-8 h-96 w-full" />}>
+        <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">
+          <h2 className="mb-2 text-xl font-bold text-heading">
+            {seasonId} NBA Standings
+            {leagueSlug == null ? null : (
+              <Link
+                href={`/leagues/${leagueSlug}` as Route}
+                className="ml-2 text-sm font-normal text-link"
+              >
+                Season Page
+              </Link>
+            )}
+          </h2>
+          <StatsTable
+            columns={[
+              { key: 'bref_abbrev', label: 'Team', link: { type: 'team' } },
+              { key: 'w', label: 'W', align: 'right' },
+              { key: 'l', label: 'L', align: 'right' },
+              { key: 'n_rtg', label: 'NetRtg', align: 'right' },
+              { key: 'pace', label: 'Pace', align: 'right' },
+            ]}
+            rows={standings}
+            initialSort="w"
+            tableId="home-standings"
+          />
+        </section>
+      </Suspense>
 
       {/* Recent games section */}
-      <section className="fade-slide-in panel-paper p-3 [animation-delay:260ms]">
-        <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
-        <div className={tableContainerClass}>
-          <table className={tableClass}>
-            <thead>
-              <tr className={tableHeadRowClass}>
-                {['Date', 'Away', 'Away PTS', 'Home', 'Home PTS', 'Box Score'].map(header => (
-                  <th key={header} className={tableHeaderCellClass('left')}>
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {games.map(game => (
-                <tr key={game.game_id} className={tableBodyRowClass}>
-                  <td className={tableCellClass('left')}>{game.game_date}</td>
-                  <td className={tableCellClass('left')}>{game.away_abbrev}</td>
-                  <td className={tableCellClass('right')}>{game.away_score ?? '-'}</td>
-                  <td className={tableCellClass('left')}>{game.home_abbrev}</td>
-                  <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
-                  <td className={tableCellClass('left')}>
-                    <Link className={tableLinkClass} href={`/boxscores/${game.game_id}` as Route}>
-                      Box Score
-                    </Link>
-                  </td>
+      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+        <section className="fade-slide-in panel-paper p-3 [animation-delay:260ms]">
+          <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
+          <div className={tableContainerClass}>
+            <table className={tableClass}>
+              <thead>
+                <tr className={tableHeadRowClass}>
+                  {['Date', 'Away', 'Away PTS', 'Home', 'Home PTS', 'Box Score'].map(header => (
+                    <th key={header} className={tableHeaderCellClass('left')}>
+                      {header}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </thead>
+              <tbody>
+                {games.map(game => (
+                  <tr key={game.game_id} className={tableBodyRowClass}>
+                    <td className={tableCellClass('left')}>{game.game_date}</td>
+                    <td className={tableCellClass('left')}>{game.away_abbrev}</td>
+                    <td className={tableCellClass('right')}>{game.away_score ?? '-'}</td>
+                    <td className={tableCellClass('left')}>{game.home_abbrev}</td>
+                    <td className={tableCellClass('right')}>{game.home_score ?? '-'}</td>
+                    <td className={tableCellClass('left')}>
+                      <Link className={tableLinkClass} href={`/boxscores/${game.game_id}` as Route}>
+                        Box Score
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </Suspense>
     </main>
   );
 }
