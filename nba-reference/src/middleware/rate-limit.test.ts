@@ -47,9 +47,13 @@ describe('rate limit middleware', () => {
     expect(blockedResponse).not.toBeNull();
     expect(blockedResponse?.status).toBe(429);
 
-    const payload = (await blockedResponse?.json()) as { error: string; message: string };
-    expect(payload.error).toBe('Too many requests');
-    expect(payload.message).toContain('Rate limit exceeded');
+    const payload = (await blockedResponse?.json()) as {
+      error: { code: string; message: string };
+    };
+    expect(payload.error.code).toBe('rate_limited');
+    expect(payload.error.message).toContain('Rate limit exceeded');
+    expect(blockedResponse?.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(blockedResponse?.headers.get('Cache-Control')).toBe('no-store');
     expect(blockedResponse?.headers.get('X-RateLimit-Limit')).toBe('100');
     expect(blockedResponse?.headers.get('X-RateLimit-Remaining')).toBe('0');
     expect(blockedResponse?.headers.get('Retry-After')).toBeTruthy();

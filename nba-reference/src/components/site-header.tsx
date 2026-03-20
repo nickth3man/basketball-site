@@ -45,6 +45,12 @@ export function SiteHeader(): JSX.Element {
           <Link href="/teams" className="transition-colors duration-200 hover:text-white">
             Teams
           </Link>
+          <Link href="/games" className="transition-colors duration-200 hover:text-white">
+            Games
+          </Link>
+          <Link href="/seasons" className="transition-colors duration-200 hover:text-white">
+            Seasons
+          </Link>
           <Link href="/leagues" className="transition-colors duration-200 hover:text-white">
             Leagues
           </Link>
@@ -80,6 +86,12 @@ export function SiteHeader(): JSX.Element {
             className="transition-colors duration-200 hover:text-white"
           >
             Standings
+          </Link>
+          <Link
+            href={'/friv/birthdays' as Route}
+            className="transition-colors duration-200 hover:text-white"
+          >
+            Frivolities
           </Link>
         </nav>
       </div>

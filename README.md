@@ -93,6 +93,7 @@ See [nba-reference/ARCHITECTURE.md](nba-reference/ARCHITECTURE.md) for the app a
 
 - **[docs/README.md](docs/README.md)** - Documentation index and navigation
 - **[docs/project-structure.md](docs/project-structure.md)** - Canonical structure map
+- **[docs/data-pipeline-contract.md](docs/data-pipeline-contract.md)** - Data refresh contract and ownership model
 - **[db/README.md](db/README.md)** - Database payload and runtime path notes
 - **[scripts/README.md](scripts/README.md)** - Maintenance script reference
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to this project

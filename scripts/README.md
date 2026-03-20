@@ -18,3 +18,4 @@ bash scripts/migrate.sh
 
 - `migrate.sh` is a legacy helper and is not part of the normal development or CI workflow.
 - Prefer the documented `nba-reference/` npm scripts for day-to-day work (`dev`, `ci`, `build`, `verify:db`).
+- Data refresh automation is intentionally external to this directory today. See [`docs/data-pipeline-contract.md`](../docs/data-pipeline-contract.md) for the current ownership model.

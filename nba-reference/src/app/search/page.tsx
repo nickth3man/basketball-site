@@ -1,14 +1,19 @@
 import type React from 'react';
 import Link from 'next/link';
+import { PaginationNav } from '@/components/pagination-nav';
 import { SearchBox } from '@/components/search-box';
 import { getSearchTypeLabel, SEARCH_RESULT_TYPES, searchEntities } from '@/lib/query';
 import type { SearchEntityResult, SearchResultType } from '@/lib/query';
+import { coercePageNumber, paginateItems } from '@/lib/pagination';
 import { routes } from '@/lib/routes';
 
 type SearchFilter = SearchResultType | 'all';
+const SEARCH_PAGE_SIZE = 12;
+const SEARCH_RESULTS_FETCH_LIMIT = 180;
 
 interface SearchPageProps {
   searchParams: Promise<{
+    page?: string;
     q?: string;
     type?: string;
   }>;
@@ -31,6 +36,7 @@ function groupResults(
       return grouped;
     },
     {
+      page: [],
       player: [],
       team: [],
       season: [],
@@ -48,23 +54,34 @@ function getSearchTypeChipLabel(type: SearchResultType): string {
 export default async function SearchPage({
   searchParams,
 }: SearchPageProps): Promise<React.JSX.Element> {
-  const { q, type } = await searchParams;
+  const { page, q, type } = await searchParams;
   const query = q?.trim() ?? '';
   const activeFilter = normalizeFilter(type);
+  const requestedPage = coercePageNumber(page);
   const results =
     query.length >= 2
       ? searchEntities(
           query,
-          activeFilter === 'all' ? { limit: 30 } : { limit: 30, types: [activeFilter] }
+          activeFilter === 'all'
+            ? { limit: SEARCH_RESULTS_FETCH_LIMIT }
+            : { limit: SEARCH_RESULTS_FETCH_LIMIT, types: [activeFilter] }
         )
       : [];
-  const groupedResults = groupResults(results);
+  const paginatedResults = paginateItems(results, requestedPage, SEARCH_PAGE_SIZE);
+  const groupedResults = groupResults(paginatedResults.items);
+  const isResultSetCapped = results.length === SEARCH_RESULTS_FETCH_LIMIT;
+  const summary =
+    query.length < 2
+      ? undefined
+      : paginatedResults.totalItems === 0
+        ? 'No matching results.'
+        : `Showing ${paginatedResults.startItem}-${paginatedResults.endItem} of ${paginatedResults.totalItems} matches.`;
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
       <h1 className="mb-1 text-3xl font-bold text-heading">Search</h1>
       <p className="mb-5 text-sm text-muted">
-        Find players, teams, seasons, games, and award history from one place.
+        Find players, teams, seasons, games, award history, and key site sections from one place.
       </p>
 
       <section className="mb-6 panel-paper p-4">
@@ -99,24 +116,35 @@ export default async function SearchPage({
       {query.length < 2 ? (
         <section className="panel-paper p-4 text-sm text-muted-strong">
           Enter at least 2 characters to search. Try a player last name, team abbreviation, season
-          year, game date, or award name.
+          year, game date, award name, or page like playoffs, draft, or birthdays.
         </section>
       ) : null}
 
-      {query.length >= 2 && results.length === 0 ? (
+      {query.length >= 2 && paginatedResults.totalItems === 0 ? (
         <section className="panel-paper p-4 text-sm text-muted-strong">
           No results found for <span className="font-semibold text-heading">{query}</span>.
         </section>
       ) : null}
 
-      {query.length >= 2 && results.length > 0 ? (
+      {query.length >= 2 && paginatedResults.totalItems > 0 ? (
         <div className="space-y-6">
+          <section className="panel-paper p-4 text-sm text-muted-strong">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span>{summary}</span>
+              {isResultSetCapped ? (
+                <span className="text-xs text-muted">
+                  Narrow your query to move beyond the first {SEARCH_RESULTS_FETCH_LIMIT} matches.
+                </span>
+              ) : null}
+            </div>
+          </section>
+
           {SEARCH_RESULT_TYPES.map(searchType => {
             const sectionResults =
               activeFilter === 'all'
                 ? groupedResults[searchType]
                 : searchType === activeFilter
-                  ? results
+                  ? paginatedResults.items
                   : [];
 
             if (sectionResults.length === 0) {
@@ -155,6 +183,17 @@ export default async function SearchPage({
               </section>
             );
           })}
+
+          <PaginationNav
+            currentPage={paginatedResults.currentPage}
+            pathname="/search"
+            query={{
+              q: query,
+              type: activeFilter === 'all' ? undefined : activeFilter,
+            }}
+            summary={summary}
+            totalPages={paginatedResults.totalPages}
+          />
         </div>
       ) : null}
     </main>

@@ -14,6 +14,9 @@ vi.mock('@/lib/query/search', () => ({
 
 vi.mock('@/middleware/rate-limit', () => ({
   checkRateLimit: vi.fn(),
+  extractClientIp: vi.fn(() => '127.0.0.1'),
+  getRateLimitStatus: vi.fn(() => ({ remaining: 99, reset: 1_710_000_000_000 })),
+  RATE_LIMIT: 100,
 }));
 
 import { getHomeStandings, getRecentGames } from '@/lib/query/home';
@@ -98,6 +101,11 @@ describe('GET /api/export/[type]', () => {
 
     expect(response.headers.get('Content-Type')).toContain('text/csv');
     expect(response.headers.get('Content-Disposition')).toContain('standings.csv');
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('100');
+    expect(response.headers.get('X-RateLimit-Remaining')).toBe('99');
+    expect(response.headers.get('X-RateLimit-Reset')).toBe('1710000000');
   });
 
   it('uses trimmed query value for search export', async () => {
@@ -135,14 +143,28 @@ describe('GET /api/export/[type]', () => {
     const request = createExportRequest('/api/export/unknown');
     const params = Promise.resolve({ type: 'unknown' });
     const response = await GET(request, { params });
+    const payload = (await response.json()) as {
+      error: { code: string; message: string };
+    };
 
     expect(response.status).toBe(400);
     expect(getHomeStandingsMock).not.toHaveBeenCalled();
+    expect(payload).toEqual({
+      error: {
+        code: 'invalid_export_type',
+        message: 'Invalid export type.',
+      },
+    });
   });
 
   it('returns rate limit response when blocked', async () => {
     checkRateLimitMock.mockReturnValue(
-      NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+      NextResponse.json(
+        {
+          error: { code: 'rate_limited', message: 'Rate limit exceeded. Try again in 1 seconds.' },
+        },
+        { status: 429 }
+      )
     );
 
     const request = createExportRequest('/api/export/standings');
@@ -151,6 +173,28 @@ describe('GET /api/export/[type]', () => {
 
     expect(response.status).toBe(429);
     expect(getHomeStandingsMock).not.toHaveBeenCalled();
+  });
+
+  it('returns a structured error response when export generation fails', async () => {
+    getHomeStandingsMock.mockImplementation(() => {
+      throw new Error('db unavailable');
+    });
+
+    const request = createExportRequest('/api/export/standings');
+    const params = Promise.resolve({ type: 'standings' });
+    const response = await GET(request, { params });
+    const payload = (await response.json()) as {
+      error: { code: string; message: string };
+    };
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(payload).toEqual({
+      error: {
+        code: 'export_failed',
+        message: 'CSV export is temporarily unavailable.',
+      },
+    });
   });
 
   it('returns games data with correct headers', async () => {

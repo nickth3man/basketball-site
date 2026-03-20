@@ -10,7 +10,9 @@
 import type React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getPlayerDirectoryByLetter } from '@/lib/query/directory';
+import { PaginationNav } from '@/components/pagination-nav';
+import { coercePageNumber } from '@/lib/pagination';
+import { getPlayerDirectoryByLetter, getPlayerDirectoryCount } from '@/lib/query/directory';
 import { routes } from '@/lib/routes';
 import {
   tableCellClass,
@@ -27,6 +29,7 @@ import {
 interface PlayerLetterPageProps {
   /** Route parameters containing the letter */
   params: Promise<{ letter: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 /**
@@ -40,8 +43,10 @@ interface PlayerLetterPageProps {
  */
 export default async function PlayerLetterPage({
   params,
+  searchParams,
 }: PlayerLetterPageProps): Promise<React.JSX.Element> {
   const { letter } = await params;
+  const resolvedSearchParams = await searchParams;
   const normalizedLetter = letter.trim().toLowerCase();
 
   // Validate letter is a single lowercase a-z character
@@ -49,12 +54,25 @@ export default async function PlayerLetterPage({
     notFound();
   }
 
-  const players = getPlayerDirectoryByLetter(normalizedLetter, 400);
+  const requestedPage = coercePageNumber(resolvedSearchParams.page);
+  const pageSize = 100;
+  const totalPlayers = getPlayerDirectoryCount(normalizedLetter);
+  const totalPages = Math.max(1, Math.ceil(totalPlayers / pageSize));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const offset = (currentPage - 1) * pageSize;
+  const players = getPlayerDirectoryByLetter(normalizedLetter, pageSize, offset);
   const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const summary =
+    totalPlayers === 0
+      ? 'No players found for this letter.'
+      : `Showing ${offset + 1}-${Math.min(offset + players.length, totalPlayers)} of ${totalPlayers} players.`;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
       <h1 className="mb-3 text-2xl font-bold">Players - {normalizedLetter.toUpperCase()}</h1>
+      <p className="mb-4 text-sm text-muted">
+        Browse the full player directory for this letter with paginated results.
+      </p>
       <div className="mb-4 flex flex-wrap gap-2 text-xs">
         <Link href="/players" className="rounded border border-line px-2 py-1 hover:bg-button-bg">
           All
@@ -105,6 +123,12 @@ export default async function PlayerLetterPage({
           </tbody>
         </table>
       </div>
+      <PaginationNav
+        currentPage={currentPage}
+        pathname={routes.playerLetter(normalizedLetter)}
+        summary={summary}
+        totalPages={totalPages}
+      />
     </main>
   );
 }

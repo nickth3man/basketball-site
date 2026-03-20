@@ -24,6 +24,7 @@ const SEARCH_LABELS: Record<SearchEntityResult['type'], string> = {
   season: 'Season',
   game: 'Game',
   award: 'Award',
+  page: 'Page',
 };
 
 /**
@@ -125,7 +126,7 @@ export function SearchBox({ initialQuery = '' }: SearchBoxProps): JSX.Element {
   return (
     <form role="search" className="relative" onSubmit={handleSubmit} aria-busy={isLoading}>
       <label htmlFor={searchId} className="sr-only">
-        Search players, teams, seasons, games, and awards
+        Search players, teams, seasons, games, awards, and site pages
       </label>
       <Input
         id={searchId}
@@ -166,7 +167,7 @@ export function SearchBox({ initialQuery = '' }: SearchBoxProps): JSX.Element {
             setHasSearched(false);
           }
         }}
-        placeholder="Search players, teams, seasons, games, awards"
+        placeholder="Search players, teams, seasons, games, awards, pages"
         role="combobox"
         aria-autocomplete="list"
         aria-controls={listboxId}

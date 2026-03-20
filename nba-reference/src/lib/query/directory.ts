@@ -10,7 +10,7 @@
  * @module @/lib/query/directory
  */
 
-import { getCachedQueryMany } from '@/lib/db';
+import { getCachedQueryMany, getCachedQueryOne } from '@/lib/db';
 
 /**
  * Represents a player in the directory listing.
@@ -40,6 +40,14 @@ export interface TeamDirectoryRow {
   division: string | null;
 }
 
+function clampDirectoryOffset(offset: number): number {
+  if (!Number.isFinite(offset)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.floor(offset));
+}
+
 /**
  * Retrieves a paginated list of players for the directory.
  *
@@ -58,7 +66,7 @@ export interface TeamDirectoryRow {
  * const players = getPlayerDirectory(50); // First 50 players
  * ```
  */
-export function getPlayerDirectory(limit = 400): PlayerDirectoryRow[] {
+export function getPlayerDirectory(limit = 400, offset = 0): PlayerDirectoryRow[] {
   return getCachedQueryMany<PlayerDirectoryRow[]>(
     `SELECT p.bref_id, p.full_name, p.position, p.is_active
      FROM dim_player p
@@ -70,13 +78,18 @@ export function getPlayerDirectory(limit = 400): PlayerDirectoryRow[] {
            AND fps.lg = 'NBA'
        )
      ORDER BY is_active DESC, full_name ASC
-     LIMIT ?`,
-    [limit],
+     LIMIT ?
+     OFFSET ?`,
+    [limit, clampDirectoryOffset(offset)],
     60_000
   );
 }
 
-export function getPlayerDirectoryByLetter(letter: string, limit = 400): PlayerDirectoryRow[] {
+export function getPlayerDirectoryByLetter(
+  letter: string,
+  limit = 400,
+  offset = 0
+): PlayerDirectoryRow[] {
   const normalizedLetter = letter.trim().toLowerCase();
   if (!/^[a-z]$/.test(normalizedLetter)) return [];
 
@@ -92,10 +105,46 @@ export function getPlayerDirectoryByLetter(letter: string, limit = 400): PlayerD
            AND fps.lg = 'NBA'
        )
      ORDER BY is_active DESC, full_name ASC
-     LIMIT ?`,
-    [normalizedLetter, limit],
+     LIMIT ?
+     OFFSET ?`,
+    [normalizedLetter, limit, clampDirectoryOffset(offset)],
     60_000
   );
+}
+
+export function getPlayerDirectoryCount(letter?: string): number {
+  const normalizedLetter = letter?.trim().toLowerCase();
+  if (
+    normalizedLetter != null &&
+    normalizedLetter.length > 0 &&
+    !/^[a-z]$/.test(normalizedLetter)
+  ) {
+    return 0;
+  }
+
+  const letterFilter =
+    normalizedLetter == null || normalizedLetter.length === 0
+      ? ''
+      : 'AND LOWER(SUBSTR(p.bref_id, 1, 1)) = ?';
+  const params =
+    normalizedLetter == null || normalizedLetter.length === 0 ? [] : [normalizedLetter];
+
+  const row = getCachedQueryOne<{ count: number }>(
+    `SELECT COUNT(*) AS count
+     FROM dim_player p
+     WHERE p.bref_id IS NOT NULL
+       ${letterFilter}
+       AND EXISTS (
+         SELECT 1
+         FROM fact_player_season_stats fps
+         WHERE fps.bref_player_id = p.bref_id
+           AND fps.lg = 'NBA'
+       )`,
+    params,
+    60_000
+  );
+
+  return row.count;
 }
 
 /**

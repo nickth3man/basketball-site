@@ -26,7 +26,7 @@ export interface GamePageData {
   players: DbRecord[];
 }
 
-export function getGamePageData(gameId: string): GamePageData | undefined {
+export function getGamePageData(gameId: string, pbpLimit = 250): GamePageData | undefined {
   const game = getGameById(gameId);
   if (game == null) {
     return undefined;
@@ -37,7 +37,7 @@ export function getGamePageData(gameId: string): GamePageData | undefined {
   const playerAdvanced = getGamePlayerAdvancedBoxScore(gameId);
   const lineScore = getGameLineScore(gameId);
   const fourFactors = getGameTeamFourFactors(gameId);
-  const pbp = getGamePbpEvents(gameId, 50);
+  const pbp = getGamePbpEvents(gameId, pbpLimit);
   const awayTeam = String(game['away_abbrev'] ?? '');
   const homeTeam = String(game['home_abbrev'] ?? '');
   const awayPlayers = players.filter(player => String(player['team']) === awayTeam);

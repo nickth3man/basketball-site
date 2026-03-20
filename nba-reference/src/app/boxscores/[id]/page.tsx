@@ -6,5 +6,5 @@ export default async function BoxscoreDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<React.JSX.Element> {
-  return GamePage({ params });
+  return GamePage({ params, searchParams: Promise.resolve({}) });
 }

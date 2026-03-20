@@ -33,12 +33,16 @@ import { notFound } from 'next/navigation';
  */
 export default async function GamePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ pbp?: string }>;
 }): Promise<React.JSX.Element> {
   const { id } = await params;
+  const { pbp: pbpMode } = await searchParams;
+  const pbpLimit = pbpMode === 'full' ? 1000 : pbpMode === 'recent' ? 50 : 250;
 
-  const gamePageData = getGamePageData(id);
+  const gamePageData = getGamePageData(id, pbpLimit);
   if (gamePageData?.game == null) notFound();
   const {
     awayAdvanced,
@@ -51,7 +55,7 @@ export default async function GamePage({
     homePlayers,
     homeTeam,
     lineScore,
-    pbp,
+    pbp: playByPlay,
   } = gamePageData;
 
   return (
@@ -69,6 +73,48 @@ export default async function GamePage({
         {game['game_date']} | Final: {game['away_abbrev']} {game['away_score']} -{' '}
         {game['home_abbrev']} {game['home_score']}
       </p>
+
+      <section className="mb-6 panel-paper p-4">
+        <h2 className="mb-3 text-lg font-bold text-heading">Game Navigation</h2>
+        <div className="flex flex-wrap gap-2 text-sm">
+          <Link
+            href={`/boxscores/${id}` as const}
+            className="rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover"
+          >
+            Canonical Box Score URL
+          </Link>
+          <Link
+            href={`/games/${id}?pbp=recent` as const}
+            className={
+              pbpLimit === 50
+                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
+                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
+            }
+          >
+            Recent PBP
+          </Link>
+          <Link
+            href={`/games/${id}` as const}
+            className={
+              pbpLimit === 250
+                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
+                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
+            }
+          >
+            Extended PBP
+          </Link>
+          <Link
+            href={`/games/${id}?pbp=full` as const}
+            className={
+              pbpLimit === 1000
+                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
+                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
+            }
+          >
+            Fuller PBP
+          </Link>
+        </div>
+      </section>
 
       {/* Line Score by Period */}
       <section className="mb-8">
@@ -89,7 +135,7 @@ export default async function GamePage({
         <h2 className="mb-2 text-xl font-bold">Team Box Score</h2>
         <StatsTable
           columns={[
-            { key: 'team', label: 'Team' },
+            { key: 'team', label: 'Team', link: { type: 'team' } },
             { key: 'fgm', label: 'FG', align: 'right' },
             { key: 'fga', label: 'FGA', align: 'right' },
             { key: 'fg3m', label: '3P', align: 'right' },
@@ -110,7 +156,7 @@ export default async function GamePage({
         <h2 className="mb-2 text-xl font-bold">Four Factors</h2>
         <StatsTable
           columns={[
-            { key: 'team', label: 'Team' },
+            { key: 'team', label: 'Team', link: { type: 'team' } },
             { key: 'efg_pct', label: 'eFG%', align: 'right' },
             { key: 'tov_pct', label: 'TOV%', align: 'right' },
             { key: 'orb_pct', label: 'ORB%', align: 'right' },
@@ -127,7 +173,7 @@ export default async function GamePage({
         <h2 className="mb-2 text-xl font-bold">{awayTeam} Player Box Score</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'starter', label: 'GS', align: 'right' },
             { key: 'minutes_played', label: 'MP', align: 'right' },
             { key: 'pts', label: 'PTS', align: 'right' },
@@ -150,7 +196,7 @@ export default async function GamePage({
         <h2 className="mb-2 text-xl font-bold">{homeTeam} Player Box Score</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'starter', label: 'GS', align: 'right' },
             { key: 'minutes_played', label: 'MP', align: 'right' },
             { key: 'pts', label: 'PTS', align: 'right' },
@@ -173,7 +219,7 @@ export default async function GamePage({
         <h2 className="mb-2 text-xl font-bold">{awayTeam} Advanced Box</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'minutes_played', label: 'MP', align: 'right' },
             { key: 'efg_pct', label: 'eFG%', align: 'right' },
             { key: 'ts_pct', label: 'TS%', align: 'right' },
@@ -190,7 +236,7 @@ export default async function GamePage({
         <h2 className="mb-2 text-xl font-bold">{homeTeam} Advanced Box</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'minutes_played', label: 'MP', align: 'right' },
             { key: 'efg_pct', label: 'eFG%', align: 'right' },
             { key: 'ts_pct', label: 'TS%', align: 'right' },
@@ -204,7 +250,7 @@ export default async function GamePage({
 
       {/* Play-by-Play */}
       <section>
-        <h2 className="mb-2 text-xl font-bold">Play-by-Play (Recent)</h2>
+        <h2 className="mb-2 text-xl font-bold">Play-by-Play ({playByPlay.length} events)</h2>
         <StatsTable
           columns={[
             { key: 'period', label: 'Q', align: 'right' },
@@ -213,7 +259,7 @@ export default async function GamePage({
             { key: 'home_description', label: `${String(game['home_abbrev'] ?? '')} Event` },
             { key: 'score', label: 'Score' },
           ]}
-          rows={pbp}
+          rows={playByPlay}
           initialSort="period"
         />
       </section>

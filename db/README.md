@@ -27,3 +27,11 @@ From `nba-reference/`, run the DB verification script to catch missing Git LFS p
 ```bash
 npm run verify:db
 ```
+
+## Refresh Ownership
+
+This repository treats the SQLite file as a published artifact from an external ETL pipeline.
+
+- App code in `nba-reference/` remains read-only.
+- Payload refreshes should follow the contract in [`docs/data-pipeline-contract.md`](../docs/data-pipeline-contract.md).
+- If schema and app changes must ship together, keep them in the same pull request.

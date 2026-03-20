@@ -4,12 +4,15 @@ import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 vi.mock('@/lib/query/search', () => ({
-  SEARCH_RESULT_TYPES: ['player', 'team', 'season', 'game', 'award'],
+  SEARCH_RESULT_TYPES: ['player', 'team', 'season', 'game', 'award', 'page'],
   searchEntities: vi.fn(),
 }));
 
 vi.mock('@/middleware/rate-limit', () => ({
   checkRateLimit: vi.fn(),
+  extractClientIp: vi.fn(() => '127.0.0.1'),
+  getRateLimitStatus: vi.fn(() => ({ remaining: 99, reset: 1_710_000_000_000 })),
+  RATE_LIMIT: 100,
 }));
 
 import { searchEntities } from '@/lib/query/search';
@@ -17,10 +20,15 @@ import { checkRateLimit } from '@/middleware/rate-limit';
 import { GET } from '@/app/api/search/route';
 
 interface SearchResponse {
+  meta: {
+    limit: number;
+    query: string;
+    type: 'player' | 'team' | 'season' | 'game' | 'award' | 'page' | null;
+  };
   results: Array<{
     description: string | null;
     href: Route;
-    type: 'player' | 'team' | 'season' | 'game' | 'award';
+    type: 'player' | 'team' | 'season' | 'game' | 'award' | 'page';
     id: string;
     label: string;
   }>;
@@ -56,6 +64,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
+    expect(payload.meta).toEqual({ limit: 8, query: 'a', type: null });
     expect(payload.results).toEqual([]);
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
@@ -74,7 +83,8 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith('james', { limit: 8, types: undefined });
+    expect(searchEntitiesMock).toHaveBeenCalledWith('james', { limit: 8 });
+    expect(payload.meta).toEqual({ limit: 8, query: 'james', type: null });
     expect(payload.results).toEqual(expectedResults);
   });
 
@@ -97,6 +107,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
+    expect(payload.meta).toEqual({ limit: 8, query: 'a', type: null });
     expect(payload.results).toEqual([]);
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
@@ -115,7 +126,8 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith('ja', { limit: 8, types: undefined });
+    expect(searchEntitiesMock).toHaveBeenCalledWith('ja', { limit: 8 });
+    expect(payload.meta).toEqual({ limit: 8, query: 'ja', type: null });
     expect(payload.results).toEqual(expectedResults);
   });
 
@@ -124,6 +136,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
+    expect(payload.meta).toEqual({ limit: 8, query: '', type: null });
     expect(payload.results).toEqual([]);
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
@@ -133,6 +146,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
+    expect(payload.meta).toEqual({ limit: 8, query: '', type: null });
     expect(payload.results).toEqual([]);
     expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
@@ -144,7 +158,8 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith('nonexistent', { limit: 8, types: undefined });
+    expect(searchEntitiesMock).toHaveBeenCalledWith('nonexistent', { limit: 8 });
+    expect(payload.meta).toEqual({ limit: 8, query: 'nonexistent', type: null });
     expect(payload.results).toEqual([]);
   });
 
@@ -222,7 +237,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     await response.json();
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith(longQuery, { limit: 8, types: undefined });
+    expect(searchEntitiesMock).toHaveBeenCalledWith(longQuery, { limit: 8 });
   });
 
   it('handles special characters in query', async () => {
@@ -240,7 +255,7 @@ describe('GET /api/search', () => {
     const response = GET(request);
     const payload = (await response.json()) as SearchResponse;
 
-    expect(searchEntitiesMock).toHaveBeenCalledWith(specialQuery, { limit: 8, types: undefined });
+    expect(searchEntitiesMock).toHaveBeenCalledWith(specialQuery, { limit: 8 });
     expect(payload.results).toEqual(expectedResults);
   });
 
@@ -249,9 +264,44 @@ describe('GET /api/search', () => {
 
     const request = new NextRequest('http://localhost/api/search?q=james&type=player');
     const response = GET(request);
-    await response.json();
+    const payload = (await response.json()) as SearchResponse;
 
     expect(searchEntitiesMock).toHaveBeenCalledWith('james', { limit: 8, types: ['player'] });
+    expect(payload.meta).toEqual({ limit: 8, query: 'james', type: 'player' });
+  });
+
+  it('includes explicit cache and rate-limit headers on successful responses', () => {
+    searchEntitiesMock.mockReturnValue([]);
+
+    const request = createSearchRequest('james');
+    const response = GET(request);
+
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('100');
+    expect(response.headers.get('X-RateLimit-Remaining')).toBe('99');
+    expect(response.headers.get('X-RateLimit-Reset')).toBe('1710000000');
+  });
+
+  it('returns a structured error response when search fails', async () => {
+    searchEntitiesMock.mockImplementation(() => {
+      throw new Error('boom');
+    });
+
+    const request = createSearchRequest('james');
+    const response = GET(request);
+    const payload = (await response.json()) as {
+      error: { code: string; message: string };
+    };
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(payload).toEqual({
+      error: {
+        code: 'search_failed',
+        message: 'Search results are temporarily unavailable.',
+      },
+    });
   });
 
   it('returns 200 status for successful search', () => {

@@ -134,7 +134,7 @@ function writeCachedResult<T>(key: string, value: T, ttlMs: number): T {
  *
  * @returns The database file path; when `DB_PATH` is unset, an absolute path to `nba_raw_data.db`
  */
-function dbPath(): string {
+export function resolveDbPath(): string {
   const envPath = process.env['DB_PATH'];
   if (envPath !== undefined && envPath.trim().length > 0) return envPath;
   return path.join(process.cwd(), '../db/nba_raw_data.db');
@@ -148,7 +148,7 @@ function dbPath(): string {
 export function getDb(): Database.Database {
   if (!db) {
     const readonly = true;
-    db = new Database(dbPath(), { readonly });
+    db = new Database(resolveDbPath(), { readonly });
     db.pragma('foreign_keys = ON');
   }
 
@@ -202,6 +202,13 @@ export function getCachedQueryMany<T>(sql: string, params: unknown[], ttlMs = 30
  */
 export function clearQueryCache(): void {
   queryResultCache.clear();
+}
+
+export function getQueryCacheStats(): { entries: number; maxEntries: number } {
+  return {
+    entries: queryResultCache.size,
+    maxEntries: MAX_QUERY_CACHE_SIZE,
+  };
 }
 
 /**

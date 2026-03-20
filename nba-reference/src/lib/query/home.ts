@@ -106,7 +106,20 @@ export function getHomeStandings(limit = 15): TeamStandingRow[] {
  * @param limit - Maximum number of games to return (default: 12)
  * @returns An array of recent game records with team abbreviations and final scores, ordered by game date descending
  */
-export function getRecentGames(limit = 12): RecentGameRow[] {
+export function getRecentGames(limit = 12, offset = 0, teamAbbrev?: string): RecentGameRow[] {
+  const normalizedTeamAbbrev = teamAbbrev?.trim().toUpperCase();
+  const hasTeamFilter =
+    normalizedTeamAbbrev != null &&
+    normalizedTeamAbbrev.length > 0 &&
+    /^[A-Z]{2,4}$/.test(normalizedTeamAbbrev);
+  const whereClause = hasTeamFilter
+    ? `WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL
+       AND (ht.abbreviation = ? OR at.abbreviation = ?)`
+    : 'WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL';
+  const params = hasTeamFilter
+    ? [normalizedTeamAbbrev, normalizedTeamAbbrev, limit, Math.max(0, Math.floor(offset))]
+    : [limit, Math.max(0, Math.floor(offset))];
+
   return getCachedQueryMany<RecentGameRow[]>(
     `SELECT g.game_id, g.game_date,
             ht.abbreviation as home_abbrev,
@@ -115,10 +128,36 @@ export function getRecentGames(limit = 12): RecentGameRow[] {
      FROM fact_game g
      JOIN dim_team ht ON ht.team_id = g.home_team_id
      JOIN dim_team at ON at.team_id = g.away_team_id
-     WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL
+     ${whereClause}
      ORDER BY g.game_date DESC
-     LIMIT ?`,
-    [limit],
+     LIMIT ?
+     OFFSET ?`,
+    params,
     15_000
   );
+}
+
+export function getRecentGamesCount(teamAbbrev?: string): number {
+  const normalizedTeamAbbrev = teamAbbrev?.trim().toUpperCase();
+  const hasTeamFilter =
+    normalizedTeamAbbrev != null &&
+    normalizedTeamAbbrev.length > 0 &&
+    /^[A-Z]{2,4}$/.test(normalizedTeamAbbrev);
+  const params = hasTeamFilter ? [normalizedTeamAbbrev, normalizedTeamAbbrev] : [];
+  const whereClause = hasTeamFilter
+    ? `WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL
+       AND (ht.abbreviation = ? OR at.abbreviation = ?)`
+    : 'WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL';
+
+  const row = getCachedQueryOne<{ count: number }>(
+    `SELECT COUNT(*) AS count
+     FROM fact_game g
+     JOIN dim_team ht ON ht.team_id = g.home_team_id
+     JOIN dim_team at ON at.team_id = g.away_team_id
+     ${whereClause}`,
+    params,
+    15_000
+  );
+
+  return row.count;
 }

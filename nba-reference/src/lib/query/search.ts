@@ -15,7 +15,7 @@ import { routes } from '@/lib/routes';
 import { seasonIdToLeagueSlug } from '@/lib/season-utils';
 import type { Route } from 'next';
 
-export const SEARCH_RESULT_TYPES = ['player', 'team', 'season', 'game', 'award'] as const;
+export const SEARCH_RESULT_TYPES = ['player', 'team', 'season', 'game', 'award', 'page'] as const;
 
 export type SearchResultType = (typeof SEARCH_RESULT_TYPES)[number];
 
@@ -38,7 +38,7 @@ interface SearchRow {
   label: string;
 }
 
-interface SearchAwardDefinition {
+interface SearchStaticDefinition {
   description: string;
   href: Route;
   id: string;
@@ -52,12 +52,13 @@ const SEARCH_TYPE_LABELS: Record<SearchResultType, string> = {
   season: 'Seasons',
   game: 'Games',
   award: 'Awards',
+  page: 'Pages',
 };
 
 const DEFAULT_RESULTS_LIMIT = 24;
-const SEARCH_TYPE_ORDER: SearchResultType[] = ['player', 'team', 'season', 'game', 'award'];
+const SEARCH_TYPE_ORDER: SearchResultType[] = ['player', 'team', 'season', 'game', 'award', 'page'];
 
-const SEARCHABLE_AWARDS: SearchAwardDefinition[] = [
+const SEARCHABLE_AWARDS: SearchStaticDefinition[] = [
   {
     id: 'mvp',
     label: 'Most Valuable Player',
@@ -95,6 +96,86 @@ const SEARCHABLE_AWARDS: SearchAwardDefinition[] = [
   },
 ];
 
+const SEARCHABLE_SITE_PAGES: SearchStaticDefinition[] = [
+  {
+    id: 'games-index',
+    label: 'Games Index',
+    description: 'Browse recent NBA results with optional team filters.',
+    href: '/games',
+    keywords: ['games', 'schedule', 'results', 'scores'],
+  },
+  {
+    id: 'boxscores',
+    label: 'Box Scores',
+    description: 'Jump into date-based box score browsing and game detail pages.',
+    href: '/boxscores',
+    keywords: ['box score', 'boxscores', 'pbp', 'play by play'],
+  },
+  {
+    id: 'seasons-index',
+    label: 'Seasons',
+    description: 'Explore season indexes, standings, leaders, and recent games.',
+    href: '/seasons',
+    keywords: ['seasons', 'season history', 'league history'],
+  },
+  {
+    id: 'leaders',
+    label: 'League Leaders',
+    description: 'Stat leaderboards and top performers across the league.',
+    href: '/leaders',
+    keywords: ['leaders', 'leaderboards', 'scoring leaders', 'assist leaders'],
+  },
+  {
+    id: 'standings',
+    label: 'Standings by Date',
+    description: 'Look up standings snapshots across the season.',
+    href: '/standings',
+    keywords: ['standings', 'rankings', 'record', 'seedings'],
+  },
+  {
+    id: 'playoffs',
+    label: 'Playoffs',
+    description: 'Series pages, playoff leaders, and postseason history.',
+    href: '/playoffs',
+    keywords: ['playoffs', 'postseason', 'series', 'bracket'],
+  },
+  {
+    id: 'draft',
+    label: 'Draft History',
+    description: 'Draft classes, picks, and team selections by year.',
+    href: '/draft',
+    keywords: ['draft', 'nba draft', 'rookies', 'draft class'],
+  },
+  {
+    id: 'allstar',
+    label: 'All-Star History',
+    description: 'All-Star rosters, MVP winners, and yearly event history.',
+    href: '/allstar',
+    keywords: ['all star', 'all-star', 'allstar', 'all-star game'],
+  },
+  {
+    id: 'salary-cap',
+    label: 'Salary Cap History',
+    description: 'Salary cap and league spending context by season.',
+    href: '/leagues/salary-cap',
+    keywords: ['salary cap', 'cap', 'luxury tax', 'cba'],
+  },
+  {
+    id: 'birthdays',
+    label: 'Player Birthdays',
+    description: 'Browse NBA players by birthday and date.',
+    href: '/friv/birthdays',
+    keywords: ['birthdays', 'birthday', 'born on'],
+  },
+  {
+    id: 'colleges',
+    label: 'Players by College',
+    description: 'See which colleges produced the most NBA players.',
+    href: '/friv/colleges',
+    keywords: ['colleges', 'college', 'alma mater', 'school'],
+  },
+];
+
 function normalizeQuery(query: string): string {
   return query.trim().toLowerCase();
 }
@@ -104,7 +185,7 @@ function clampLimit(limit: number | undefined): number {
     return DEFAULT_RESULTS_LIMIT;
   }
 
-  return Math.max(1, Math.min(Math.floor(limit), 50));
+  return Math.max(1, Math.min(Math.floor(limit), 240));
 }
 
 function filterTypes(types: SearchResultType[] | undefined): SearchResultType[] {
@@ -279,18 +360,35 @@ function buildGameResults(normalizedQuery: string, resultLimit: number): SearchE
   }));
 }
 
-function buildAwardResults(normalizedQuery: string, resultLimit: number): SearchEntityResult[] {
-  const awards = SEARCHABLE_AWARDS.filter(award =>
-    [award.label, ...award.keywords].some(value => value.toLowerCase().includes(normalizedQuery))
-  ).slice(0, resultLimit);
+function buildStaticResults(
+  definitions: SearchStaticDefinition[],
+  normalizedQuery: string,
+  resultLimit: number,
+  type: SearchResultType
+): SearchEntityResult[] {
+  const results = definitions
+    .filter(definition =>
+      [definition.label, definition.description, ...definition.keywords].some(value =>
+        value.toLowerCase().includes(normalizedQuery)
+      )
+    )
+    .slice(0, resultLimit);
 
-  return awards.map(award => ({
-    description: award.description,
-    href: award.href,
-    id: award.id,
-    label: award.label,
-    type: 'award',
+  return results.map(result => ({
+    description: result.description,
+    href: result.href,
+    id: result.id,
+    label: result.label,
+    type,
   }));
+}
+
+function buildAwardResults(normalizedQuery: string, resultLimit: number): SearchEntityResult[] {
+  return buildStaticResults(SEARCHABLE_AWARDS, normalizedQuery, resultLimit, 'award');
+}
+
+function buildPageResults(normalizedQuery: string, resultLimit: number): SearchEntityResult[] {
+  return buildStaticResults(SEARCHABLE_SITE_PAGES, normalizedQuery, resultLimit, 'page');
 }
 
 export function getSearchTypeLabel(type: SearchResultType): string {
@@ -327,6 +425,9 @@ export function searchEntities(
         break;
       case 'award':
         results.push(...buildAwardResults(normalizedQuery, perTypeLimit));
+        break;
+      case 'page':
+        results.push(...buildPageResults(normalizedQuery, perTypeLimit));
         break;
     }
   }

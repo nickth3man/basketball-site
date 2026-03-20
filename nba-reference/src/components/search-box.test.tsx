@@ -17,7 +17,7 @@ interface SearchResult {
   href: string;
   id: string;
   label: string;
-  type: 'player' | 'team' | 'season' | 'game' | 'award';
+  type: 'player' | 'team' | 'season' | 'game' | 'award' | 'page';
 }
 
 function createSearchResponse(results: SearchResult[]): Response {
@@ -36,7 +36,7 @@ describe('SearchBox', () => {
   it('updates input value on change', () => {
     render(<SearchBox />);
     const input = screen.getByPlaceholderText<HTMLInputElement>(
-      /Search players, teams, seasons, games, awards/i
+      /Search players, teams, seasons, games, awards, pages/i
     );
 
     fireEvent.change(input, { target: { value: 'LeBron' } });
@@ -58,7 +58,9 @@ describe('SearchBox', () => {
     );
 
     render(<SearchBox />);
-    const input = screen.getByPlaceholderText(/Search players, teams, seasons, games, awards/i);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
 
     fireEvent.change(input, { target: { value: 'Le' } });
 
@@ -110,7 +112,9 @@ describe('SearchBox', () => {
     );
 
     render(<SearchBox />);
-    const input = screen.getByPlaceholderText(/Search players, teams, seasons, games, awards/i);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
 
     fireEvent.change(input, { target: { value: 'Lak' } });
 
@@ -136,7 +140,9 @@ describe('SearchBox', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(createSearchResponse([]));
 
     render(<SearchBox />);
-    const input = screen.getByPlaceholderText(/Search players, teams, seasons, games, awards/i);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
 
     fireEvent.change(input, { target: { value: 'L' } });
 
@@ -153,7 +159,7 @@ describe('SearchBox', () => {
 
     const { unmount } = render(<SearchBox />);
     const input = screen.getByPlaceholderText<HTMLInputElement>(
-      /Search players, teams, seasons, games, awards/i
+      /Search players, teams, seasons, games, awards, pages/i
     );
 
     fireEvent.change(input, { target: { value: 'LeBron' } });
@@ -166,7 +172,7 @@ describe('SearchBox', () => {
   it('submits to the search results page on enter when no option is active', () => {
     render(<SearchBox />);
     const input = screen.getByPlaceholderText<HTMLInputElement>(
-      /Search players, teams, seasons, games, awards/i
+      /Search players, teams, seasons, games, awards, pages/i
     );
 
     fireEvent.change(input, { target: { value: 'Jordan' } });

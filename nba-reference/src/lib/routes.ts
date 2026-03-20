@@ -22,13 +22,16 @@ import type { Route } from 'next';
  */
 export const routes = {
   // Search
-  search: (query?: string, type?: string): Route => {
+  search: (query?: string, type?: string, page?: number): Route => {
     const params = new URLSearchParams();
     if (query != null && query.trim().length > 0) {
       params.set('q', query.trim());
     }
     if (type != null && type !== 'all' && type.trim().length > 0) {
       params.set('type', type.trim());
+    }
+    if (page != null && Number.isInteger(page) && page > 1) {
+      params.set('page', String(page));
     }
 
     const search = params.toString();

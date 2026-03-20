@@ -58,7 +58,7 @@ test('renders page component', () => {
   expect(screen.getByText(/Season 2024-25 standings/i)).toBeInTheDocument();
   expect(screen.getAllByText('LAL').length).toBeGreaterThan(0);
   expect(screen.getByText('BOS')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: /Box Score/i })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: /^Box Score$/i })).toHaveAttribute(
     'href',
     '/boxscores/0022400001'
   );

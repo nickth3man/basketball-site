@@ -14,7 +14,13 @@
 import type React from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { getPlayerDirectory, getPlayerDirectoryByLetter } from '@/lib/query/directory';
+import { PaginationNav } from '@/components/pagination-nav';
+import {
+  getPlayerDirectory,
+  getPlayerDirectoryByLetter,
+  getPlayerDirectoryCount,
+} from '@/lib/query/directory';
+import { coercePageNumber } from '@/lib/pagination';
 import {
   tableCellClass,
   tableClass,
@@ -35,20 +41,35 @@ import {
 export default async function PlayersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ letter?: string }>;
+  searchParams: Promise<{ letter?: string; page?: string }>;
 }): Promise<React.JSX.Element> {
   const resolvedSearchParams = await searchParams;
   const requestedLetter = (resolvedSearchParams.letter ?? '').trim().toLowerCase();
+  const requestedPage = coercePageNumber(resolvedSearchParams.page);
   const activeLetter = /^[a-z]$/.test(requestedLetter) ? requestedLetter : null;
+  const pageSize = 100;
+  const totalPlayers = getPlayerDirectoryCount(activeLetter ?? undefined);
+  const totalPages = Math.max(1, Math.ceil(totalPlayers / pageSize));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const offset = (currentPage - 1) * pageSize;
   const players =
-    activeLetter == null ? getPlayerDirectory(400) : getPlayerDirectoryByLetter(activeLetter, 400);
+    activeLetter == null
+      ? getPlayerDirectory(pageSize, offset)
+      : getPlayerDirectoryByLetter(activeLetter, pageSize, offset);
   const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const summary =
+    totalPlayers === 0
+      ? 'No players found for this filter.'
+      : `Showing ${offset + 1}-${Math.min(offset + players.length, totalPlayers)} of ${totalPlayers} players.`;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
       <h1 className="mb-3 text-2xl font-bold">
         Players{activeLetter == null ? '' : ` - ${activeLetter.toUpperCase()}`}
       </h1>
+      <p className="mb-4 text-sm text-muted">
+        Browse the full player directory with alphabetical filtering and pagination.
+      </p>
       <div className="mb-4 flex flex-wrap gap-2 text-xs">
         <Link
           href="/players"
@@ -108,6 +129,13 @@ export default async function PlayersPage({
           </tbody>
         </table>
       </div>
+      <PaginationNav
+        currentPage={currentPage}
+        pathname="/players"
+        query={{ letter: activeLetter ?? undefined }}
+        summary={summary}
+        totalPages={totalPages}
+      />
     </main>
   );
 }

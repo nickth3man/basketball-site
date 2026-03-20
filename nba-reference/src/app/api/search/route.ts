@@ -8,22 +8,18 @@
  * @module @/app/api/search/route
  */
 
+import {
+  createApiErrorResponse,
+  createApiJsonResponse,
+  createApiOptionsResponse,
+  logApiError,
+} from '@/lib/api-response';
 import { SEARCH_RESULT_TYPES, searchEntities } from '@/lib/query/search';
 import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-
-const OPTIONS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Accept-Encoding',
-};
 
 export function OPTIONS(): Response {
-  return new Response(null, {
-    status: 204,
-    headers: OPTIONS_HEADERS,
-  });
+  return createApiOptionsResponse();
 }
 
 /**
@@ -35,23 +31,48 @@ export function OPTIONS(): Response {
  * @param req - Next.js request whose URL may include the `q` query parameter (search text)
  * @returns An object with a `results` array of search entries, each entry having fields such as `type`, `id`, and `label`
  */
-export function GET(req: NextRequest): NextResponse {
+export function GET(req: NextRequest): Response {
   const rateLimitResponse = checkRateLimit(req);
   if (rateLimitResponse) return rateLimitResponse;
 
-  const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
-  const requestedType = req.nextUrl.searchParams.get('type')?.trim().toLowerCase();
-  if (query.length < 2) {
-    return NextResponse.json({ results: [] });
+  try {
+    const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
+    const requestedType = req.nextUrl.searchParams.get('type')?.trim().toLowerCase();
+    if (query.length < 2) {
+      return createApiJsonResponse(req, {
+        meta: {
+          limit: 8,
+          query,
+          type: null,
+        },
+        results: [],
+      });
+    }
+
+    const matchedType =
+      requestedType != null ? SEARCH_RESULT_TYPES.find(type => type === requestedType) : undefined;
+
+    return createApiJsonResponse(req, {
+      meta: {
+        limit: 8,
+        query,
+        type: matchedType ?? null,
+      },
+      results: searchEntities(
+        query,
+        matchedType != null ? { limit: 8, types: [matchedType] } : { limit: 8 }
+      ),
+    });
+  } catch (error) {
+    logApiError('search', error, {
+      query: req.nextUrl.searchParams.get('q')?.trim() ?? '',
+      type: req.nextUrl.searchParams.get('type')?.trim().toLowerCase() ?? null,
+    });
+    return createApiErrorResponse(
+      req,
+      500,
+      'search_failed',
+      'Search results are temporarily unavailable.'
+    );
   }
-
-  const matchedType =
-    requestedType != null ? SEARCH_RESULT_TYPES.find(type => type === requestedType) : undefined;
-
-  return NextResponse.json({
-    results: searchEntities(
-      query,
-      matchedType != null ? { limit: 8, types: [matchedType] } : { limit: 8 }
-    ),
-  });
 }

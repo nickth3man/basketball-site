@@ -97,7 +97,7 @@ export default async function SeasonPage({
         <h2 className="mb-2 text-xl font-bold">Scoring Leaders</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'team', label: 'Tm' },
             { key: 'g', label: 'G', align: 'right' },
             { key: 'pts_pg', label: 'PTS', align: 'right' },
@@ -113,7 +113,7 @@ export default async function SeasonPage({
         <h2 className="mb-2 text-xl font-bold">Rebound Leaders</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'team', label: 'Tm' },
             { key: 'g', label: 'G', align: 'right' },
             { key: 'reb_pg', label: 'REB', align: 'right' },
@@ -129,7 +129,7 @@ export default async function SeasonPage({
         <h2 className="mb-2 text-xl font-bold">Assist Leaders</h2>
         <StatsTable
           columns={[
-            { key: 'full_name', label: 'Player' },
+            { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
             { key: 'team', label: 'Tm' },
             { key: 'g', label: 'G', align: 'right' },
             { key: 'ast_pg', label: 'AST', align: 'right' },
@@ -146,11 +146,11 @@ export default async function SeasonPage({
         <StatsTable
           columns={[
             { key: 'game_date', label: 'Date' },
-            { key: 'away_abbrev', label: 'Away' },
+            { key: 'away_abbrev', label: 'Away', link: { type: 'team' } },
             { key: 'away_score', label: 'Away PTS', align: 'right' },
-            { key: 'home_abbrev', label: 'Home' },
+            { key: 'home_abbrev', label: 'Home', link: { type: 'team' } },
             { key: 'home_score', label: 'Home PTS', align: 'right' },
-            { key: 'game_id', label: 'Game ID' },
+            { key: 'game_id', label: 'Game ID', link: { type: 'boxscore' } },
           ]}
           rows={games}
           initialSort="game_date"

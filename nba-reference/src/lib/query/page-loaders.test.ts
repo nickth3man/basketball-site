@@ -146,6 +146,24 @@ describe('page loaders', () => {
     expect(data?.homeTeam).toBe('BOS');
     expect(data?.awayPlayers).toHaveLength(1);
     expect(data?.homeAdvanced).toHaveLength(1);
-    expect(mockedQueries.getGamePbpEvents).toHaveBeenCalledWith('0022400001', 50);
+    expect(mockedQueries.getGamePbpEvents).toHaveBeenCalledWith('0022400001', 250);
+  });
+
+  it('passes through a custom play-by-play limit for game pages', () => {
+    const game: NonNullable<ReturnType<typeof queries.getGameById>> = {
+      away_abbrev: 'LAL',
+      home_abbrev: 'BOS',
+    };
+    mockedQueries.getGameById.mockReturnValue(game);
+    mockedQueries.getGameTeamBoxScores.mockReturnValue([]);
+    mockedQueries.getGamePlayerBoxScore.mockReturnValue([]);
+    mockedQueries.getGamePlayerAdvancedBoxScore.mockReturnValue([]);
+    mockedQueries.getGameLineScore.mockReturnValue([]);
+    mockedQueries.getGameTeamFourFactors.mockReturnValue([]);
+    mockedQueries.getGamePbpEvents.mockReturnValue([]);
+
+    getGamePageData('0022400001', 1000);
+
+    expect(mockedQueries.getGamePbpEvents).toHaveBeenCalledWith('0022400001', 1000);
   });
 });
