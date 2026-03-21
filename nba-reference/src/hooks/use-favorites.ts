@@ -44,7 +44,11 @@ export function useFavorites(): {
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+      } catch {
+        // Ignore storage errors (quota exceeded, storage disabled, etc.)
+      }
     }
   }, [favorites, isLoaded]);
 

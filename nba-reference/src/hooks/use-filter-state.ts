@@ -9,7 +9,8 @@
 
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import type { Route } from 'next';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 
 /**
@@ -34,6 +35,7 @@ export function useFilterState(
   defaultValue: string
 ): [string, (value: string) => void] {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const value = searchParams.get(key) ?? defaultValue;
@@ -47,9 +49,10 @@ export function useFilterState(
         params.set(key, newValue);
       }
       const qs = params.toString();
-      router.push(qs.length > 0 ? `?${qs}` : '?', { scroll: false });
+      const url = qs.length > 0 ? `${pathname}?${qs}` : pathname;
+      router.replace(url as Route, { scroll: false });
     },
-    [key, defaultValue, router, searchParams]
+    [key, defaultValue, pathname, router, searchParams]
   );
 
   return [value, setValue];
