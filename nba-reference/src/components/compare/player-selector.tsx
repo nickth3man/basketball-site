@@ -1,6 +1,6 @@
 'use client';
 
-import type { JSX } from 'react';
+import type { JSX, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,7 @@ export function PlayerSelector({
   );
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
+    (event: KeyboardEvent<HTMLInputElement>) => {
       if (!showDropdown || results.length === 0) {
         return;
       }
@@ -179,14 +179,14 @@ export function PlayerSelector({
             aria-autocomplete="list"
             aria-controls={listboxId}
             aria-expanded={showDropdown}
-            className="w-full rounded border border-line bg-white px-3 py-2 text-sm focus:border-focus-border focus:ring-2 focus:ring-focus-ring focus:outline-none"
+            className="w-full rounded border border-line bg-paper px-3 py-2 text-sm text-heading focus:border-focus-border focus:ring-2 focus:ring-focus-ring focus:outline-none"
           />
 
           {showDropdown ? (
             <div
               id={listboxId}
               role="listbox"
-              className="absolute z-20 mt-1 w-full overflow-hidden rounded border border-line bg-white shadow-popover"
+              className="absolute z-20 mt-1 w-full overflow-hidden rounded border border-line bg-paper shadow-popover"
             >
               {isLoading ? <div className="px-3 py-3 text-sm text-muted">Searching...</div> : null}
 

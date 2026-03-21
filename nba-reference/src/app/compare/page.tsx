@@ -5,10 +5,10 @@ import type { RadarDataPoint } from '@/components/compare';
 import { getPlayerComparisonData, type PlayerCareerStats } from '@/lib/queries/compare';
 
 interface ComparePageProps {
-  searchParams: Promise<{
+  searchParams: {
     p1?: string;
     p2?: string;
-  }>;
+  };
 }
 
 function buildRadarData(stats1: PlayerCareerStats, stats2: PlayerCareerStats): RadarDataPoint[] {
@@ -25,46 +25,52 @@ function buildRadarData(stats1: PlayerCareerStats, stats2: PlayerCareerStats): R
     ws: 15,
   };
 
+  // Helper to normalize a stat value to 0-100 scale
+  const normalize = (value: number | null, max: number): number => {
+    if (value == null || max === 0) return 0;
+    return Math.max(0, Math.min(100, (value / max) * 100));
+  };
+
   return [
     {
       stat: 'Scoring',
-      player1: Math.min(100, (stats1.ppg / maxValues.ppg) * 100),
-      player2: Math.min(100, (stats2.ppg / maxValues.ppg) * 100),
+      player1: normalize(stats1.ppg, maxValues.ppg),
+      player2: normalize(stats2.ppg, maxValues.ppg),
     },
     {
       stat: 'Rebounding',
-      player1: Math.min(100, (stats1.rpg / maxValues.rpg) * 100),
-      player2: Math.min(100, (stats2.rpg / maxValues.rpg) * 100),
+      player1: normalize(stats1.rpg, maxValues.rpg),
+      player2: normalize(stats2.rpg, maxValues.rpg),
     },
     {
       stat: 'Assists',
-      player1: Math.min(100, (stats1.apg / maxValues.apg) * 100),
-      player2: Math.min(100, (stats2.apg / maxValues.apg) * 100),
+      player1: normalize(stats1.apg, maxValues.apg),
+      player2: normalize(stats2.apg, maxValues.apg),
     },
     {
       stat: 'Steals',
-      player1: Math.min(100, (stats1.spg / maxValues.spg) * 100),
-      player2: Math.min(100, (stats2.spg / maxValues.spg) * 100),
+      player1: normalize(stats1.spg, maxValues.spg),
+      player2: normalize(stats2.spg, maxValues.spg),
     },
     {
       stat: 'Blocks',
-      player1: Math.min(100, (stats1.bpg / maxValues.bpg) * 100),
-      player2: Math.min(100, (stats2.bpg / maxValues.bpg) * 100),
+      player1: normalize(stats1.bpg, maxValues.bpg),
+      player2: normalize(stats2.bpg, maxValues.bpg),
     },
     {
       stat: 'FG%',
-      player1: Math.min(100, (stats1.fg_pct / maxValues.fg_pct) * 100),
-      player2: Math.min(100, (stats2.fg_pct / maxValues.fg_pct) * 100),
+      player1: normalize(stats1.fg_pct, maxValues.fg_pct),
+      player2: normalize(stats2.fg_pct, maxValues.fg_pct),
     },
     {
       stat: '3P%',
-      player1: Math.min(100, (stats1.fg3_pct / maxValues.fg3_pct) * 100),
-      player2: Math.min(100, (stats2.fg3_pct / maxValues.fg3_pct) * 100),
+      player1: normalize(stats1.fg3_pct, maxValues.fg3_pct),
+      player2: normalize(stats2.fg3_pct, maxValues.fg3_pct),
     },
     {
       stat: 'PER',
-      player1: Math.min(100, (stats1.per != null ? stats1.per / maxValues.per : 0) * 100),
-      player2: Math.min(100, (stats2.per != null ? stats2.per / maxValues.per : 0) * 100),
+      player1: normalize(stats1.per, maxValues.per),
+      player2: normalize(stats2.per, maxValues.per),
     },
   ];
 }
@@ -94,10 +100,8 @@ function PlayerSelectorWrapper({
   return <PlayerSelector {...props} />;
 }
 
-export default async function ComparePage({
-  searchParams,
-}: ComparePageProps): Promise<JSX.Element> {
-  const { p1, p2 } = await searchParams;
+export default function ComparePage({ searchParams }: ComparePageProps): JSX.Element {
+  const { p1, p2 } = searchParams;
 
   const player1Data = p1 != null ? getPlayerComparisonData(p1) : undefined;
   const player2Data = p2 != null ? getPlayerComparisonData(p2) : undefined;
@@ -161,14 +165,14 @@ export default async function ComparePage({
               <span>
                 <strong className="text-heading">{player1Data.info.full_name}</strong>
                 {player1Data.info.position != null ? ` · ${player1Data.info.position}` : ''}
-                {player1Data.info.height != null ? ` · ${player1Data.info.height}` : ''}
-                {player1Data.info.weight != null ? ` · ${player1Data.info.weight} lb` : ''}
+                {player1Data.info.height_cm != null ? ` · ${player1Data.info.height_cm}cm` : ''}
+                {player1Data.info.weight_kg != null ? ` · ${player1Data.info.weight_kg}kg` : ''}
               </span>
               <span>
                 <strong className="text-heading">{player2Data.info.full_name}</strong>
                 {player2Data.info.position != null ? ` · ${player2Data.info.position}` : ''}
-                {player2Data.info.height != null ? ` · ${player2Data.info.height}` : ''}
-                {player2Data.info.weight != null ? ` · ${player2Data.info.weight} lb` : ''}
+                {player2Data.info.height_cm != null ? ` · ${player2Data.info.height_cm}cm` : ''}
+                {player2Data.info.weight_kg != null ? ` · ${player2Data.info.weight_kg}kg` : ''}
               </span>
             </div>
           </section>

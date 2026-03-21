@@ -75,7 +75,7 @@ export function ComparisonTable({
                 key={row.key}
                 className={cn(
                   'border-b border-line-soft transition-colors',
-                  isAltRow ? 'bg-row-alt' : 'bg-white',
+                  isAltRow ? 'bg-row-alt' : 'bg-paper',
                   'hover:bg-row-hover'
                 )}
               >
@@ -97,7 +97,15 @@ export function ComparisonTable({
                   {row.format(v2)}
                 </td>
                 <td className="px-4 py-3 text-center text-muted tabular-nums">
-                  {diff != null ? (diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)) : '-'}
+                  {diff != null
+                    ? (() => {
+                        // For percentage stats (fg_pct, fg3_pct, ft_pct), scale diff to percentage points
+                        const isPct =
+                          row.key === 'fg_pct' || row.key === 'fg3_pct' || row.key === 'ft_pct';
+                        const scaledDiff = isPct ? diff * 100 : diff;
+                        return scaledDiff > 0 ? `+${scaledDiff.toFixed(1)}` : scaledDiff.toFixed(1);
+                      })()
+                    : '-'}
                 </td>
               </tr>
             );
