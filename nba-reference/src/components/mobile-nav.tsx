@@ -28,6 +28,7 @@ interface NavLink {
  */
 const NAV_LINKS: NavLink[] = [
   { href: '/search' as Route, label: 'Search' },
+  { href: '/compare' as Route, label: 'Compare' },
   { href: '/players' as Route, label: 'Players' },
   { href: '/teams' as Route, label: 'Teams' },
   { href: '/games' as Route, label: 'Games' },
@@ -146,44 +147,42 @@ export function MobileNav(): JSX.Element {
         aria-hidden="true"
       />
 
-      {/* Slide-out panel */}
-      <nav
-        id="mobile-nav-panel"
-        className={cn(
-          'fixed top-0 right-0 z-50 h-full w-64 transform border-l border-line bg-header-start shadow-xl transition-transform duration-300 ease-in-out lg:hidden',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        )}
-        aria-label="Mobile navigation"
-        aria-hidden={!isOpen}
-      >
-        {/* Panel header with close button */}
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <span className="text-sm font-semibold text-header-text">Menu</span>
-          <button
-            type="button"
-            onClick={closeMenu}
-            className="flex items-center justify-center rounded p-2 text-header-text transition-colors hover:bg-header-mid"
-            aria-label="Close navigation menu"
-          >
-            <CloseIcon className="h-5 w-5" />
-          </button>
-        </div>
+      {/* Slide-out panel - conditionally render to prevent keyboard focus when closed */}
+      {isOpen ? (
+        <nav
+          id="mobile-nav-panel"
+          className="fixed top-0 right-0 z-50 h-full w-64 transform border-l border-line bg-header-start shadow-xl transition-transform duration-300 ease-in-out lg:hidden"
+          aria-label="Mobile navigation"
+        >
+          {/* Panel header with close button */}
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <span className="text-sm font-semibold text-header-text">Menu</span>
+            <button
+              type="button"
+              onClick={closeMenu}
+              className="flex items-center justify-center rounded p-2 text-header-text transition-colors hover:bg-header-mid"
+              aria-label="Close navigation menu"
+            >
+              <CloseIcon className="h-5 w-5" />
+            </button>
+          </div>
 
-        {/* Navigation links */}
-        <ul className="flex flex-col py-2">
-          {NAV_LINKS.map(link => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                onClick={handleLinkClick}
-                className="block px-4 py-3 text-sm text-header-text transition-colors hover:bg-header-mid hover:text-white"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+          {/* Navigation links */}
+          <ul className="flex flex-col py-2">
+            {NAV_LINKS.map(link => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={handleLinkClick}
+                  className="block px-4 py-3 text-sm text-header-text transition-colors hover:bg-header-mid hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
     </>
   );
 }
