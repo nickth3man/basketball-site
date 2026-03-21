@@ -11,6 +11,8 @@
 import type { JSX } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { MobileNav } from '@/components/mobile-nav';
+import { ThemeToggle } from '@/components/theme';
 
 /**
  * Renders the global site header with logo and primary navigation.
@@ -32,7 +34,7 @@ export function SiteHeader(): JSX.Element {
         </Link>
 
         {/* Main navigation */}
-        <nav aria-label="Primary" className="flex items-center gap-4 text-sm">
+        <nav aria-label="Primary" className="hidden items-center gap-4 text-sm lg:flex">
           <Link
             href={'/search' as Route}
             className="transition-colors duration-200 hover:text-white"
@@ -82,6 +84,12 @@ export function SiteHeader(): JSX.Element {
             Awards
           </Link>
           <Link
+            href={'/compare' as Route}
+            className="transition-colors duration-200 hover:text-white"
+          >
+            Compare
+          </Link>
+          <Link
             href={'/standings' as Route}
             className="transition-colors duration-200 hover:text-white"
           >
@@ -93,7 +101,9 @@ export function SiteHeader(): JSX.Element {
           >
             Frivolities
           </Link>
+          <ThemeToggle />
         </nav>
+        <MobileNav />
       </div>
     </header>
   );

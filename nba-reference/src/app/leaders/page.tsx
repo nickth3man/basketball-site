@@ -1,4 +1,5 @@
 import type React from 'react';
+import { Suspense } from 'react';
 import {
   getAllTimeLeadersByTotal,
   getLatestSeasonWithPlayerStats,
@@ -6,6 +7,7 @@ import {
   getSeasonLeadersByPerGame,
 } from '@/lib/queries';
 import { formatUsd } from '@/lib/formatters';
+import { FilterBar } from '@/components/filters';
 import { StatsTable } from '@/components/stats-table';
 
 export default function LeadersPage(): React.JSX.Element {
@@ -35,6 +37,10 @@ export default function LeadersPage(): React.JSX.Element {
       <p className="mb-5 text-sm text-muted-strong">
         Season and all-time leaderboards built from the local stats database.
       </p>
+
+      <Suspense fallback={<div className="mb-6 h-16 animate-pulse rounded-lg bg-paper-soft" />}>
+        <FilterBar />
+      </Suspense>
 
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-bold">{latestSeasonId} Per Game Leaders - Points</h2>

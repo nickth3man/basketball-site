@@ -21,6 +21,7 @@ export * from './player-splits';
 export * from './franchise';
 export * from './frivolities';
 export * from './salaries';
+export * from './compare';
 
 // Re-export feature queries for convenience
 export {

@@ -90,6 +90,9 @@ Thumbs.db
 *.db-shm
 *.db-wal
 
+# Agent guidance (Cursor, etc.) — local only; any path depth
+**/AGENTS.md
+
 # Skills directory (project-specific)
 /skills
 

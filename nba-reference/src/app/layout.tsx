@@ -16,6 +16,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/site-header';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { ThemeProvider } from '@/components/theme';
 import { getSiteUrl, getSiteUrlObject } from '@/lib/site-config';
 import { cn } from '@/lib/utils';
 
@@ -76,18 +77,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
-        <a
-          href="#main-content"
-          className="sr-only absolute top-4 left-4 z-50 rounded bg-paper px-3 py-2 text-sm text-heading shadow-popover focus:not-sr-only"
-        >
-          Skip to main content
-        </a>
-        <SiteHeader />
-        <ErrorBoundary>
-          <div id="main-content" tabIndex={-1}>
-            {children}
-          </div>
-        </ErrorBoundary>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <a
+            href="#main-content"
+            className="sr-only absolute top-4 left-4 z-50 rounded bg-paper px-3 py-2 text-sm text-heading shadow-popover focus:not-sr-only"
+          >
+            Skip to main content
+          </a>
+          <SiteHeader />
+          <ErrorBoundary>
+            <div id="main-content" tabIndex={-1}>
+              {children}
+            </div>
+          </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   );
