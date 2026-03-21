@@ -123,12 +123,26 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
     },
   ];
 
-  const careerData: CareerSeasonData[] = perGameStats.map(row => ({
-    season: String(row['season_id'] ?? ''),
-    ppg: Number(row['pts_pg'] ?? 0),
-    rpg: Number(row['reb_pg'] ?? 0),
-    apg: Number(row['ast_pg'] ?? 0),
-  }));
+  const careerData: CareerSeasonData[] = perGameStats
+    .filter(
+      row =>
+        row['season_id'] != null &&
+        row['pts_pg'] != null &&
+        row['reb_pg'] != null &&
+        row['ast_pg'] != null
+    )
+    .slice()
+    .sort((a, b) => {
+      const seasonA = String(a['season_id']);
+      const seasonB = String(b['season_id']);
+      return seasonA.localeCompare(seasonB);
+    })
+    .map(row => ({
+      season: String(row['season_id']),
+      ppg: Number(row['pts_pg']),
+      rpg: Number(row['reb_pg']),
+      apg: Number(row['ast_pg']),
+    }));
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
