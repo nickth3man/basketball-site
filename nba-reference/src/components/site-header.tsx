@@ -3,7 +3,7 @@
  *
  * Provides the main navigation header displayed on all pages.
  * Uses sticky positioning to remain visible during scroll.
- * Includes gradient background and animated link hover effects.
+ * Editorial gradient band without hard divider lines; illuminated hover on links.
  *
  * @module @/components/site-header
  */
@@ -13,92 +13,73 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { MobileNav } from '@/components/mobile-nav';
 import { ThemeToggle } from '@/components/theme';
+import { cn } from '@/lib/utils';
+
+const navLinkClass =
+  'illuminated-tab rounded-md px-2 py-1.5 text-sm text-header-text/90 transition-all duration-200 hover:bg-white/10 hover:text-header-text hover:shadow-[0_0_14px_color-mix(in_srgb,var(--dc-tertiary-container)_28%,transparent)]';
 
 /**
  * Renders the global site header with logo and primary navigation.
- *
- * The header is sticky with a gradient background and contains a home link labeled "NBA Reference" plus navigation links for Players, Teams, Games, and Seasons.
  *
  * @returns The header JSX element for the site's global navigation.
  */
 export function SiteHeader(): JSX.Element {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-linear-to-r from-header-start via-header-mid to-header-start text-header-text shadow-header">
+    <header className="sticky top-0 z-30 bg-linear-to-r from-header-start via-header-mid to-header-start text-header-text shadow-[var(--shadow-ambient)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        {/* Logo / Home link */}
         <Link
           href="/"
-          className="text-lg font-bold tracking-wide text-accent transition-all duration-200 hover:brightness-110"
+          className={cn(
+            'font-serif text-lg font-semibold tracking-[var(--tracking-inscription)] text-[var(--dc-tertiary-fixed)] transition-all duration-200 hover:brightness-110'
+          )}
         >
           NBA Reference
         </Link>
 
-        {/* Main navigation */}
-        <nav aria-label="Primary" className="hidden items-center gap-4 text-sm lg:flex">
-          <Link
-            href={'/search' as Route}
-            className="transition-colors duration-200 hover:text-white"
-          >
+        <nav aria-label="Primary" className="hidden items-center gap-1 text-sm lg:flex">
+          <Link href={'/search' as Route} className={navLinkClass}>
             Search
           </Link>
-          <Link href="/players" className="transition-colors duration-200 hover:text-white">
+          <Link href="/players" className={navLinkClass}>
             Players
           </Link>
-          <Link href="/teams" className="transition-colors duration-200 hover:text-white">
+          <Link href="/teams" className={navLinkClass}>
             Teams
           </Link>
-          <Link href="/games" className="transition-colors duration-200 hover:text-white">
+          <Link href="/games" className={navLinkClass}>
             Games
           </Link>
-          <Link href="/seasons" className="transition-colors duration-200 hover:text-white">
+          <Link href="/seasons" className={navLinkClass}>
             Seasons
           </Link>
-          <Link href="/leagues" className="transition-colors duration-200 hover:text-white">
+          <Link href="/leagues" className={navLinkClass}>
             Leagues
           </Link>
-          <Link href="/boxscores" className="transition-colors duration-200 hover:text-white">
+          <Link href="/boxscores" className={navLinkClass}>
             Box Scores
           </Link>
-          <Link href="/leaders" className="transition-colors duration-200 hover:text-white">
+          <Link href="/leaders" className={navLinkClass}>
             Leaders
           </Link>
-          <Link href="/draft" className="transition-colors duration-200 hover:text-white">
+          <Link href="/draft" className={navLinkClass}>
             Draft
           </Link>
-          <Link
-            href={'/allstar' as Route}
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href={'/allstar' as Route} className={navLinkClass}>
             All-Star
           </Link>
-          <Link
-            href={'/playoffs' as Route}
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href={'/playoffs' as Route} className={navLinkClass}>
             Playoffs
           </Link>
-          <Link
-            href={'/awards' as Route}
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href={'/awards' as Route} className={navLinkClass}>
             Awards
           </Link>
-          <Link
-            href={'/compare' as Route}
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href={'/compare' as Route} className={navLinkClass}>
             Compare
           </Link>
-          <Link
-            href={'/standings' as Route}
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href={'/standings' as Route} className={navLinkClass}>
             Standings
           </Link>
-          <Link
-            href={'/friv/birthdays' as Route}
-            className="transition-colors duration-200 hover:text-white"
-          >
+          <Link href={'/friv/birthdays' as Route} className={navLinkClass}>
             Frivolities
           </Link>
           <ThemeToggle />

@@ -15,6 +15,7 @@ import type React from 'react';
 import Link from 'next/link';
 import { getTeamDirectory } from '@/lib/query/directory';
 import {
+  tableBodyRowClass,
   tableCellClass,
   tableClass,
   tableContainerClass,
@@ -35,7 +36,7 @@ export default function TeamsPage(): React.JSX.Element {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="mb-3 text-2xl font-bold">Teams</h1>
+      <h1 className="mb-3 inscription-title text-2xl">Teams</h1>
       <div className={tableContainerClass}>
         <table className={tableClass}>
           <thead>
@@ -46,11 +47,8 @@ export default function TeamsPage(): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {teams.map((team, teamIndex) => (
-              <tr
-                key={team.abbreviation}
-                className={teamIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
-              >
+            {teams.map(team => (
+              <tr key={team.abbreviation} className={tableBodyRowClass}>
                 <td className={tableCellClass('left')}>
                   <Link className={tableLinkClass} href={`/teams/${team.abbreviation}`}>
                     {team.full_name} ({team.abbreviation})

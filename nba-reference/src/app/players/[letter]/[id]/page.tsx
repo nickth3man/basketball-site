@@ -21,6 +21,7 @@
 
 import type React from 'react';
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -28,9 +29,11 @@ import { CareerTrajectoryChart } from '@/components/charts';
 import { RelatedLinksPanel } from '@/components/related-links-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsTable } from '@/components/stats-table';
+import { StructuredData } from '@/components/structured-data';
 import { formatUsd } from '@/lib/formatters';
 import { getPlayerPageData } from '@/lib/query';
 import { routes } from '@/lib/routes';
+import { getSiteUrl } from '@/lib/site-config';
 import type { CareerSeasonData } from '@/lib/types/charts';
 import { validateBrefId } from '@/lib/validation';
 import { AwardsBadges, GameHighs, PlayerBioHeader } from './components';
@@ -67,6 +70,71 @@ const ANCHOR_SECTIONS = [
  */
 function validateLetterMatch(letter: string, id: string): boolean {
   return /^[a-z]$/i.test(letter) && id.slice(0, 1).toLowerCase() === letter.toLowerCase();
+}
+
+/**
+ * Generate metadata for the player detail page.
+ */
+export async function generateMetadata({ params }: PlayerPageProps): Promise<Metadata> {
+  const { letter, id } = await params;
+  if (!validateLetterMatch(letter, id)) return {};
+  try {
+    validateBrefId(id);
+  } catch {
+    return {};
+  }
+
+  const playerPageData = getPlayerPageData(id);
+  const player = playerPageData?.player;
+  if (player == null) return {};
+
+  const siteUrl = getSiteUrl();
+  const title = `${player.full_name} Stats | NBA Reference`;
+  const description = `Complete career statistics for ${player.full_name}${player.position != null ? ` (${player.position})` : ''}. View per-game, advanced, shooting, and salary data.`;
+  const url = `${siteUrl}/players/${letter}/${id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
+  };
+}
+
+/**
+ * Build JSON-LD Person schema for a player.
+ */
+function getPlayerJsonLd(
+  letter: string,
+  id: string,
+  player: { full_name: string; position: string | null; is_active: number | null },
+  summary: Record<string, number | null>
+): Record<string, unknown> {
+  const siteUrl = getSiteUrl();
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: player.full_name,
+    url: `${siteUrl}/players/${letter}/${id}`,
+    description: `NBA player career statistics${player.position != null ? ` (${player.position})` : ''}`,
+    sport: 'Basketball',
+    nationality: { '@type': 'Country', name: 'United States' },
+    ...(player.is_active === 1 ? { memberOf: { '@type': 'SportsTeam', name: 'NBA' } } : {}),
+    ...(summary['pts_pg'] != null
+      ? { award: `Career PPG: ${summary['pts_pg']}` }
+      : {}),
+  };
 }
 
 /**
@@ -144,8 +212,11 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
       apg: Number(row['ast_pg']),
     }));
 
+  const jsonLd = getPlayerJsonLd(letter, id, player, summary);
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
+      <StructuredData data={jsonLd} />
       {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/players">Players</Link> / {player.full_name}
@@ -157,7 +228,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
       {/* Main content with sticky sidebar navigation */}
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         {/* Sticky navigation sidebar */}
-        <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
+        <aside className="h-max surface-pedestal p-4 lg:sticky lg:top-3">
           <div className="mb-2 text-xs font-bold tracking-wide text-crumb uppercase">
             On this page
           </div>
@@ -177,15 +248,15 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
         {/* Statistics sections */}
         <div className="space-y-8">
           {/* Career Trajectory Chart */}
-          <section className="mb-8 rounded-lg border border-line bg-paper p-4">
-            <h2 className="mb-4 text-xl font-bold text-heading">Career Trajectory</h2>
+          <section className="mb-8 surface-altar p-5">
+            <h2 className="mb-4 inscription-title text-xl">Career Trajectory</h2>
             <CareerTrajectoryChart data={careerData} />
           </section>
 
           {/* Per Game Stats */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="per-game" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Per Game</h2>
+              <h2 className="mb-3 inscription-title text-xl">Per Game</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -213,7 +284,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Per 36 Minutes Stats */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="per-36" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Per 36 Minutes</h2>
+              <h2 className="mb-3 inscription-title text-xl">Per 36 Minutes</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -236,7 +307,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Season Totals */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="totals" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Totals</h2>
+              <h2 className="mb-3 inscription-title text-xl">Totals</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -267,7 +338,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Per 100 Possessions Stats */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="per-100" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Per 100 Possessions</h2>
+              <h2 className="mb-3 inscription-title text-xl">Per 100 Possessions</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -295,7 +366,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Advanced Stats */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="advanced" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Advanced</h2>
+              <h2 className="mb-3 inscription-title text-xl">Advanced</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -331,7 +402,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Shooting Stats (Distance Breakdown) */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="shooting" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Shooting</h2>
+              <h2 className="mb-3 inscription-title text-xl">Shooting</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -363,7 +434,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Adjusted Shooting (League-Relative) */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="adjusted-shooting" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Adjusted Shooting</h2>
+              <h2 className="mb-3 inscription-title text-xl">Adjusted Shooting</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -388,7 +459,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Play-by-Play Derived Stats */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="pbp" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Play-by-Play</h2>
+              <h2 className="mb-3 inscription-title text-xl">Play-by-Play</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -427,7 +498,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Full Game Log */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="game-log" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Game Log</h2>
+              <h2 className="mb-3 inscription-title text-xl">Game Log</h2>
               <StatsTable
                 columns={[
                   {
@@ -469,7 +540,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Awards History */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="awards" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Awards History</h2>
+              <h2 className="mb-3 inscription-title text-xl">Awards History</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },
@@ -485,7 +556,7 @@ export default async function PlayerPage({ params }: PlayerPageProps): Promise<R
           {/* Salary History */}
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <section id="salaries" className="scroll-mt-4">
-              <h2 className="mb-2 text-xl font-bold">Salaries</h2>
+              <h2 className="mb-3 inscription-title text-xl">Salaries</h2>
               <StatsTable
                 columns={[
                   { key: 'season_id', label: 'Season', link: { type: 'league' } },

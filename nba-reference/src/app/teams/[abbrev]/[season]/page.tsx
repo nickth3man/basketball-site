@@ -46,6 +46,9 @@ export default async function TeamSeasonPage({
     neighbors.prev == null ? null : (seasonIdToEndYear(neighbors.prev)?.toString() ?? null);
   const nextEndYear =
     neighbors.next == null ? null : (seasonIdToEndYear(neighbors.next)?.toString() ?? null);
+  const seasonChipClass =
+    'rounded-md bg-[var(--dc-surface-container-highest)] px-2 py-1 text-xs outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover';
+  const seasonChipDisabledClass = `${seasonChipClass} cursor-not-allowed opacity-50 hover:bg-[var(--dc-surface-container-highest)]`;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
@@ -55,13 +58,13 @@ export default async function TeamSeasonPage({
       </div>
 
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">
+        <h1 className="inscription-title text-3xl">
           {seasonId} {team.full_name}
         </h1>
         <div className="flex items-center gap-2 text-sm">
           <Link
             href={`/teams/${team.abbreviation}/${seasonId}/schedule` as Route}
-            className="rounded border border-line bg-button-bg px-2 py-1"
+            className={seasonChipClass}
           >
             Schedule
           </Link>
@@ -69,26 +72,26 @@ export default async function TeamSeasonPage({
             href={
               `/teams/${team.abbreviation}/salaries?season=${encodeURIComponent(seasonId)}` as Route
             }
-            className="rounded border border-line bg-button-bg px-2 py-1"
+            className={seasonChipClass}
           >
             Salaries
           </Link>
           {previousEndYear == null ? (
-            <span className="rounded border border-line px-2 py-1 text-muted">Previous Season</span>
+            <span className={seasonChipDisabledClass}>Previous Season</span>
           ) : (
             <Link
               href={`/teams/${team.abbreviation}/${previousEndYear}` as Route}
-              className="rounded border border-line bg-button-bg px-2 py-1"
+              className={seasonChipClass}
             >
               Previous Season
             </Link>
           )}
           {nextEndYear == null ? (
-            <span className="rounded border border-line px-2 py-1 text-muted">Next Season</span>
+            <span className={seasonChipDisabledClass}>Next Season</span>
           ) : (
             <Link
               href={`/teams/${team.abbreviation}/${nextEndYear}` as Route}
-              className="rounded border border-line bg-button-bg px-2 py-1"
+              className={seasonChipClass}
             >
               Next Season
             </Link>
@@ -96,7 +99,7 @@ export default async function TeamSeasonPage({
         </div>
       </div>
 
-      <section className="mb-5 border border-line bg-paper-soft p-4">
+      <section className="mb-6 surface-altar p-5">
         <div className="grid gap-2 text-sm text-muted-strong md:grid-cols-3">
           <div>Conference: {team.conference ?? '-'}</div>
           <div>Division: {team.division ?? '-'}</div>
@@ -111,7 +114,7 @@ export default async function TeamSeasonPage({
           <div>SRS: {formatSignedNumber(seasonSummary['srs'] as number | null)}</div>
         </div>
         {averages == null ? null : (
-          <div className="mt-3 grid gap-2 border border-line-soft bg-white p-3 text-xs sm:grid-cols-5 lg:grid-cols-10">
+          <div className="mt-4 grid gap-3 surface-inset p-4 text-xs sm:grid-cols-5 lg:grid-cols-10">
             <div>
               PTS/G: <span className="font-bold tabular-nums">{averages['pts'] ?? '-'}</span>
             </div>
@@ -147,7 +150,7 @@ export default async function TeamSeasonPage({
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Roster</h2>
+        <h2 className="mb-3 inscription-title text-xl">Roster</h2>
         <StatsTable
           columns={[
             { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
@@ -165,7 +168,7 @@ export default async function TeamSeasonPage({
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Four Factors (Team vs Opponent)</h2>
+        <h2 className="mb-3 inscription-title text-xl">Four Factors (Team vs Opponent)</h2>
         <StatsTable
           columns={[
             { key: 'side', label: 'Side' },
@@ -200,7 +203,7 @@ export default async function TeamSeasonPage({
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Player Leaders</h2>
+        <h2 className="mb-3 inscription-title text-xl">Player Leaders</h2>
         <StatsTable
           columns={[
             { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
@@ -216,7 +219,7 @@ export default async function TeamSeasonPage({
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Recent Games</h2>
+        <h2 className="mb-3 inscription-title text-xl">Recent Games</h2>
         <StatsTable
           columns={[
             { key: 'game_date', label: 'Date' },
@@ -236,7 +239,7 @@ export default async function TeamSeasonPage({
       </section>
 
       <section>
-        <h2 className="mb-2 text-xl font-bold">Season History</h2>
+        <h2 className="mb-3 inscription-title text-xl">Season History</h2>
         <StatsTable
           columns={[
             { key: 'season_id', label: 'Season' },

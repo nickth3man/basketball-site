@@ -65,11 +65,11 @@ export default async function SeasonPage({
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/seasons">Seasons</Link> / {year}
       </div>
-      <h1 className="mb-3 text-3xl font-bold">{year} NBA Season</h1>
+      <h1 className="mb-4 inscription-title text-3xl">{year} NBA Season</h1>
 
       {/* League Summary Section */}
-      <section className="mb-8 border border-line-mid bg-paper-soft p-3 text-sm">
-        <h2 className="mb-2 text-lg font-bold">League Summary</h2>
+      <section className="mb-10 surface-pedestal p-5 text-sm">
+        <h2 className="mb-3 inscription-title text-lg">League Summary</h2>
         <div className="grid gap-2 sm:grid-cols-5">
           <div>
             PPG: <span className="font-bold tabular-nums">{leagueSummary['ppg'] ?? '-'}</span>
@@ -93,8 +93,8 @@ export default async function SeasonPage({
       <SeasonStandingsSection standings={standings} />
 
       {/* Scoring Leaders Section */}
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Scoring Leaders</h2>
+      <section className="mb-10 surface-altar p-5">
+        <h2 className="mb-3 inscription-title text-xl">Scoring Leaders</h2>
         <StatsTable
           columns={[
             { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
@@ -109,8 +109,8 @@ export default async function SeasonPage({
       </section>
 
       {/* Rebound Leaders Section */}
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Rebound Leaders</h2>
+      <section className="mb-10 surface-altar p-5">
+        <h2 className="mb-3 inscription-title text-xl">Rebound Leaders</h2>
         <StatsTable
           columns={[
             { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
@@ -125,8 +125,8 @@ export default async function SeasonPage({
       </section>
 
       {/* Assist Leaders Section */}
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-bold">Assist Leaders</h2>
+      <section className="mb-10 surface-altar p-5">
+        <h2 className="mb-3 inscription-title text-xl">Assist Leaders</h2>
         <StatsTable
           columns={[
             { key: 'full_name', label: 'Player', link: { type: 'player', valueKey: 'bref_id' } },
@@ -141,8 +141,8 @@ export default async function SeasonPage({
       </section>
 
       {/* Recent Games Section */}
-      <section>
-        <h2 className="mb-2 text-xl font-bold">Recent Games</h2>
+      <section className="surface-altar p-5">
+        <h2 className="mb-3 inscription-title text-xl">Recent Games</h2>
         <StatsTable
           columns={[
             { key: 'game_date', label: 'Date' },

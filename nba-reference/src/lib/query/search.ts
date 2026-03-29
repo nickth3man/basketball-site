@@ -11,6 +11,7 @@
  */
 
 import { getCachedQueryMany } from '@/lib/db';
+import { fuzzyScore } from '@/lib/fuzzy';
 import { routes } from '@/lib/routes';
 import { seasonIdToLeagueSlug } from '@/lib/season-utils';
 import type { Route } from 'next';
@@ -432,5 +433,12 @@ export function searchEntities(
     }
   }
 
-  return results.slice(0, resultLimit);
+  const ranked = results.map(result => {
+    const { score } = fuzzyScore(normalizedQuery, result.label);
+    return { result, score };
+  });
+
+  ranked.sort((a, b) => b.score - a.score);
+
+  return ranked.map(entry => entry.result).slice(0, resultLimit);
 }

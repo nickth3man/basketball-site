@@ -13,6 +13,7 @@ import {
   tableHeaderCellClass,
   tableLinkClass,
 } from '@/lib/table-styles';
+import { buttonStyles } from '@/components/ui/button';
 
 export default async function CollegesPage({
   searchParams,
@@ -35,7 +36,7 @@ export default async function CollegesPage({
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
-      <h1 className="mb-1 text-3xl font-bold text-heading">NBA Players by College</h1>
+      <h1 className="mb-1 inscription-title text-3xl">NBA Players by College</h1>
       <p className="mb-5 text-sm text-muted">
         Colleges that have produced NBA players, ranked by number of alumni with name filtering.
       </p>
@@ -47,19 +48,13 @@ export default async function CollegesPage({
             name="q"
             defaultValue={q ?? ''}
             placeholder="Filter colleges"
-            className="w-full rounded border border-line bg-white px-3 py-2 text-sm"
+            className="w-full rounded-md bg-paper-soft/95 px-3 py-2 text-sm text-ink shadow-input outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_16%,transparent)] focus:border-transparent focus:ring-2 focus:ring-[var(--focus-ring)] focus:outline-none"
           />
-          <button
-            type="submit"
-            className="rounded border border-line bg-button-bg px-4 py-2 text-sm hover:bg-button-hover"
-          >
+          <button type="submit" className={buttonStyles({ variant: 'secondary' })}>
             Apply
           </button>
           {query.length > 0 ? (
-            <Link
-              href="/friv/colleges"
-              className="rounded border border-line bg-button-bg px-4 py-2 text-sm hover:bg-button-hover"
-            >
+            <Link href="/friv/colleges" className={buttonStyles({ variant: 'ghost' })}>
               Clear
             </Link>
           ) : null}
@@ -83,10 +78,7 @@ export default async function CollegesPage({
                 const displayRank = startRank + index;
 
                 return (
-                  <tr
-                    key={college.college}
-                    className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
-                  >
+                  <tr key={college.college} className={tableBodyRowClass}>
                     <td className={tableCellClass('left')}>{displayRank}</td>
                     <td className={tableCellClass('left')}>{college.college}</td>
                     <td className={tableCellClass('right')}>{college.player_count}</td>

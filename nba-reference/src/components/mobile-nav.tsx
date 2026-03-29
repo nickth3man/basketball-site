@@ -2,7 +2,7 @@
  * @fileoverview Mobile navigation hamburger menu component.
  *
  * Provides a responsive slide-out navigation panel for mobile devices.
- * Hidden on lg+ breakpoints where the desktop navigation is visible.
+ * Atmospheric overlay and stone-panel drawer without heavy borders.
  *
  * @module @/components/mobile-nav
  */
@@ -15,17 +15,11 @@ import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 
-/**
- * Navigation link configuration for mobile menu.
- */
 interface NavLink {
   href: Route;
   label: string;
 }
 
-/**
- * All navigation links displayed in the mobile menu.
- */
 const NAV_LINKS: NavLink[] = [
   { href: '/search' as Route, label: 'Search' },
   { href: '/compare' as Route, label: 'Compare' },
@@ -44,12 +38,6 @@ const NAV_LINKS: NavLink[] = [
   { href: '/friv/birthdays' as Route, label: 'Frivolities' },
 ];
 
-/**
- * Renders a hamburger menu icon (three horizontal lines).
- *
- * @param className - Optional additional CSS classes
- * @returns SVG hamburger icon element
- */
 function HamburgerIcon({ className }: { className?: string }): JSX.Element {
   return (
     <svg
@@ -72,12 +60,6 @@ function HamburgerIcon({ className }: { className?: string }): JSX.Element {
   );
 }
 
-/**
- * Renders a close (X) icon.
- *
- * @param className - Optional additional CSS classes
- * @returns SVG close icon element
- */
 function CloseIcon({ className }: { className?: string }): JSX.Element {
   return (
     <svg
@@ -99,15 +81,9 @@ function CloseIcon({ className }: { className?: string }): JSX.Element {
   );
 }
 
-/**
- * Renders the mobile navigation hamburger menu.
- *
- * Shows a hamburger button on screens smaller than lg breakpoint.
- * When opened, displays a slide-out panel from the right with all navigation links.
- * Includes an overlay backdrop that closes the menu when clicked.
- *
- * @returns The mobile navigation component
- */
+const panelLinkClass =
+  'block px-5 py-3.5 text-sm text-header-text transition-all duration-200 hover:bg-white/12 hover:pl-6 hover:shadow-[inset_3px_0_0_color-mix(in_srgb,var(--dc-tertiary-fixed)_55%,transparent)]';
+
 export function MobileNav(): JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -125,11 +101,10 @@ export function MobileNav(): JSX.Element {
 
   return (
     <>
-      {/* Hamburger button - visible on mobile, hidden on lg+ */}
       <button
         type="button"
         onClick={openMenu}
-        className="flex items-center justify-center rounded p-2 text-header-text transition-colors hover:bg-header-mid lg:hidden"
+        className="flex items-center justify-center rounded-md p-2 text-header-text transition-all duration-200 hover:bg-white/10 hover:shadow-[0_0_12px_color-mix(in_srgb,var(--dc-tertiary-container)_25%,transparent)] lg:hidden"
         aria-label="Open navigation menu"
         aria-expanded={isOpen}
         aria-controls="mobile-nav-panel"
@@ -137,45 +112,39 @@ export function MobileNav(): JSX.Element {
         <HamburgerIcon className="h-5 w-5" />
       </button>
 
-      {/* Overlay backdrop */}
       <div
         className={cn(
-          'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 lg:hidden',
+          'fixed inset-0 z-40 bg-primary/35 backdrop-blur-sm transition-opacity duration-300 lg:hidden',
           isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         )}
         onClick={closeMenu}
         aria-hidden="true"
       />
 
-      {/* Slide-out panel - conditionally render to prevent keyboard focus when closed */}
       {isOpen ? (
         <nav
           id="mobile-nav-panel"
-          className="fixed top-0 right-0 z-50 h-full w-64 transform border-l border-line bg-header-start shadow-xl transition-transform duration-300 ease-in-out lg:hidden"
+          className="fixed top-0 right-0 z-50 h-full w-[min(20rem,92vw)] overflow-y-auto bg-linear-to-b from-header-start to-header-mid shadow-[var(--shadow-ambient)] outline outline-1 outline-[color-mix(in_srgb,var(--dc-tertiary-fixed)_18%,transparent)] transition-transform duration-300 ease-in-out lg:hidden"
           aria-label="Mobile navigation"
         >
-          {/* Panel header with close button */}
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <span className="text-sm font-semibold text-header-text">Menu</span>
+          <div className="flex items-center justify-between px-4 py-4">
+            <span className="font-serif text-sm font-semibold tracking-wide text-[var(--dc-tertiary-fixed)]">
+              Menu
+            </span>
             <button
               type="button"
               onClick={closeMenu}
-              className="flex items-center justify-center rounded p-2 text-header-text transition-colors hover:bg-header-mid"
+              className="flex items-center justify-center rounded-md p-2 text-header-text transition-colors hover:bg-white/10"
               aria-label="Close navigation menu"
             >
               <CloseIcon className="h-5 w-5" />
             </button>
           </div>
 
-          {/* Navigation links */}
-          <ul className="flex flex-col py-2">
+          <ul className="flex flex-col gap-1 pb-6">
             {NAV_LINKS.map(link => (
               <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={handleLinkClick}
-                  className="block px-4 py-3 text-sm text-header-text transition-colors hover:bg-header-mid hover:text-white"
-                >
+                <Link href={link.href} onClick={handleLinkClick} className={panelLinkClass}>
                   {link.label}
                 </Link>
               </li>

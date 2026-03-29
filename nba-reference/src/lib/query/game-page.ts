@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import {
   getGameById,
   getGameLineScore,
@@ -26,7 +27,7 @@ export interface GamePageData {
   players: DbRecord[];
 }
 
-export function getGamePageData(gameId: string, pbpLimit = 250): GamePageData | undefined {
+export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageData | undefined => {
   const game = getGameById(gameId);
   if (game == null) {
     return undefined;
@@ -60,4 +61,4 @@ export function getGamePageData(gameId: string, pbpLimit = 250): GamePageData | 
     playerAdvanced,
     players,
   };
-}
+});

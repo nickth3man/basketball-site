@@ -143,7 +143,7 @@ export function PlayerSelector({
         {slot === 'p1' ? 'Player 1' : 'Player 2'}
       </label>
       {selectedPlayer ? (
-        <div className="flex items-center justify-between rounded border border-line bg-paper-soft px-3 py-2">
+        <div className="flex items-center justify-between surface-inset px-3 py-2">
           <span className="font-medium text-heading">{selectedPlayer.name}</span>
           <button
             type="button"
@@ -179,14 +179,14 @@ export function PlayerSelector({
             aria-autocomplete="list"
             aria-controls={listboxId}
             aria-expanded={showDropdown}
-            className="w-full rounded border border-line bg-paper px-3 py-2 text-sm text-heading focus:border-focus-border focus:ring-2 focus:ring-focus-ring focus:outline-none"
+            className="w-full rounded-md bg-paper-soft/95 px-3 py-2 text-sm text-ink shadow-input outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_16%,transparent)] backdrop-blur-sm transition-all duration-200 placeholder:text-placeholder focus:ring-2 focus:ring-[var(--focus-ring)] focus:ring-offset-1 focus:ring-offset-[var(--paper-soft)] focus:outline-none"
           />
 
           {showDropdown ? (
             <div
               id={listboxId}
               role="listbox"
-              className="absolute z-20 mt-1 w-full overflow-hidden rounded border border-line bg-paper shadow-popover"
+              className="absolute z-20 mt-2 w-full fade-slide-in overflow-hidden surface-glass shadow-popover"
             >
               {isLoading ? <div className="px-3 py-3 text-sm text-muted">Searching...</div> : null}
 
@@ -206,8 +206,10 @@ export function PlayerSelector({
                           selectPlayer(result);
                         }}
                         className={cn(
-                          'block w-full border-b border-dropdown-line px-3 py-2 text-left text-sm transition-colors last:border-b-0',
-                          isActive ? 'bg-paper-soft' : 'hover:bg-paper-soft'
+                          'block w-full px-3 py-2 text-left text-sm transition-colors',
+                          isActive
+                            ? 'bg-[color-mix(in_srgb,var(--dc-tertiary-container)_14%,var(--dc-surface-container-low))]'
+                            : 'hover:bg-paper-soft/80'
                         )}
                       >
                         <span className="font-medium text-ink">{result.label}</span>

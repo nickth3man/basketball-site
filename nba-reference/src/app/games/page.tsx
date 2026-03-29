@@ -20,6 +20,7 @@ import { coercePageNumber } from '@/lib/pagination';
 import { getTeamDirectory } from '@/lib/query/directory';
 import { getRecentGames, getRecentGamesCount } from '@/lib/query/home';
 import {
+  tableBodyRowClass,
   tableCellClass,
   tableClass,
   tableContainerClass,
@@ -27,6 +28,11 @@ import {
   tableHeaderCellClass,
   tableLinkClass,
 } from '@/lib/table-styles';
+
+const filterActiveClass =
+  'rounded-md px-3 py-2 font-semibold text-heading bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] shadow-input';
+const filterIdleClass =
+  'rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-2 text-sm outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover hover:shadow-[0_0_10px_color-mix(in_srgb,var(--dc-tertiary-container)_15%,transparent)]';
 
 /**
  * Render the Games page showing a table of recent completed games.
@@ -59,20 +65,13 @@ export default async function GamesPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="mb-3 text-2xl font-bold">Games</h1>
+      <h1 className="mb-3 inscription-title text-2xl">Games</h1>
       <p className="mb-4 text-sm text-muted">
         Browse recent completed games and narrow the list by team.
       </p>
-      <section className="mb-4 panel-paper p-4">
+      <section className="mb-6 surface-pedestal p-5">
         <div className="flex flex-wrap gap-2 text-sm">
-          <Link
-            href="/games"
-            className={
-              activeTeam == null
-                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
-            }
-          >
+          <Link href="/games" className={activeTeam == null ? filterActiveClass : filterIdleClass}>
             All Teams
           </Link>
           {teams.map(teamOption => (
@@ -80,9 +79,7 @@ export default async function GamesPage({
               key={teamOption.abbreviation}
               href={`/games?team=${teamOption.abbreviation}` as Route}
               className={
-                activeTeam === teamOption.abbreviation
-                  ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                  : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
+                activeTeam === teamOption.abbreviation ? filterActiveClass : filterIdleClass
               }
             >
               {teamOption.abbreviation}
@@ -103,8 +100,8 @@ export default async function GamesPage({
             </tr>
           </thead>
           <tbody>
-            {games.map((game, gameIndex) => (
-              <tr key={game.game_id} className={gameIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+            {games.map(game => (
+              <tr key={game.game_id} className={tableBodyRowClass}>
                 <td className={tableCellClass('left')}>{game.game_date}</td>
                 <td className={tableCellClass('left')}>
                   <Link className={tableLinkClass} href={`/teams/${game.away_abbrev}` as Route}>

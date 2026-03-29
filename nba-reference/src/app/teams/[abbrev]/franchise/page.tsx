@@ -48,7 +48,7 @@ export default async function FranchisePage({
       <div className="mb-6">
         <Link
           href={`/teams/${teamAbbrev}` as Route}
-          className="mb-2 inline-block text-link hover:underline"
+          className="mb-2 inline-block text-link transition-colors hover:brightness-110"
         >
           ← Back to {team.full_name}
         </Link>

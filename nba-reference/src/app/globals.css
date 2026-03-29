@@ -1,37 +1,87 @@
 @import 'tailwindcss';
 
+/* -------------------------------------------------------------------------- */
+/* Digital Cathedral — core tokens (DESIGN.md)                                 */
+/* -------------------------------------------------------------------------- */
+
 :root {
-  --background: #f7f3e9;
-  --foreground: #201d19;
-  --heading: #2b261f;
-  --muted: #574f3f;
-  --muted-strong: #3b3428;
-  --crumb: #6b604b;
-  --paper: #fdfbf5;
-  --paper-soft: #f8f3e8;
-  --paper-alt: #f3ecde;
-  --line: #b8ab8f;
-  --line-mid: #c9b998;
-  --line-soft: #d2c8b3;
-  --line-subtle: #d9cdb7;
-  --accent: #ffb11b;
-  --link: #0d4a8a;
-  --nav-hover: #f5efe2;
-  --dropdown-line: #eee5d5;
-  --label: #836f43;
-  --placeholder: #7a6f5c;
-  --focus-border: #8f7f61;
-  --focus-ring: #c8b897;
-  --header-start: #2f2a23;
-  --header-mid: #3a3329;
-  --header-text: #f2ede1;
-  --image-line: #a69066;
-  --ink: #222222;
-  --button-bg: #f6f3ea;
-  --button-hover: #ece5d7;
-  --row-alt: #faf8f2;
-  --row-hover: #efe7d8;
-  --thead: #ece5d7;
+  --dc-primary: #00245e;
+  --dc-secondary: #9f402d;
+  --dc-tertiary: #735c00;
+  --dc-surface: #fbf9f2;
+  --dc-surface-container-low: #f6f4ec;
+  --dc-surface-container-highest: #e4e2dc;
+  --dc-surface-dim: #dcdad3;
+  --dc-surface-container-lowest: rgb(255 255 255 / 0.72);
+  --dc-on-surface: #1b1c18;
+  --dc-on-primary: #faf9f5;
+  --dc-on-secondary: #faf9f5;
+  --dc-on-tertiary-fixed: #241a00;
+  --dc-primary-container: #00388a;
+  --dc-secondary-container: #b5523d;
+  --dc-tertiary-container: #cca730;
+  --dc-outline-variant: #c4c5d5;
+  --dc-tertiary-fixed: #ffe088;
+  --dc-tertiary-fixed-dim: #e9c349;
+
+  --shadow-ambient: 0 24px 48px rgb(27 28 24 / 0.06);
+  --shadow-glow-gold: 0 0 0 1px rgb(204 167 48 / 0.35), 0 0 12px rgb(204 167 48 / 0.25);
+  --ghost-border-alpha: 0.15;
+  --backdrop-blur-glass: 12px;
+  --grain-overlay-opacity: 0.05;
+
+  --tracking-inscription: 0.05em;
+  --text-display-lg: 3.5rem;
+  --text-headline-md: 1.75rem;
+  --text-body-md: 0.875rem;
+  --text-label-md: 0.75rem;
+
+  /* Legacy aliases → cathedral tokens (existing utilities keep working) */
+  --background: var(--dc-surface);
+  --foreground: var(--dc-on-surface);
+  --heading: var(--dc-primary);
+  --muted: color-mix(in srgb, var(--dc-on-surface) 62%, var(--dc-surface));
+  --muted-strong: color-mix(in srgb, var(--dc-on-surface) 78%, var(--dc-surface));
+  --crumb: color-mix(in srgb, var(--dc-tertiary) 55%, var(--dc-on-surface));
+  --paper: var(--dc-surface-container-lowest);
+  --paper-soft: var(--dc-surface-container-low);
+  --paper-alt: var(--dc-surface-container-highest);
+  --line: color-mix(in srgb, var(--dc-outline-variant) 22%, var(--dc-surface));
+  --line-mid: color-mix(in srgb, var(--dc-outline-variant) 28%, var(--dc-surface));
+  --line-soft: color-mix(in srgb, var(--dc-outline-variant) 14%, var(--dc-surface));
+  --line-subtle: color-mix(in srgb, var(--dc-surface-dim) 85%, var(--dc-surface));
+  --accent: var(--dc-secondary);
+  --link: var(--dc-primary-container);
+  --nav-hover: color-mix(
+    in srgb,
+    var(--dc-tertiary-container) 12%,
+    var(--dc-surface-container-low)
+  );
+  --dropdown-line: color-mix(in srgb, var(--dc-outline-variant) 12%, transparent);
+  --label: var(--dc-tertiary);
+  --placeholder: color-mix(in srgb, var(--dc-on-surface) 45%, var(--dc-surface));
+  --focus-border: color-mix(in srgb, var(--dc-tertiary) 35%, var(--dc-primary));
+  --focus-ring: color-mix(in srgb, var(--dc-tertiary-container) 40%, transparent);
+  --header-start: var(--dc-primary);
+  --header-mid: var(--dc-primary-container);
+  --header-text: var(--dc-on-primary);
+  --image-line: color-mix(in srgb, var(--dc-tertiary) 40%, var(--dc-surface-dim));
+  --ink: var(--dc-on-surface);
+  --button-bg: var(--dc-surface-container-highest);
+  --button-hover: color-mix(
+    in srgb,
+    var(--dc-surface-container-highest) 88%,
+    var(--dc-secondary) 12%
+  );
+  --row-alt: var(--dc-surface-container-low);
+  --row-hover: color-mix(
+    in srgb,
+    var(--dc-tertiary-container) 14%,
+    var(--dc-surface-container-low)
+  );
+  --thead: var(--dc-primary);
+  --danger: #8b2c2c;
+  --danger-hover: #6f2424;
   --chart-1: 38 100% 55%;
   --chart-2: 210 80% 55%;
   --chart-3: 140 60% 50%;
@@ -40,37 +90,62 @@
 }
 
 .dark {
-  --background: #1a1814;
-  --foreground: #f2ede1;
-  --heading: #fdfbf5;
-  --muted: #a69b85;
-  --muted-strong: #ccc2ad;
-  --crumb: #9a8e78;
-  --paper: #2a2620;
-  --paper-soft: #363029;
-  --paper-alt: #3d362e;
-  --line: #4a4339;
-  --line-mid: #5a5246;
-  --line-soft: #6a6256;
-  --line-subtle: #7a7266;
-  --accent: #ffb11b;
-  --link: #6ba3e0;
-  --nav-hover: #3a3329;
-  --dropdown-line: #4a4339;
-  --label: #c4a44e;
-  --placeholder: #8a7e68;
-  --focus-border: #8f7f61;
-  --focus-ring: #5a5246;
-  --header-start: #1a1814;
-  --header-mid: #2a2620;
-  --header-text: #f2ede1;
-  --image-line: #6a5a3e;
-  --ink: #f2ede1;
-  --button-bg: #363029;
-  --button-hover: #4a4339;
-  --row-alt: #2a2620;
-  --row-hover: #3a3329;
-  --thead: #363029;
+  --dc-primary: #4a7ab8;
+  --dc-secondary: #c45c45;
+  --dc-tertiary: #d4a84b;
+  --dc-surface: #141210;
+  --dc-surface-container-low: #1c1a16;
+  --dc-surface-container-highest: #2a2620;
+  --dc-surface-dim: #242018;
+  --dc-surface-container-lowest: rgb(30 28 24 / 0.75);
+  --dc-on-surface: #f0ebe3;
+  --dc-on-primary: #0c1220;
+  --dc-on-secondary: #faf9f5;
+  --dc-on-tertiary-fixed: #1a1408;
+  --dc-primary-container: #5a8cc8;
+  --dc-secondary-container: #d4705a;
+  --dc-tertiary-container: #e0b860;
+  --dc-outline-variant: #6a6478;
+  --dc-tertiary-fixed: #ffe9a8;
+  --dc-tertiary-fixed-dim: #c9a030;
+
+  --background: var(--dc-surface);
+  --foreground: var(--dc-on-surface);
+  --heading: #f5f0e8;
+  --muted: color-mix(in srgb, var(--dc-on-surface) 70%, var(--dc-surface));
+  --muted-strong: color-mix(in srgb, var(--dc-on-surface) 88%, var(--dc-surface));
+  --crumb: color-mix(in srgb, var(--dc-tertiary) 50%, var(--dc-on-surface));
+  --paper: var(--dc-surface-container-lowest);
+  --paper-soft: var(--dc-surface-container-low);
+  --paper-alt: var(--dc-surface-container-highest);
+  --line: color-mix(in srgb, var(--dc-outline-variant) 35%, var(--dc-surface));
+  --line-mid: color-mix(in srgb, var(--dc-outline-variant) 45%, var(--dc-surface));
+  --line-soft: color-mix(in srgb, var(--dc-outline-variant) 22%, var(--dc-surface));
+  --line-subtle: color-mix(in srgb, var(--dc-surface-dim) 90%, var(--dc-surface));
+  --accent: var(--dc-secondary);
+  --link: var(--dc-primary-container);
+  --nav-hover: color-mix(in srgb, var(--dc-tertiary) 15%, var(--dc-surface-container-low));
+  --dropdown-line: color-mix(in srgb, var(--dc-outline-variant) 25%, transparent);
+  --label: var(--dc-tertiary);
+  --placeholder: color-mix(in srgb, var(--dc-on-surface) 50%, var(--dc-surface));
+  --focus-border: var(--dc-tertiary);
+  --focus-ring: color-mix(in srgb, var(--dc-tertiary-container) 35%, transparent);
+  --header-start: #0a1628;
+  --header-mid: #0f2240;
+  --header-text: var(--dc-on-surface);
+  --image-line: color-mix(in srgb, var(--dc-tertiary) 35%, var(--dc-surface-dim));
+  --ink: var(--dc-on-surface);
+  --button-bg: var(--dc-surface-container-highest);
+  --button-hover: color-mix(
+    in srgb,
+    var(--dc-surface-container-highest) 85%,
+    var(--dc-secondary) 15%
+  );
+  --row-alt: var(--dc-surface-container-low);
+  --row-hover: color-mix(in srgb, var(--dc-tertiary) 12%, var(--dc-surface-container-low));
+  --thead: var(--dc-primary-container);
+  --danger: #e07070;
+  --danger-hover: #f09090;
   --chart-1: 38 100% 60%;
   --chart-2: 210 80% 65%;
   --chart-3: 140 60% 55%;
@@ -110,22 +185,37 @@
   --color-row-alt: var(--row-alt);
   --color-row-hover: var(--row-hover);
   --color-thead: var(--thead);
+  --color-primary: var(--dc-primary);
+  --color-secondary: var(--dc-secondary);
+  --color-tertiary: var(--dc-tertiary);
+  --color-surface: var(--dc-surface);
+  --color-on-primary: var(--dc-on-primary);
+  --color-on-secondary: var(--dc-on-secondary);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
 
-  --shadow-header: 0 4px 14px rgba(24, 20, 15, 0.22);
-  --shadow-panel: 0 8px 20px rgba(32, 29, 25, 0.06);
-  --shadow-input: 0 2px 6px rgba(24, 20, 15, 0.06);
-  --shadow-popover: 0 12px 24px rgba(24, 20, 15, 0.16);
+  --shadow-header: var(--shadow-ambient);
+  --shadow-panel: var(--shadow-ambient);
+  --shadow-input: 0 2px 12px rgb(27 28 24 / 0.05);
+  --shadow-popover: var(--shadow-ambient);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body), ui-serif, Georgia, serif;
+  --font-serif: var(--font-display), ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, monospace;
 }
 
 body {
   background:
-    radial-gradient(circle at 15% -10%, #fffaf0 0%, rgba(255, 250, 240, 0) 42%),
-    radial-gradient(circle at 90% 0%, #efe6d4 0%, rgba(239, 230, 212, 0) 34%), var(--background);
+    radial-gradient(circle at 12% -8%, rgb(255 250 240 / 0.9) 0%, transparent 40%),
+    radial-gradient(circle at 92% 4%, rgb(228 226 220 / 0.55) 0%, transparent 36%),
+    var(--background);
   color: var(--foreground);
-  font-family: 'Times New Roman', Times, serif;
+  font-family: var(--font-body), ui-serif, Georgia, serif;
+}
+
+html.dark body {
+  background:
+    radial-gradient(circle at 15% 0%, rgb(74 122 184 / 0.12) 0%, transparent 42%), var(--background);
 }
 
 a {
@@ -150,11 +240,104 @@ a {
   animation: fade-slide-in 320ms ease-out both;
 }
 
-@utility panel-paper {
-  border: 1px solid var(--line);
+/* Tonal surfaces — no hard 1px section borders */
+@utility surface-pedestal {
+  background: var(--dc-surface-container-low);
   border-radius: 0.5rem;
-  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-alt) 100%);
+}
+
+@utility surface-altar {
+  background: linear-gradient(
+    165deg,
+    var(--dc-surface-container-highest) 0%,
+    color-mix(in srgb, var(--dc-surface-container-highest) 92%, var(--dc-secondary) 8%) 100%
+  );
+  border-radius: 0.5rem;
   box-shadow: var(--shadow-panel);
+}
+
+@utility surface-glass {
+  background: var(--dc-surface-container-lowest);
+  backdrop-filter: blur(var(--backdrop-blur-glass));
+  -webkit-backdrop-filter: blur(var(--backdrop-blur-glass));
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-panel);
+}
+
+@utility surface-inset {
+  background: color-mix(in srgb, var(--dc-surface-container-low) 92%, var(--dc-on-surface) 8%);
+  border-radius: 0.375rem;
+}
+
+@utility ghost-border {
+  outline: 1px solid color-mix(in srgb, var(--dc-outline-variant) 15%, transparent);
+  outline-offset: 0;
+}
+
+@utility fresco-hero {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(
+    155deg,
+    var(--dc-primary) 0%,
+    color-mix(in srgb, var(--dc-primary) 70%, var(--dc-primary-container) 30%) 55%,
+    var(--dc-primary-container) 100%
+  );
+  color: var(--dc-on-primary);
+}
+
+@utility illuminated-tab {
+  position: relative;
+}
+
+@utility stat-coin {
+  border-radius: 9999px;
+  background: var(--dc-tertiary-fixed-dim);
+  color: var(--dc-on-tertiary-fixed);
+  padding: 0.25rem 0.75rem;
+  font-size: var(--text-label-md);
+}
+
+@utility editorial-kicker {
+  font-size: var(--text-body-md);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dc-tertiary);
+}
+
+@utility inscription-title {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  letter-spacing: var(--tracking-inscription);
+  font-weight: 600;
+  color: var(--heading);
+}
+
+@utility ambient-glow-hover {
+  transition:
+    box-shadow 200ms ease,
+    background-color 200ms ease;
+}
+
+@utility ambient-glow-hover-active {
+  box-shadow: var(--shadow-glow-gold);
+}
+
+/* Legacy panel: stone lift, tonal only */
+@utility panel-paper {
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    180deg,
+    var(--dc-surface-container-low) 0%,
+    var(--dc-surface-container-highest) 100%
+  );
+  box-shadow: var(--shadow-panel);
+  outline: 1px solid color-mix(in srgb, var(--dc-outline-variant) 12%, transparent);
+  outline-offset: 0;
+}
+
+/* Table header text on primary background */
+@utility text-thead-ink {
+  color: var(--dc-on-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -26,8 +26,8 @@ function ConferenceTable({
   }
 
   return (
-    <div>
-      <h3 className="mb-2 text-lg font-semibold">{title}</h3>
+    <div className="space-y-3">
+      <h3 className="inscription-title text-lg">{title}</h3>
       <StatsTable columns={standingsColumns} rows={standings} initialSort="w" />
     </div>
   );
@@ -47,8 +47,8 @@ export function SeasonStandingsSection({
     eastStandings.length > 0 && westStandings.length > 0 && otherStandings.length === 0;
 
   return (
-    <section className="mb-8">
-      <h2 className="mb-2 text-xl font-bold">Standings</h2>
+    <section className="mb-10 space-y-6">
+      <h2 className="inscription-title text-xl">Standings</h2>
       {hasConferenceSplit ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <ConferenceTable title="Eastern Conference" standings={eastStandings} />
@@ -57,7 +57,7 @@ export function SeasonStandingsSection({
       ) : (
         <>
           {eastStandings.length > 0 || westStandings.length > 0 ? (
-            <div className="mb-6 grid gap-6 lg:grid-cols-2">
+            <div className="mb-8 grid gap-10 lg:grid-cols-2">
               <ConferenceTable title="Eastern Conference" standings={eastStandings} />
               <ConferenceTable title="Western Conference" standings={westStandings} />
             </div>

@@ -7,7 +7,7 @@ export default function SeasonLoading(): JSX.Element {
       <Skeleton className="mb-1 h-4 w-48" />
       <Skeleton className="mb-3 h-9 w-48" />
 
-      <section className="mb-8 border border-line-mid bg-paper-soft p-3">
+      <section className="mb-8 surface-pedestal p-4">
         <Skeleton className="mb-2 h-6 w-32" />
         <div className="grid gap-2 sm:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (

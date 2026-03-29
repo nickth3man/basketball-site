@@ -8,6 +8,8 @@ import {
   tableHeaderButtonClass,
   tableHeaderCellClass,
   tableLinkClass,
+  tableRowClass,
+  tableSectionClass,
 } from './table-styles';
 
 describe('table-styles', () => {
@@ -23,38 +25,57 @@ describe('table-styles', () => {
       expect(tableClass).toContain('text-ink');
     });
 
-    it('tableHeadRowClass has thead background', () => {
-      expect(tableHeadRowClass).toBe('bg-thead');
+    it('tableHeadRowClass uses primary header treatment', () => {
+      expect(tableHeadRowClass).toContain('bg-thead');
+      expect(tableHeadRowClass).toContain('text-thead-ink');
     });
 
-    it('tableBodyRowClass has alternating row colors and hover', () => {
-      expect(tableBodyRowClass).toContain('odd:bg-white');
+    it('tableBodyRowClass uses tonal striping without white rows', () => {
+      expect(tableBodyRowClass).toContain('odd:bg-surface');
       expect(tableBodyRowClass).toContain('even:bg-row-alt');
       expect(tableBodyRowClass).toContain('hover:bg-row-hover');
       expect(tableBodyRowClass).toContain('transition-colors');
     });
 
-    it('tableHeaderButtonClass is full width with hover', () => {
+    it('tableHeaderButtonClass is full width with gold hover hint', () => {
       expect(tableHeaderButtonClass).toContain('w-full');
       expect(tableHeaderButtonClass).toContain('cursor-pointer');
-      expect(tableHeaderButtonClass).toContain('hover:text-muted');
+      expect(tableHeaderButtonClass).toContain('hover:text-[var(--dc-tertiary-fixed)]');
     });
 
-    it('tableLinkClass has underline transition', () => {
+    it('tableLinkClass avoids harsh underline default', () => {
       expect(tableLinkClass).toContain('text-link');
       expect(tableLinkClass).toContain('decoration-transparent');
       expect(tableLinkClass).toContain('hover:decoration-current');
     });
   });
 
+  describe('tableSectionClass', () => {
+    it('returns pedestal shell by default', () => {
+      expect(tableSectionClass()).toContain('surface-pedestal');
+    });
+  });
+
+  describe('tableRowClass', () => {
+    it('matches body striping when not highlighted', () => {
+      expect(tableRowClass()).toBe(tableBodyRowClass);
+      expect(tableRowClass(false)).toBe(tableBodyRowClass);
+    });
+
+    it('uses tonal highlight without striping when highlighted', () => {
+      expect(tableRowClass(true)).toContain(
+        'bg-[color-mix(in_srgb,var(--dc-tertiary-container)_12%,var(--dc-surface-container-low))]'
+      );
+    });
+  });
+
   describe('tableHeaderCellClass', () => {
-    it('returns left-aligned classes by default', () => {
+    it('returns left-aligned classes by default without borders', () => {
       const classes = tableHeaderCellClass();
-      expect(classes).toContain('border');
-      expect(classes).toContain('border-line');
-      expect(classes).toContain('px-2');
-      expect(classes).toContain('py-1');
+      expect(classes).toContain('px-3');
+      expect(classes).toContain('py-2.5');
       expect(classes).toContain('text-left');
+      expect(classes).not.toContain('border');
     });
 
     it('returns right-aligned classes when specified', () => {
@@ -62,36 +83,21 @@ describe('table-styles', () => {
       expect(classes).toContain('text-right');
       expect(classes).not.toContain('text-left');
     });
-
-    it('returns left-aligned classes when explicitly specified', () => {
-      const classes = tableHeaderCellClass('left');
-      expect(classes).toContain('text-left');
-      expect(classes).not.toContain('text-right');
-    });
   });
 
   describe('tableCellClass', () => {
-    it('returns left-aligned classes by default', () => {
+    it('returns left-aligned classes by default without borders', () => {
       const classes = tableCellClass();
-      expect(classes).toContain('border');
-      expect(classes).toContain('border-line-soft');
-      expect(classes).toContain('px-2');
-      expect(classes).toContain('py-1');
+      expect(classes).toContain('px-3');
+      expect(classes).toContain('py-2.5');
       expect(classes).toContain('text-left');
+      expect(classes).not.toContain('border');
     });
 
     it('returns right-aligned classes with tabular-nums when specified', () => {
       const classes = tableCellClass('right');
       expect(classes).toContain('text-right');
       expect(classes).toContain('tabular-nums');
-      expect(classes).not.toContain('text-left');
-    });
-
-    it('returns left-aligned classes when explicitly specified', () => {
-      const classes = tableCellClass('left');
-      expect(classes).toContain('text-left');
-      expect(classes).not.toContain('text-right');
-      expect(classes).not.toContain('tabular-nums');
     });
   });
 });

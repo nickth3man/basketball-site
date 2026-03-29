@@ -20,6 +20,7 @@ import type { Route } from 'next';
 import { FavoritesWidget } from '@/components/favorites';
 import { HomeExploreLinks } from '@/components/home-explore-links';
 import { SearchBox } from '@/components/search-box';
+import { buttonStyles } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsTable } from '@/components/stats-table';
 import { StructuredData } from '@/components/structured-data';
@@ -68,29 +69,30 @@ export default function Home(): React.JSX.Element {
   const games = getRecentGames(12);
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
+    <main className="mx-auto min-h-screen max-w-6xl px-4 pt-4 pb-14">
       <StructuredData data={getHomeJsonLd()} />
-      {/* Page header */}
-      <h1 className="mb-1 fade-slide-in text-3xl font-bold text-heading">
-        Basketball Stats and History
-      </h1>
-      <p className="mb-5 fade-slide-in text-sm text-muted [animation-delay:80ms]">
-        Season {seasonId} standings, scores, and player/team lookup.
-      </p>
 
-      {/* Search and export controls */}
-      <div className="mb-6 grid fade-slide-in gap-3 [animation-delay:140ms] md:grid-cols-[2fr_1fr]">
+      <section className="fresco-hero relative -mx-4 mb-10 fade-slide-in overflow-hidden px-5 py-10 sm:mx-0 sm:rounded-xl md:px-10 md:py-14">
+        <h1 className="font-serif text-3xl font-semibold tracking-[var(--tracking-inscription)] sm:text-4xl">
+          Basketball Stats and History
+        </h1>
+        <p className="mt-4 max-w-2xl text-sm text-[color-mix(in_srgb,var(--dc-on-primary)88%,transparent)]">
+          Season {seasonId} standings, scores, and player/team lookup.
+        </p>
+      </section>
+
+      <div className="mb-8 grid fade-slide-in gap-4 [animation-delay:140ms] md:grid-cols-[2fr_1fr]">
         <SearchBox />
         <div className="flex items-center gap-2 text-sm">
           <Link
             href="/api/export/standings"
-            className="rounded border border-line bg-button-bg px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
+            className={buttonStyles({ variant: 'secondary', size: 'sm' })}
           >
             Export Standings
           </Link>
           <Link
             href="/api/export/games"
-            className="rounded border border-line bg-button-bg px-2 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
+            className={buttonStyles({ variant: 'secondary', size: 'sm' })}
           >
             Export Games
           </Link>
@@ -103,13 +105,13 @@ export default function Home(): React.JSX.Element {
 
       {/* Standings section */}
       <Suspense fallback={<Skeleton className="mb-8 h-96 w-full" />}>
-        <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:200ms]">
-          <h2 className="mb-2 text-xl font-bold text-heading">
+        <section className="mb-10 fade-slide-in surface-altar p-5 [animation-delay:200ms]">
+          <h2 className="mb-4 inscription-title text-xl">
             {seasonId} NBA Standings
             {leagueSlug == null ? null : (
               <Link
                 href={`/leagues/${leagueSlug}` as Route}
-                className="ml-2 text-sm font-normal text-link"
+                className="ml-2 text-sm font-normal text-link hover:brightness-110"
               >
                 Season Page
               </Link>
@@ -132,8 +134,8 @@ export default function Home(): React.JSX.Element {
 
       {/* Recent games section */}
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <section className="fade-slide-in panel-paper p-3 [animation-delay:260ms]">
-          <h2 className="mb-2 text-xl font-bold text-heading">Recent Games</h2>
+        <section className="fade-slide-in surface-altar p-5 [animation-delay:260ms]">
+          <h2 className="mb-4 inscription-title text-xl">Recent Games</h2>
           <div className={tableContainerClass}>
             <table className={tableClass}>
               <thead>

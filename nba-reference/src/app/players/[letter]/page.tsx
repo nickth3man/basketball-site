@@ -15,6 +15,7 @@ import { coercePageNumber } from '@/lib/pagination';
 import { getPlayerDirectoryByLetter, getPlayerDirectoryCount } from '@/lib/query/directory';
 import { routes } from '@/lib/routes';
 import {
+  tableBodyRowClass,
   tableCellClass,
   tableClass,
   tableContainerClass,
@@ -66,26 +67,28 @@ export default async function PlayerLetterPage({
     totalPlayers === 0
       ? 'No players found for this letter.'
       : `Showing ${offset + 1}-${Math.min(offset + players.length, totalPlayers)} of ${totalPlayers} players.`;
+  const filterActiveClass =
+    'rounded-md bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] px-2 py-1 font-semibold text-heading shadow-input';
+  const filterIdleClass =
+    'rounded-md bg-[var(--dc-surface-container-highest)] px-2 py-1 outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover';
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="mb-3 text-2xl font-bold">Players - {normalizedLetter.toUpperCase()}</h1>
+      <h1 className="mb-3 inscription-title text-2xl">
+        Players - {normalizedLetter.toUpperCase()}
+      </h1>
       <p className="mb-4 text-sm text-muted">
         Browse the full player directory for this letter with paginated results.
       </p>
       <div className="mb-4 flex flex-wrap gap-2 text-xs">
-        <Link href="/players" className="rounded border border-line px-2 py-1 hover:bg-button-bg">
+        <Link href="/players" className={filterIdleClass}>
           All
         </Link>
         {letters.map(l => (
           <Link
             key={l}
             href={routes.playerLetter(l)}
-            className={
-              normalizedLetter === l
-                ? 'rounded border border-line bg-button-bg px-2 py-1 font-semibold'
-                : 'rounded border border-line px-2 py-1 hover:bg-button-bg'
-            }
+            className={normalizedLetter === l ? filterActiveClass : filterIdleClass}
           >
             {l.toUpperCase()}
           </Link>
@@ -101,11 +104,8 @@ export default async function PlayerLetterPage({
             </tr>
           </thead>
           <tbody>
-            {players.map((player, playerIndex) => (
-              <tr
-                key={player.bref_id}
-                className={playerIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
-              >
+            {players.map(player => (
+              <tr key={player.bref_id} className={tableBodyRowClass}>
                 <td className={tableCellClass('left')}>
                   <Link
                     className={tableLinkClass}

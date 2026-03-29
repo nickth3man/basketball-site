@@ -14,30 +14,66 @@
  */
 
 import type React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
+import { StructuredData } from '@/components/structured-data';
 import { getGamePageData } from '@/lib/query';
+import { getSiteUrl } from '@/lib/site-config';
 import { notFound } from 'next/navigation';
 
-/**
- * Render the game detail page for a specified game.
- *
- * Fetches game metadata, team and player box scores, advanced player stats,
- * line score by period, team four factors, and recent play-by-play events,
- * then partitions player data by home and away teams for display.
- *
- * Triggers a 404 response when the game ID is not found.
- *
- * @param params - Route params promise that resolves to an object with the `id` of the game
- * @returns The game detail page JSX element for the specified game
- */
+interface GamePageParams {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ pbp?: string }>;
+}
+
+export async function generateMetadata({ params }: GamePageParams): Promise<Metadata> {
+  const { id } = await params;
+  const gamePageData = getGamePageData(id, 0);
+  const game = gamePageData?.game;
+  if (game == null) return {};
+
+  const siteUrl = getSiteUrl();
+  const away = String(game['away_abbrev'] ?? '');
+  const home = String(game['home_abbrev'] ?? '');
+  const date = String(game['game_date'] ?? '');
+  const title = `${away} at ${home} (${date}) | NBA Reference`;
+  const description = `Box score for ${away} at ${home} on ${date}. View player stats, play-by-play, and four factors.`;
+  const url = `${siteUrl}/games/${id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'article' },
+    twitter: { card: 'summary', title, description },
+  };
+}
+
+function getGameJsonLd(
+  id: string,
+  game: Record<string, unknown>
+): Record<string, unknown> {
+  const siteUrl = getSiteUrl();
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name: `${String(game['away_name'])} at ${String(game['home_name'])}`,
+    url: `${siteUrl}/games/${id}`,
+    startDate: game['game_date'],
+    sport: 'Basketball',
+    competitor: [
+      { '@type': 'SportsTeam', name: game['away_name'] },
+      { '@type': 'SportsTeam', name: game['home_name'] },
+    ],
+  };
+}
+
 export default async function GamePage({
   params,
   searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ pbp?: string }>;
-}): Promise<React.JSX.Element> {
+}: GamePageParams): Promise<React.JSX.Element> {
   const { id } = await params;
   const { pbp: pbpMode } = await searchParams;
   const pbpLimit = pbpMode === 'full' ? 1000 : pbpMode === 'recent' ? 50 : 250;
@@ -58,8 +94,16 @@ export default async function GamePage({
     pbp: playByPlay,
   } = gamePageData;
 
+  const navActive =
+    'rounded-md px-3 py-2 font-semibold text-heading bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] shadow-input';
+  const navIdle =
+    'rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-2 outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover';
+
+  const jsonLd = getGameJsonLd(id, game);
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
+      <StructuredData data={jsonLd} />
       {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/boxscores">Box Scores</Link> / {game['game_id']}
@@ -74,42 +118,24 @@ export default async function GamePage({
         {game['home_abbrev']} {game['home_score']}
       </p>
 
-      <section className="mb-6 panel-paper p-4">
-        <h2 className="mb-3 text-lg font-bold text-heading">Game Navigation</h2>
+      <section className="mb-8 surface-altar p-5">
+        <h2 className="mb-4 inscription-title text-lg">Game Navigation</h2>
         <div className="flex flex-wrap gap-2 text-sm">
-          <Link
-            href={`/boxscores/${id}` as const}
-            className="rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover"
-          >
+          <Link href={`/boxscores/${id}` as const} className={navIdle}>
             Canonical Box Score URL
           </Link>
           <Link
             href={`/games/${id}?pbp=recent` as const}
-            className={
-              pbpLimit === 50
-                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
-            }
+            className={pbpLimit === 50 ? navActive : navIdle}
           >
             Recent PBP
           </Link>
-          <Link
-            href={`/games/${id}` as const}
-            className={
-              pbpLimit === 250
-                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
-            }
-          >
+          <Link href={`/games/${id}` as const} className={pbpLimit === 250 ? navActive : navIdle}>
             Extended PBP
           </Link>
           <Link
             href={`/games/${id}?pbp=full` as const}
-            className={
-              pbpLimit === 1000
-                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
-            }
+            className={pbpLimit === 1000 ? navActive : navIdle}
           >
             Fuller PBP
           </Link>

@@ -1,94 +1,66 @@
 /**
  * @fileoverview Tailwind CSS utility classes for consistent table styling.
  *
- * Provides reusable style constants for:
- * - Table containers with horizontal scrolling
- * - Header and body row styling
- * - Cell alignment (left/right) with proper padding
- * - Interactive elements (sortable headers, links)
- *
- * All classes follow the design system defined in globals.css using
- * custom CSS variables for theming.
+ * Tonal separation (Digital Cathedral): no grid borders; alternating surfaces;
+ * primary header row with on-primary text.
  *
  * @module @/lib/table-styles
  */
 
 import { cn } from '@/lib/utils';
 
-/**
- * Container class enabling horizontal scroll for overflow tables.
- * Applied to the wrapper div around tables.
- */
+/** Horizontal scroll wrapper for wide tables */
 export const tableContainerClass = 'overflow-x-auto';
 
-/**
- * Base table styles for full-width, collapsed borders with small text.
- *
- * - `min-w-full`: Ensures table fills container width
- * - `border-collapse`: Removes gaps between cell borders
- * - `text-xs`: Small text size for dense data display
- * - `text-ink`: Primary text color from design system
- */
-export const tableClass = 'min-w-full border-collapse text-xs text-ink';
-
-/**
- * Header row background color using theme's thead color.
- */
-export const tableHeadRowClass = 'bg-thead';
-
-/**
- * Body row styles with alternating colors and hover effect.
- *
- * - `odd:bg-white`: White background for odd rows
- * - `even:bg-row-alt`: Alternate background for even rows
- * - `hover:bg-row-hover`: Highlight on mouse hover
- * - `transition-colors duration-200`: Smooth color transitions
- */
-export const tableBodyRowClass =
-  'transition-colors duration-200 odd:bg-white even:bg-row-alt hover:bg-row-hover';
-
-/**
- * Styles for clickable header buttons used for sorting.
- *
- * - Full width for easy clicking
- * - Hover color change to indicate interactivity
- * - Pointer cursor
- */
-export const tableHeaderButtonClass =
-  'w-full cursor-pointer transition-colors duration-150 hover:text-muted';
-
-/**
- * Link styles within table cells.
- *
- * Uses underline decoration that appears on hover for subtle
- * indication of clickable content.
- */
-export const tableLinkClass =
-  'text-link underline decoration-transparent transition-all duration-200 hover:decoration-current';
-
-/**
- * Generates header cell classes with optional right alignment.
- *
- * @param align - Text alignment direction ("left" or "right")
- * @returns Combined class string with border, padding, and alignment
- * @example
- * ```tsx
- * <th className={tableHeaderCellClass("right")}>PTS</th>
- * ```
- */
-export function tableHeaderCellClass(align?: 'left' | 'right'): string {
-  return cn('border border-line px-2 py-1', align === 'right' ? 'text-right' : 'text-left');
+/** Optional outer shell for a table block */
+export function tableSectionClass(variant: 'default' | 'dense' | 'hero' = 'default'): string {
+  if (variant === 'dense') {
+    return 'surface-inset p-2';
+  }
+  if (variant === 'hero') {
+    return 'surface-altar p-4';
+  }
+  return 'surface-pedestal p-3';
 }
 
+export const tableClass =
+  'min-w-full border-collapse text-xs text-ink [font-feature-settings:"tnum"]';
+
+/** Primary header row — lapis background, light inscription text */
+export const tableHeadRowClass = 'bg-thead text-thead-ink';
+
 /**
- * Generate a class string for a table body cell with optional right alignment.
- *
- * @param align - If `"right"`, adds right-alignment and `tabular-nums` for numeric alignment; otherwise left-aligns
- * @returns The combined Tailwind CSS class string including border, padding, and alignment classes
+ * Body rows: alternating marble tones, generous hover.
  */
-export function tableCellClass(align?: 'left' | 'right'): string {
+export const tableBodyRowClass =
+  'transition-colors duration-200 odd:bg-surface even:bg-row-alt hover:bg-row-hover';
+
+export const tableHeaderButtonClass =
+  'w-full cursor-pointer text-left font-semibold text-inherit transition-colors duration-150 hover:text-[var(--dc-tertiary-fixed)]';
+
+export const tableLinkClass =
+  'text-link underline decoration-transparent transition-all duration-200 hover:decoration-current hover:brightness-110';
+
+export type TableAlign = 'left' | 'right';
+
+export function tableHeaderCellClass(align?: TableAlign): string {
+  return cn('px-3 py-2.5 font-semibold', align === 'right' ? 'text-right' : 'text-left');
+}
+
+export function tableCellClass(align?: TableAlign): string {
   return cn(
-    'border border-line-soft px-2 py-1',
+    'px-3 py-2.5 align-middle',
     align === 'right' ? 'text-right tabular-nums' : 'text-left'
   );
+}
+
+/** Highlighted row (e.g. keyed emphasis) without borders */
+export function tableRowClass(isHighlighted?: boolean): string {
+  if (isHighlighted === true) {
+    return cn(
+      'transition-colors duration-200 hover:bg-row-hover',
+      'bg-[color-mix(in_srgb,var(--dc-tertiary-container)_12%,var(--dc-surface-container-low))]'
+    );
+  }
+  return tableBodyRowClass;
 }

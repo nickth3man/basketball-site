@@ -50,17 +50,21 @@ export default async function BirthdaysPage({
     paginatedBirthdays.totalItems === 0
       ? 'No birthdays found for this month filter.'
       : `Showing ${paginatedBirthdays.startItem}-${paginatedBirthdays.endItem} of ${paginatedBirthdays.totalItems} birthday dates.`;
+  const monthActiveClass =
+    'rounded-md bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] px-3 py-2 font-semibold text-heading shadow-input';
+  const monthIdleClass =
+    'rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-2 outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover';
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
-      <h1 className="mb-1 text-3xl font-bold text-heading">NBA Player Birthdays</h1>
+      <h1 className="mb-1 inscription-title text-3xl">NBA Player Birthdays</h1>
       <p className="mb-5 text-sm text-muted">
         Find players by their birth date and filter the calendar by month.
       </p>
 
       {todayBirthdays.length > 0 && (
-        <section className="mb-6 panel-paper border-l-4 border-accent p-4">
-          <h2 className="mb-3 text-xl font-bold text-heading">
+        <section className="mb-6 surface-altar p-5">
+          <h2 className="mb-3 inscription-title text-xl">
             Today&apos;s Birthdays ({MONTH_NAMES[today.getMonth()]} {today.getDate()})
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -70,7 +74,7 @@ export default async function BirthdaysPage({
                 href={
                   `/players/${player.bref_id.slice(0, 1).toLowerCase()}/${player.bref_id}` as Route
                 }
-                className="rounded bg-accent/10 px-3 py-2 text-sm font-medium text-accent hover:bg-accent/20"
+                className="stat-coin ambient-glow-hover hover:brightness-105"
               >
                 {player.full_name}
               </Link>
@@ -83,11 +87,7 @@ export default async function BirthdaysPage({
         <div className="mb-4 flex flex-wrap gap-2 text-sm">
           <Link
             href="/friv/birthdays"
-            className={
-              activeMonth == null
-                ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
-            }
+            className={activeMonth == null ? monthActiveClass : monthIdleClass}
           >
             All Months
           </Link>
@@ -97,11 +97,7 @@ export default async function BirthdaysPage({
               <Link
                 key={name}
                 href={`/friv/birthdays?month=${monthValue}` as Route}
-                className={
-                  activeMonth === monthValue
-                    ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                    : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
-                }
+                className={activeMonth === monthValue ? monthActiveClass : monthIdleClass}
               >
                 {name}
               </Link>
@@ -118,11 +114,8 @@ export default async function BirthdaysPage({
               </tr>
             </thead>
             <tbody>
-              {paginatedBirthdays.items.map(({ month, day, players }, index) => (
-                <tr
-                  key={`${month}-${day}`}
-                  className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
-                >
+              {paginatedBirthdays.items.map(({ month, day, players }) => (
+                <tr key={`${month}-${day}`} className={tableBodyRowClass}>
                   <td className={tableCellClass('left')}>
                     {MONTH_NAMES[month - 1]} {day}
                   </td>
