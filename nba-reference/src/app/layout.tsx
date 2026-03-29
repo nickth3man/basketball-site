@@ -4,7 +4,7 @@
  * This is the root layout for the Next.js App Router. It provides:
  * - Global CSS imports and font configuration
  * - Site header navigation (sticky)
- * - Geist font family (Sans and Mono variants)
+ * - Display/body serif fonts (Digital Cathedral typography)
  * - HTML lang attribute for accessibility
  *
  * @module @/app/layout
@@ -12,30 +12,29 @@
 
 import type React from 'react';
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Newsreader, Noto_Serif } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/site-header';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ThemeProvider } from '@/components/theme';
+import { WebVitalsReporter } from '@/components/web-vitals';
 import { getSiteUrl, getSiteUrlObject } from '@/lib/site-config';
 import { cn } from '@/lib/utils';
 
-/**
- * Geist Sans font configuration.
- * Used for body text and UI elements.
- */
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+/** Inscription / headlines — high-contrast serif */
+const fontDisplay = Noto_Serif({
+  variable: '--font-display',
   subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  display: 'swap',
 });
 
-/**
- * Geist Mono font configuration.
- * Used for code, numbers, and tabular data.
- */
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+/** Body / manuscript text */
+const fontBody = Newsreader({
+  variable: '--font-body',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
 });
 
 const siteUrl = getSiteUrl();
@@ -76,11 +75,12 @@ export default function RootLayout({
 }>): React.JSX.Element {
   return (
     <html lang="en">
-      <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
+      <body className={cn(fontDisplay.variable, fontBody.variable, 'font-sans antialiased')}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <WebVitalsReporter />
           <a
             href="#main-content"
-            className="sr-only absolute top-4 left-4 z-50 rounded bg-paper px-3 py-2 text-sm text-heading shadow-popover focus:not-sr-only"
+            className="sr-only absolute top-4 left-4 z-50 surface-altar rounded-md px-3 py-2 text-sm text-heading shadow-popover focus:not-sr-only focus:ring-2 focus:ring-[var(--focus-ring)] focus:ring-offset-2 focus:ring-offset-[var(--paper-soft)]"
           >
             Skip to main content
           </a>

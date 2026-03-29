@@ -128,11 +128,11 @@ export default async function PlayerSplitsPage({
       <div className="mb-6">
         <Link
           href={`/players/${letter}/${id}` as Route}
-          className="mb-2 inline-block text-link hover:underline"
+          className="mb-2 inline-block text-link transition-colors hover:brightness-110"
         >
           ← Back to Player
         </Link>
-        <h1 className="text-3xl font-bold text-heading">Player Splits</h1>
+        <h1 className="inscription-title text-3xl">Player Splits</h1>
         {activeSeason != null && activeSeason.length > 0 && (
           <p className="mt-1 text-muted">Season: {activeSeason}</p>
         )}
@@ -140,7 +140,7 @@ export default async function PlayerSplitsPage({
 
       {availableSeasons.length > 0 ? (
         <section className="mb-6 panel-paper p-4">
-          <h2 className="mb-3 text-lg font-bold text-heading">Season Selector</h2>
+          <h2 className="mb-3 inscription-title text-lg">Season Selector</h2>
           <div className="flex flex-wrap gap-2 text-sm">
             {availableSeasons.map(seasonId => (
               <Link
@@ -150,8 +150,8 @@ export default async function PlayerSplitsPage({
                 }
                 className={
                   seasonId === activeSeason
-                    ? 'rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading'
-                    : 'rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover'
+                    ? 'rounded-md bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] px-3 py-2 font-semibold text-heading shadow-input'
+                    : 'rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-2 outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover'
                 }
               >
                 {seasonId}

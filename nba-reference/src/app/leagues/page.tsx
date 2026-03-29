@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getSeasonList } from '@/lib/queries';
 import { seasonIdToLeagueSlug } from '@/lib/season-utils';
 import {
+  tableBodyRowClass,
   tableCellClass,
   tableClass,
   tableContainerClass,
@@ -37,14 +38,11 @@ export default function LeaguesPage(): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {seasons.map((season, seasonIndex) => {
+            {seasons.map(season => {
               const leagueSlug = seasonIdToLeagueSlug(season.season_id) ?? season.season_id;
 
               return (
-                <tr
-                  key={season.season_id}
-                  className={seasonIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}
-                >
+                <tr key={season.season_id} className={tableBodyRowClass}>
                   <td className={tableCellClass('left')}>{season.season_id}</td>
                   <td className={tableCellClass('left')}>
                     <Link className={tableLinkClass} href={`/leagues/${leagueSlug}` as Route}>

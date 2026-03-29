@@ -13,6 +13,7 @@
 
 import Database from 'better-sqlite3';
 import path from 'node:path';
+import { logQuery } from '@/lib/logger';
 
 /** Singleton database instance - initialized on first access */
 let db: Database.Database | null = null;
@@ -167,11 +168,16 @@ export function getDb(): Database.Database {
 export function getCachedQueryOne<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
   const key = `one:${buildQueryCacheKey(sql, params)}`;
   const cached = readCachedResult<T>(key);
-  if (cached !== undefined) return cached;
+  if (cached !== undefined) {
+    logQuery(sql, 0, true);
+    return cached;
+  }
 
+  const start = performance.now();
   const result = getDb()
     .prepare(sql)
     .get(...params) as T;
+  logQuery(sql, performance.now() - start, false);
   return writeCachedResult(key, result, ttlMs);
 }
 
@@ -187,11 +193,16 @@ export function getCachedQueryOne<T>(sql: string, params: unknown[], ttlMs = 30_
 export function getCachedQueryMany<T>(sql: string, params: unknown[], ttlMs = 30_000): T {
   const key = `many:${buildQueryCacheKey(sql, params)}`;
   const cached = readCachedResult<T>(key);
-  if (cached !== undefined) return cached;
+  if (cached !== undefined) {
+    logQuery(sql, 0, true);
+    return cached;
+  }
 
+  const start = performance.now();
   const result = getDb()
     .prepare(sql)
     .all(...params) as T;
+  logQuery(sql, performance.now() - start, false);
   return writeCachedResult(key, result, ttlMs);
 }
 

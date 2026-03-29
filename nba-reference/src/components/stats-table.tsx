@@ -16,6 +16,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { convertRowsToCsvWithColumns } from '@/lib/csv';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { routes } from '@/lib/routes';
 import { seasonIdToLeagueSlug } from '@/lib/season-utils';
@@ -304,18 +305,16 @@ export function StatsTable({ columns, rows, initialSort, tableId }: StatsTablePr
   };
 
   return (
-    <div className={tableContainerClass}>
+    <div className={cn(tableContainerClass, 'surface-inset rounded-lg p-1 sm:p-2')}>
       {!hasColumns ? null : (
         <>
-          {/* CSV Export button */}
-          <div className="mb-2 flex justify-end">
-            <Button onClick={handleExportCsv} size="sm">
+          <div className="mb-3 flex justify-end">
+            <Button onClick={handleExportCsv} size="sm" variant="ghost" className="text-link">
               Export CSV
             </Button>
           </div>
 
-          {/* Data table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-md">
             <table className={tableClass}>
               <thead>
                 <tr className={tableHeadRowClass}>

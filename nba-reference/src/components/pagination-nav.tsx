@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { buildPaginationTokens } from '@/lib/pagination';
+import { cn } from '@/lib/utils';
 
 interface PaginationNavProps {
   currentPage: number;
@@ -32,6 +33,12 @@ function buildPageHref(
   return search.length > 0 ? `${pathname}?${search}` : pathname;
 }
 
+const pageBtnClass =
+  'rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-2 outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all duration-200 hover:bg-button-hover hover:shadow-[0_0_10px_color-mix(in_srgb,var(--dc-tertiary-container)_18%,transparent)]';
+
+const pageActiveClass =
+  'rounded-md bg-[color-mix(in_srgb,var(--dc-tertiary-container)_22%,var(--dc-surface-container-highest))] px-3 py-2 font-semibold text-heading shadow-[var(--shadow-input)]';
+
 export function PaginationNav({
   currentPage,
   pathname,
@@ -48,19 +55,23 @@ export function PaginationNav({
   return (
     <nav
       aria-label="Pagination"
-      className="mt-4 flex flex-col gap-3 border-t border-line-soft pt-4 sm:flex-row sm:items-center sm:justify-between"
+      className="mt-6 flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between"
     >
       <p className="text-sm text-muted">{summary}</p>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {currentPage > 1 ? (
-          <Link
-            href={buildPageHref(pathname, currentPage - 1, query)}
-            className="rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover"
-          >
+          <Link href={buildPageHref(pathname, currentPage - 1, query)} className={pageBtnClass}>
             Previous
           </Link>
         ) : (
-          <span className="rounded border border-line px-3 py-2 text-muted">Previous</span>
+          <span
+            className={cn(
+              pageBtnClass,
+              'cursor-not-allowed opacity-45 shadow-none hover:bg-[var(--dc-surface-container-highest)] hover:shadow-none'
+            )}
+          >
+            Previous
+          </span>
         )}
 
         {tokens.map((token, index) =>
@@ -69,18 +80,14 @@ export function PaginationNav({
               ...
             </span>
           ) : token === currentPage ? (
-            <span
-              key={`page-${token}`}
-              aria-current="page"
-              className="rounded border border-line bg-paper-soft px-3 py-2 font-semibold text-heading"
-            >
+            <span key={`page-${token}`} aria-current="page" className={pageActiveClass}>
               {token}
             </span>
           ) : (
             <Link
               key={`page-${token}`}
               href={buildPageHref(pathname, token, query)}
-              className="rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover"
+              className={pageBtnClass}
             >
               {token}
             </Link>
@@ -88,14 +95,18 @@ export function PaginationNav({
         )}
 
         {currentPage < totalPages ? (
-          <Link
-            href={buildPageHref(pathname, currentPage + 1, query)}
-            className="rounded border border-line bg-button-bg px-3 py-2 hover:bg-button-hover"
-          >
+          <Link href={buildPageHref(pathname, currentPage + 1, query)} className={pageBtnClass}>
             Next
           </Link>
         ) : (
-          <span className="rounded border border-line px-3 py-2 text-muted">Next</span>
+          <span
+            className={cn(
+              pageBtnClass,
+              'cursor-not-allowed opacity-45 shadow-none hover:bg-[var(--dc-surface-container-highest)] hover:shadow-none'
+            )}
+          >
+            Next
+          </span>
         )}
       </div>
     </nav>

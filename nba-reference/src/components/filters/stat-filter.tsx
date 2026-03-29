@@ -26,7 +26,7 @@ export function StatFilter({ label, paramKey, placeholder = 'Min' }: StatFilterP
           setValue(e.target.value);
         }}
         placeholder={placeholder}
-        className="w-20 rounded border border-line bg-paper px-2 py-1 text-sm"
+        className="w-20 rounded-md bg-paper-soft/95 px-2 py-1.5 text-sm text-ink shadow-input outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_16%,transparent)] focus:border-transparent focus:ring-2 focus:ring-[var(--focus-ring)] focus:outline-none"
         min="0"
         step="0.1"
       />

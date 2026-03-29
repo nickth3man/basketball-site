@@ -8,6 +8,9 @@ interface SeasonRangeFilterProps {
   maxYear: number;
 }
 
+const selectClass =
+  'rounded-md bg-paper-soft/95 px-2 py-1.5 text-sm text-ink shadow-input outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_16%,transparent)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]';
+
 export function SeasonRangeFilter({ minYear, maxYear }: SeasonRangeFilterProps): JSX.Element {
   const [startYear, setStartYear] = useFilterState('startYear', '');
   const [endYear, setEndYear] = useFilterState('endYear', '');
@@ -15,7 +18,7 @@ export function SeasonRangeFilter({ minYear, maxYear }: SeasonRangeFilterProps):
   const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <label htmlFor="season-start" className="text-sm text-muted">
         From
       </label>
@@ -25,7 +28,7 @@ export function SeasonRangeFilter({ minYear, maxYear }: SeasonRangeFilterProps):
         onChange={e => {
           setStartYear(e.target.value);
         }}
-        className="rounded border border-line bg-paper px-2 py-1 text-sm"
+        className={selectClass}
       >
         <option value="">All</option>
         {years.map(year => (
@@ -43,7 +46,7 @@ export function SeasonRangeFilter({ minYear, maxYear }: SeasonRangeFilterProps):
         onChange={e => {
           setEndYear(e.target.value);
         }}
-        className="rounded border border-line bg-paper px-2 py-1 text-sm"
+        className={selectClass}
       >
         <option value="">All</option>
         {years.map(year => (

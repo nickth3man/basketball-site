@@ -35,6 +35,24 @@ export interface PlayerComparisonData {
   stats: PlayerCareerStats;
 }
 
+export interface TeamComparisonInfo {
+  abbreviation: string;
+  full_name: string;
+  conference: string | null;
+  division: string | null;
+}
+
+export interface TeamSeasonStats {
+  wins: number | null;
+  losses: number | null;
+  o_rtg: number | null;
+  d_rtg: number | null;
+  n_rtg: number | null;
+  pace: number | null;
+  ts_pct: number | null;
+  e_fg_pct: number | null;
+}
+
 /**
  * Fetches basic player information for comparison display.
  *
@@ -101,4 +119,30 @@ export function getPlayerComparisonData(brefId: string): PlayerComparisonData | 
   }
 
   return { info, stats };
+}
+
+export function getTeamInfo(abbrev: string): TeamComparisonInfo | undefined {
+  return getCachedQueryOne<TeamComparisonInfo>(
+    'SELECT abbreviation, full_name, conference, division FROM dim_team WHERE abbreviation = ?',
+    [abbrev]
+  );
+}
+
+export function getTeamCurrentStats(abbrev: string): TeamSeasonStats | undefined {
+  return getCachedQueryOne<TeamSeasonStats>(
+    `SELECT
+      w as wins,
+      l as losses,
+      ROUND(o_rtg, 1) as o_rtg,
+      ROUND(d_rtg, 1) as d_rtg,
+      ROUND(n_rtg, 1) as n_rtg,
+      ROUND(pace, 1) as pace,
+      ROUND(ts_pct, 3) as ts_pct,
+      ROUND(e_fg_pct, 3) as e_fg_pct
+    FROM fact_team_season
+    WHERE bref_abbrev = ? AND lg = 'NBA'
+    ORDER BY season_id DESC
+    LIMIT 1`,
+    [abbrev]
+  );
 }

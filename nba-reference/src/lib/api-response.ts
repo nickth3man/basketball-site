@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { API_CORS_HEADERS, API_NO_STORE_HEADERS } from '@/lib/api-headers';
+import { logError } from '@/lib/logger';
 import { extractClientIp, getRateLimitStatus, RATE_LIMIT } from '@/middleware/rate-limit';
 
 interface ApiErrorResponse {
@@ -68,8 +69,7 @@ export function logApiError(
   error: unknown,
   metadata: Record<string, string | number | boolean | null | undefined> = {}
 ): void {
-  console.error(`[api:${route}] request failed`, {
-    timestamp: new Date().toISOString(),
+  logError(`api:${route} failed`, {
     ...metadata,
     errorName: error instanceof Error ? error.name : 'UnknownError',
     error: error instanceof Error ? error.message : String(error),

@@ -1,6 +1,7 @@
 import type React from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
+import { buttonStyles } from '@/components/ui/button';
 
 const exploreLinks = [
   { href: '/search' as Route, label: 'Search' },
@@ -22,15 +23,11 @@ const exploreLinks = [
 
 export function HomeExploreLinks(): React.JSX.Element {
   return (
-    <section className="mb-8 fade-slide-in panel-paper p-3 [animation-delay:170ms]">
-      <h2 className="mb-2 text-xl font-bold text-heading">Explore More</h2>
+    <section className="mb-10 fade-slide-in surface-altar p-5 [animation-delay:170ms]">
+      <h2 className="mb-4 inscription-title text-xl">Explore More</h2>
       <div className="flex flex-wrap gap-2 text-sm">
         {exploreLinks.map(link => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="rounded border border-line bg-button-bg px-3 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-button-hover active:translate-y-0 active:scale-[0.98]"
-          >
+          <Link key={link.href} href={link.href} className={buttonStyles({ variant: 'chip' })}>
             {link.label}
           </Link>
         ))}

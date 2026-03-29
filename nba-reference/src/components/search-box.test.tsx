@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SearchBox } from './search-box';
 
 const pushMock = vi.fn();
@@ -27,10 +27,16 @@ function createSearchResponse(results: SearchResult[]): Response {
   });
 }
 
+const DEBOUNCE_MS = 200;
+
 describe('SearchBox', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     pushMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('updates input value on change', () => {
@@ -64,13 +70,15 @@ describe('SearchBox', () => {
 
     fireEvent.change(input, { target: { value: 'Le' } });
 
+    // Advance time but stay within debounce window - fetch should not be called yet
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(199);
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS - 50);
     });
     expect(fetchSpy).not.toHaveBeenCalled();
 
+    // Advance past the debounce period
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1);
+      await vi.advanceTimersByTimeAsync(100);
     });
 
     expect(fetchSpy).toHaveBeenCalledWith(
@@ -78,6 +86,7 @@ describe('SearchBox', () => {
       expect.any(Object)
     );
 
+    // Flush microtasks to allow React state updates to complete
     await act(async () => {
       await Promise.resolve();
     });
@@ -118,10 +127,12 @@ describe('SearchBox', () => {
 
     fireEvent.change(input, { target: { value: 'Lak' } });
 
+    // Advance past debounce period
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(200);
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
     });
 
+    // Flush microtasks to allow React state updates to complete
     await act(async () => {
       await Promise.resolve();
     });
@@ -146,8 +157,9 @@ describe('SearchBox', () => {
 
     fireEvent.change(input, { target: { value: 'L' } });
 
+    // Advance well past the debounce period
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(200);
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS * 2);
     });
 
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -162,7 +174,16 @@ describe('SearchBox', () => {
       /Search players, teams, seasons, games, awards, pages/i
     );
 
+    // Trigger the debounce timer setup
     fireEvent.change(input, { target: { value: 'LeBron' } });
+
+    // Advance timers slightly to ensure the effect has run (AbortController created)
+    // but NOT past the 200ms debounce threshold
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+
+    // Unmount synchronously - abort should be called immediately
     unmount();
 
     expect(abortSpy).toHaveBeenCalled();

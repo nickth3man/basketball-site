@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import {
   getPlayerAdjustedShootingStats,
   getPlayerAdvancedSeasonStats,
@@ -46,7 +47,7 @@ export interface PlayerPageData {
   summary: ReturnType<typeof getPlayerCareerSummary>;
 }
 
-export function getPlayerPageData(brefId: string): PlayerPageData | undefined {
+export const getPlayerPageData = cache((brefId: string): PlayerPageData | undefined => {
   const player = getPlayerByBrefId(brefId);
   if (player == null) {
     return undefined;
@@ -83,4 +84,4 @@ export function getPlayerPageData(brefId: string): PlayerPageData | undefined {
     shootingStats,
     summary,
   };
-}
+});

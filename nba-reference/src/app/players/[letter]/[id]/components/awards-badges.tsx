@@ -18,11 +18,11 @@ export function AwardsBadges({ awardCounts }: AwardsBadgesProps): React.JSX.Elem
   }
 
   return (
-    <section className="mb-5 border border-line-mid bg-white p-3">
-      <h2 className="mb-2 text-lg font-bold">Leaderboards, Awards, & Honors</h2>
+    <section className="mb-6 surface-pedestal p-4">
+      <h2 className="mb-3 inscription-title text-lg">Leaderboards, Awards, & Honors</h2>
       <div className="flex flex-wrap gap-2">
         {awardCounts.map(([name, count]) => (
-          <span key={name} className="rounded border border-line bg-button-bg px-2 py-1 text-xs">
+          <span key={name} className="stat-coin">
             {count}x {name}
           </span>
         ))}

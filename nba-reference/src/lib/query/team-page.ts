@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import {
   getTeamByAbbrev,
   getTeamCurrentSeasonSummary,
@@ -24,7 +25,7 @@ export interface TeamPageData {
   team: ReturnType<typeof getTeamByAbbrev>;
 }
 
-export function getTeamPageData(teamAbbrev: string): TeamPageData | undefined {
+export const getTeamPageData = cache((teamAbbrev: string): TeamPageData | undefined => {
   const team = getTeamByAbbrev(teamAbbrev);
   if (team == null) {
     return undefined;
@@ -58,4 +59,4 @@ export function getTeamPageData(teamAbbrev: string): TeamPageData | undefined {
     seasonStats,
     team,
   };
-}
+});

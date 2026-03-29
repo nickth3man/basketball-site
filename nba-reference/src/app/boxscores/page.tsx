@@ -8,6 +8,7 @@ import {
   getPreviousCompletedGameDate,
 } from '@/lib/query/boxscores';
 import {
+  tableBodyRowClass,
   tableCellClass,
   tableClass,
   tableContainerClass,
@@ -29,7 +30,7 @@ export default async function BoxscoresPage({
   if (latestDate == null) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <h1 className="mb-3 text-2xl font-bold">Box Scores</h1>
+        <h1 className="mb-3 inscription-title text-2xl">Box Scores</h1>
         <p className="text-sm text-muted-strong">No completed games available.</p>
       </main>
     );
@@ -53,14 +54,16 @@ export default async function BoxscoresPage({
       <p className="mb-3 text-sm text-muted-strong">Games played on {safeDate}.</p>
       <div className="mb-4 flex items-center gap-2 text-sm">
         {previousDate == null ? (
-          <span className="rounded border border-line px-2 py-1 text-muted">Previous</span>
+          <span className="surface-inset rounded-md px-3 py-1.5 text-muted opacity-60">
+            Previous
+          </span>
         ) : (
           <Link className={tableLinkClass} href={`/boxscores?date=${previousDate}` as Route}>
             Previous ({previousDate})
           </Link>
         )}
         {nextDate == null ? (
-          <span className="rounded border border-line px-2 py-1 text-muted">Next</span>
+          <span className="surface-inset rounded-md px-3 py-1.5 text-muted opacity-60">Next</span>
         ) : (
           <Link className={tableLinkClass} href={`/boxscores?date=${nextDate}` as Route}>
             Next ({nextDate})
@@ -79,8 +82,8 @@ export default async function BoxscoresPage({
             </tr>
           </thead>
           <tbody>
-            {safeGames.map((game, gameIndex) => (
-              <tr key={game.game_id} className={gameIndex % 2 === 0 ? 'bg-white' : 'bg-row-alt'}>
+            {safeGames.map(game => (
+              <tr key={game.game_id} className={tableBodyRowClass}>
                 <td className={tableCellClass('left')}>{game.away_abbrev}</td>
                 <td className={tableCellClass('right')}>{game.away_score ?? '-'}</td>
                 <td className={tableCellClass('left')}>{game.home_abbrev}</td>

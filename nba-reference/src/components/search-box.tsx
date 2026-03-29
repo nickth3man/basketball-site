@@ -177,12 +177,8 @@ export function SearchBox({ initialQuery = '' }: SearchBoxProps): JSX.Element {
       />
 
       {showDropdown ? (
-        <div className="absolute z-20 mt-1 w-full fade-slide-in overflow-hidden rounded border border-line bg-white shadow-popover">
-          {isLoading ? (
-            <div className="border-b border-dropdown-line px-3 py-3 text-sm text-muted">
-              Searching...
-            </div>
-          ) : null}
+        <div className="absolute z-20 mt-2 w-full fade-slide-in overflow-hidden surface-glass shadow-popover">
+          {isLoading ? <div className="px-4 py-3 text-sm text-muted">Searching...</div> : null}
 
           {!isLoading && results.length > 0 ? (
             <div id={listboxId} role="listbox" aria-label="Search suggestions">
@@ -202,12 +198,14 @@ export function SearchBox({ initialQuery = '' }: SearchBoxProps): JSX.Element {
                     onClick={() => {
                       setHasSearched(false);
                     }}
-                    className={`block border-b border-dropdown-line px-3 py-2 text-sm transition-colors duration-150 last:border-b-0 ${
-                      isActive ? 'bg-paper-soft' : 'hover:bg-paper-soft'
+                    className={`block px-4 py-2.5 text-sm transition-colors duration-150 ${
+                      isActive
+                        ? 'bg-[color-mix(in_srgb,var(--dc-tertiary-container)_14%,var(--dc-surface-container-low))]'
+                        : 'hover:bg-paper-soft/80'
                     }`}
                   >
                     <div className="mb-0.5 flex items-center gap-2">
-                      <span className="text-xs text-label uppercase">
+                      <span className="text-xs font-medium tracking-wide text-label uppercase">
                         {SEARCH_LABELS[result.type]}
                       </span>
                       <span className="font-medium text-ink">{result.label}</span>
@@ -222,15 +220,13 @@ export function SearchBox({ initialQuery = '' }: SearchBoxProps): JSX.Element {
           ) : null}
 
           {!isLoading && hasSearched && results.length === 0 ? (
-            <div className="border-b border-dropdown-line px-3 py-3 text-sm text-muted">
-              No results found.
-            </div>
+            <div className="px-4 py-3 text-sm text-muted">No results found.</div>
           ) : null}
 
           {trimmedQuery.length >= 2 ? (
             <Link
               href={viewAllHref}
-              className="block bg-paper-soft px-3 py-2 text-sm font-medium text-link hover:underline"
+              className="block border-t border-[color-mix(in_srgb,var(--dc-outline-variant)_10%,transparent)] bg-[color-mix(in_srgb,var(--dc-surface-container-low)88%,var(--dc-tertiary-container)12%)] px-4 py-2.5 text-sm font-medium text-link transition-colors hover:brightness-110"
             >
               View all results for &quot;{trimmedQuery}&quot;
             </Link>

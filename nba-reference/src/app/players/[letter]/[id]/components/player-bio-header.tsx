@@ -19,7 +19,7 @@ interface PlayerBioHeaderProps {
  */
 export function PlayerBioHeader({ player, summary }: PlayerBioHeaderProps): React.JSX.Element {
   return (
-    <section className="mb-5 border border-line bg-paper-soft p-4">
+    <section className="mb-6 surface-altar p-5">
       <div className="grid gap-4 md:grid-cols-[140px_1fr_260px]">
         {/* Player headshot from Basketball-Reference CDN */}
         <div>
@@ -28,14 +28,14 @@ export function PlayerBioHeader({ player, summary }: PlayerBioHeaderProps): Reac
             alt={`Photo of ${player.full_name}`}
             width={130}
             height={170}
-            className="h-42.5 w-32.5 border border-image-line object-cover"
+            className="h-42.5 w-32.5 rounded-md object-cover outline outline-1 outline-[color-mix(in_srgb,var(--dc-tertiary-fixed)_25%,transparent)]"
           />
         </div>
 
         {/* Basic player info grid */}
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <h1 className="text-3xl font-bold">{player.full_name}</h1>
+            <h1 className="inscription-title text-3xl">{player.full_name}</h1>
             <StarButton id={player.bref_id} type="player" name={player.full_name} />
           </div>
           <div className="grid gap-1 text-sm text-muted-strong sm:grid-cols-2">
@@ -69,8 +69,8 @@ export function PlayerBioHeader({ player, summary }: PlayerBioHeaderProps): Reac
         </div>
 
         {/* Career summary stats card */}
-        <div className="border border-line-mid bg-white p-3 text-xs">
-          <div className="mb-2 font-bold tracking-wide text-crumb uppercase">Career Summary</div>
+        <div className="surface-inset p-4 text-xs">
+          <div className="mb-2 editorial-kicker">Career Summary</div>
           <div className="grid grid-cols-2 gap-y-1">
             <span>G</span>
             <span className="text-right tabular-nums">{summary['g'] ?? '-'}</span>

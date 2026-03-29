@@ -49,6 +49,10 @@ export default async function TeamSalariesPage({
   if (seasonId == null) notFound();
 
   const salaries = getTeamSalariesBySeason(team.abbreviation, seasonId);
+  const seasonChipActiveClass =
+    'rounded-md bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] px-2 py-1 font-semibold text-heading shadow-input';
+  const seasonChipIdleClass =
+    'rounded-md bg-[var(--dc-surface-container-highest)] px-2 py-1 outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover';
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -57,7 +61,7 @@ export default async function TeamSalariesPage({
         <Link href={`/teams/${team.abbreviation}` as Route}>{team.abbreviation}</Link> / Salaries
       </div>
 
-      <h1 className="mb-2 text-3xl font-bold">{team.full_name} Salaries</h1>
+      <h1 className="mb-2 inscription-title text-3xl">{team.full_name} Salaries</h1>
       <p className="mb-4 text-sm text-muted-strong">NBA-only salary records by season.</p>
 
       <div className="mb-4 flex flex-wrap gap-2 text-xs">
@@ -65,11 +69,7 @@ export default async function TeamSalariesPage({
           <Link
             key={s}
             href={`/teams/${team.abbreviation}/salaries?season=${encodeURIComponent(s)}` as Route}
-            className={
-              s === seasonId
-                ? 'rounded border border-line bg-button-bg px-2 py-1 font-semibold'
-                : 'rounded border border-line px-2 py-1 hover:bg-button-bg'
-            }
+            className={s === seasonId ? seasonChipActiveClass : seasonChipIdleClass}
           >
             {s}
           </Link>

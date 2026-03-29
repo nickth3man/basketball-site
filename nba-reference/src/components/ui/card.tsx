@@ -1,7 +1,7 @@
 import type { HTMLAttributes, JSX } from 'react';
 import { cn } from '@/lib/utils';
 
-type CardVariant = 'paper' | 'soft' | 'white';
+export type CardVariant = 'altar' | 'pedestal' | 'glass' | 'inset';
 
 interface CardProps extends HTMLAttributes<HTMLElement> {
   as?: 'section' | 'div' | 'article' | 'aside';
@@ -9,14 +9,15 @@ interface CardProps extends HTMLAttributes<HTMLElement> {
 }
 
 const variantClassMap: Record<CardVariant, string> = {
-  paper: 'panel-paper p-4',
-  soft: 'border border-line bg-paper-soft p-4',
-  white: 'border border-line-mid bg-white p-3',
+  altar: 'surface-altar p-5',
+  pedestal: 'surface-pedestal p-5',
+  glass: 'surface-glass p-4',
+  inset: 'surface-inset p-3',
 };
 
 export function Card({
   as = 'section',
-  variant = 'paper',
+  variant = 'pedestal',
   className,
   ...props
 }: CardProps): JSX.Element {

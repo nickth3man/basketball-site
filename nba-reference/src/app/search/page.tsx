@@ -1,6 +1,7 @@
 import type React from 'react';
 import Link from 'next/link';
 import { PaginationNav } from '@/components/pagination-nav';
+import { SavedViewsWidget, SaveViewButton } from '@/components/saved-views';
 import { SearchBox } from '@/components/search-box';
 import { getSearchTypeLabel, SEARCH_RESULT_TYPES, searchEntities } from '@/lib/query';
 import type { SearchEntityResult, SearchResultType } from '@/lib/query';
@@ -76,10 +77,13 @@ export default async function SearchPage({
       : paginatedResults.totalItems === 0
         ? 'No matching results.'
         : `Showing ${paginatedResults.startItem}-${paginatedResults.endItem} of ${paginatedResults.totalItems} matches.`;
+  const filterBaseClass = 'rounded-md px-3 py-2 transition-colors';
+  const filterActiveClass = `${filterBaseClass} bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] text-heading shadow-input`;
+  const filterIdleClass = `${filterBaseClass} bg-[var(--dc-surface-container-highest)] text-muted-strong hover:bg-button-hover`;
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
-      <h1 className="mb-1 text-3xl font-bold text-heading">Search</h1>
+      <h1 className="mb-1 inscription-title text-3xl">Search</h1>
       <p className="mb-5 text-sm text-muted">
         Find players, teams, seasons, games, award history, and key site sections from one place.
       </p>
@@ -89,11 +93,7 @@ export default async function SearchPage({
         <div className="mt-4 flex flex-wrap gap-2 text-sm">
           <Link
             href={routes.search(query)}
-            className={`rounded border px-3 py-2 transition-colors ${
-              activeFilter === 'all'
-                ? 'border-line bg-paper-soft text-heading'
-                : 'border-line bg-button-bg text-muted-strong hover:bg-button-hover'
-            }`}
+            className={activeFilter === 'all' ? filterActiveClass : filterIdleClass}
           >
             All Results
           </Link>
@@ -101,17 +101,18 @@ export default async function SearchPage({
             <Link
               key={searchType}
               href={routes.search(query, searchType)}
-              className={`rounded border px-3 py-2 transition-colors ${
-                activeFilter === searchType
-                  ? 'border-line bg-paper-soft text-heading'
-                  : 'border-line bg-button-bg text-muted-strong hover:bg-button-hover'
-              }`}
+              className={activeFilter === searchType ? filterActiveClass : filterIdleClass}
             >
               {getSearchTypeLabel(searchType)}
             </Link>
           ))}
+          {query.length >= 2 ? (
+            <SaveViewButton currentUrl={`/search?q=${encodeURIComponent(query)}${activeFilter !== 'all' ? `&type=${activeFilter}` : ''}`} type="search" />
+          ) : null}
         </div>
       </section>
+
+      <SavedViewsWidget type="search" />
 
       {query.length < 2 ? (
         <section className="panel-paper p-4 text-sm text-muted-strong">
@@ -166,7 +167,7 @@ export default async function SearchPage({
                     <Link
                       key={`${result.type}-${result.id}`}
                       href={result.href}
-                      className="block rounded border border-line-soft bg-white px-4 py-3 transition-colors hover:bg-paper-soft"
+                      className="block surface-inset px-4 py-3 transition-colors hover:bg-paper-soft"
                     >
                       <div className="mb-1 flex items-center gap-2">
                         <span className="text-xs tracking-wide text-label uppercase">

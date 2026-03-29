@@ -117,7 +117,7 @@ export default async function StandingsPage({
             defaultValue={selectedDate}
             className="text-ink"
           />
-          <Button type="submit" variant="accent" size="lg">
+          <Button type="submit" variant="primary" size="lg">
             Update Standings
           </Button>
         </form>

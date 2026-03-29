@@ -88,11 +88,11 @@ export default async function TeamSchedulePage({
       <div className="mb-6">
         <Link
           href={`/teams/${teamAbbrev}` as Route}
-          className="mb-2 inline-block text-link hover:underline"
+          className="mb-2 inline-block text-link transition-colors hover:brightness-110"
         >
           ← Back to {team.full_name}
         </Link>
-        <h1 className="text-3xl font-bold text-heading">{seasonId} Schedule</h1>
+        <h1 className="inscription-title text-3xl">{seasonId} Schedule</h1>
         <p className="mt-1 text-muted">
           {schedule.filter(g => g.result === 'W').length} -{' '}
           {schedule.filter(g => g.result === 'L').length} Record
@@ -114,11 +114,8 @@ export default async function TeamSchedulePage({
                 </tr>
               </thead>
               <tbody>
-                {games.map((game, index) => (
-                  <tr
-                    key={game.game_id}
-                    className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
-                  >
+                {games.map(game => (
+                  <tr key={game.game_id} className={tableBodyRowClass}>
                     <td className={tableCellClass('left')}>{formatDate(game.game_date)}</td>
                     <td className={tableCellClass('left')}>
                       <Link
@@ -147,8 +144,8 @@ export default async function TeamSchedulePage({
                           href={`/boxscores/${game.game_id}` as Route}
                           className={
                             game.result === 'W'
-                              ? 'font-semibold text-green-600 hover:underline'
-                              : 'font-semibold text-red-600 hover:underline'
+                              ? 'font-semibold text-green-600 transition-colors hover:brightness-110'
+                              : 'font-semibold text-red-600 transition-colors hover:brightness-110'
                           }
                         >
                           {game.result} ({game.team_score} - {game.opp_score})

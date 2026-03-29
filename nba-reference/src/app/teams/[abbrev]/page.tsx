@@ -16,29 +16,77 @@
  */
 
 import type { JSX } from 'react';
+import type { Metadata } from 'next';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { StarButton } from '@/components/favorites';
 import { RelatedLinksPanel } from '@/components/related-links-panel';
 import { StatsTable } from '@/components/stats-table';
+import { StructuredData } from '@/components/structured-data';
 import { formatSignedNumber } from '@/lib/formatters';
 import { getTeamPageData } from '@/lib/query';
 import { routes } from '@/lib/routes';
+import { getSiteUrl } from '@/lib/site-config';
 import { notFound } from 'next/navigation';
 import { validateTeamAbbrev } from '@/lib/validation';
 import { seasonIdToEndYear } from '@/lib/season-utils';
 
-/**
- * Render the team detail dashboard for the team identified by the route abbreviation.
- *
- * @param params - Promise resolving to route params containing the `abbrev` route parameter
- * @returns The JSX element for the team's detail page
- */
+interface TeamPageParams {
+  params: Promise<{ abbrev: string }>;
+}
+
+export async function generateMetadata({ params }: TeamPageParams): Promise<Metadata> {
+  const { abbrev } = await params;
+  try {
+    validateTeamAbbrev(abbrev.toUpperCase());
+  } catch {
+    return {};
+  }
+
+  const teamPageData = getTeamPageData(abbrev.toUpperCase());
+  const team = teamPageData?.team;
+  if (team == null) return {};
+
+  const siteUrl = getSiteUrl();
+  const title = `${team.full_name} Stats | NBA Reference`;
+  const description = `Complete team statistics for the ${team.full_name}. View roster, schedule, four factors, leaders, and franchise history.`;
+  const url = `${siteUrl}/teams/${abbrev.toUpperCase()}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'website' },
+    twitter: { card: 'summary', title, description },
+  };
+}
+
+function getTeamJsonLd(
+  abbrev: string,
+  team: { full_name: string; conference: string | null; division: string | null },
+  current: Record<string, unknown> | null
+): Record<string, unknown> {
+  const siteUrl = getSiteUrl();
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SportsTeam',
+    name: team.full_name,
+    url: `${siteUrl}/teams/${abbrev}`,
+    sport: 'Basketball',
+    ...(team.conference != null ? { memberOf: { '@type': 'SportsOrganization', name: `NBA ${team.conference} Conference` } } : {}),
+    ...(current?.['w'] != null && current['l'] != null
+      ? { additionalProperty: [
+          { '@type': 'PropertyValue', name: 'Wins', value: current['w'] },
+          { '@type': 'PropertyValue', name: 'Losses', value: current['l'] },
+        ] }
+      : {}),
+  };
+}
+
 export default async function TeamPage({
   params,
-}: {
-  params: Promise<{ abbrev: string }>;
-}): Promise<JSX.Element> {
+}: TeamPageParams): Promise<JSX.Element> {
   const { abbrev } = await params;
 
   // Validate team abbreviation format before querying
@@ -101,18 +149,23 @@ export default async function TeamPage({
     { id: 'history', label: 'Season History' },
   ];
 
+  const seasonChipClass =
+    'rounded-md bg-[var(--dc-surface-container-highest)] px-2 py-1 text-xs outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover';
+  const jsonLd = getTeamJsonLd(team.abbreviation, team, current ?? null);
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
+      <StructuredData data={jsonLd} />
       {/* Breadcrumb navigation */}
       <div className="mb-1 text-xs text-crumb">
         <Link href="/">Home</Link> / <Link href="/teams">Teams</Link> / {team.abbreviation}
       </div>
 
       {/* Team profile header */}
-      <section id="summary" className="mb-5 border border-line bg-paper-soft p-4">
+      <section id="summary" className="mb-6 surface-altar p-5">
         <div className="mb-2 text-xs text-crumb">{seasonLabel} Team Profile</div>
         <div className="mb-2 flex items-center gap-2">
-          <h1 className="text-3xl font-bold">{team.full_name}</h1>
+          <h1 className="inscription-title text-3xl">{team.full_name}</h1>
           <StarButton id={team.abbreviation} type="team" name={team.full_name} />
         </div>
 
@@ -133,7 +186,7 @@ export default async function TeamPage({
 
         {/* Per-game averages display */}
         {averages ? (
-          <div className="mt-3 grid gap-2 border border-line-soft bg-white p-3 text-xs sm:grid-cols-5 lg:grid-cols-10">
+          <div className="mt-4 grid gap-3 surface-inset p-4 text-xs sm:grid-cols-5 lg:grid-cols-10">
             <div>
               PTS/G: <span className="font-bold tabular-nums">{averages['pts'] ?? '-'}</span>
             </div>
@@ -177,16 +230,13 @@ export default async function TeamPage({
               <Link
                 key={rowSeasonId}
                 href={`/teams/${team.abbreviation}/${endYear}` as Route}
-                className="rounded border border-line bg-button-bg px-2 py-1"
+                className={seasonChipClass}
               >
                 {rowSeasonId}
               </Link>
             );
           })}
-          <Link
-            href={`/teams/${team.abbreviation}/salaries` as Route}
-            className="rounded border border-line bg-button-bg px-2 py-1"
-          >
+          <Link href={`/teams/${team.abbreviation}/salaries` as Route} className={seasonChipClass}>
             Salaries
           </Link>
         </div>
@@ -195,7 +245,7 @@ export default async function TeamPage({
       {/* Main content with sticky sidebar */}
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         {/* Sticky navigation sidebar */}
-        <aside className="h-max border border-line-mid bg-white p-3 lg:sticky lg:top-3">
+        <aside className="h-max surface-pedestal p-4 lg:sticky lg:top-3">
           <div className="mb-2 text-xs font-bold tracking-wide text-crumb uppercase">
             On this page
           </div>

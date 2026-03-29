@@ -10,7 +10,7 @@
  * @module @/lib/db.test
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearQueryCache, getCachedQueryMany, getDb, getLatestSeasonId } from '@/lib/db';
 import { getHomeStandings, getRecentGames } from '@/lib/query/home';
 import { searchEntities } from '@/lib/query/search';
@@ -63,22 +63,33 @@ describe('db utilities', () => {
     expect(results[0]).toHaveProperty('href');
   });
 
-  it('honors helper cache TTLs without statement-level overlap', () => {
-    vi.useFakeTimers();
-    clearQueryCache();
+  describe('cache TTL behavior', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+      clearQueryCache();
+    });
 
-    const db = getDb();
-    const prepareSpy = vi.spyOn(db, 'prepare');
-    const sql = 'SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT ?';
+    it('honors helper cache TTLs without statement-level overlap', () => {
+      vi.useFakeTimers();
+      clearQueryCache();
 
-    getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
-    getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
-    expect(prepareSpy).toHaveBeenCalledTimes(1);
+      const db = getDb();
+      const prepareSpy = vi.spyOn(db, 'prepare');
+      const sql = 'SELECT season_id FROM dim_season ORDER BY start_year DESC LIMIT ?';
 
-    vi.advanceTimersByTime(1_001);
-    getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
-    expect(prepareSpy).toHaveBeenCalledTimes(2);
+      // First call populates cache
+      getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
+      // Second call should hit cache
+      getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
+      expect(prepareSpy).toHaveBeenCalledTimes(1);
 
-    clearQueryCache();
+      // Advance well past the TTL to ensure cache entry is expired
+      // Using 1_100ms (100ms buffer) instead of exact boundary to avoid off-by-one flakes
+      vi.advanceTimersByTime(1_100);
+
+      // Third call should miss cache and re-prepare
+      getCachedQueryMany<Array<{ season_id: string }>>(sql, [1], 1_000);
+      expect(prepareSpy).toHaveBeenCalledTimes(2);
+    });
   });
 });

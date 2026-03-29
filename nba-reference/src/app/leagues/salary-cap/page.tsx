@@ -30,7 +30,10 @@ export default function LeagueSalaryCapPage(): React.JSX.Element {
       />
 
       <div className="mt-4 text-xs text-muted">
-        <Link href={'/leagues' as Route} className="text-link hover:underline">
+        <Link
+          href={'/leagues' as Route}
+          className="text-link transition-colors hover:brightness-110"
+        >
           Back to leagues
         </Link>
       </div>
