@@ -82,6 +82,9 @@ export function SiteHeader(): JSX.Element {
           <Link href={'/friv/birthdays' as Route} className={navLinkClass}>
             Frivolities
           </Link>
+          <Link href={'/friv/immaculate-grid' as Route} className={navLinkClass}>
+            Grid
+          </Link>
           <ThemeToggle />
         </nav>
         <MobileNav />
