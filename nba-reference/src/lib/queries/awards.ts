@@ -7,7 +7,7 @@
  * - ROY (Rookie of the Year) winners
  * - All-NBA teams (First, Second, Third)
  * - All-Defensive teams
- * - Award voting details
+ * - Award voting details (full candidate lists per season)
  *
  * All queries use the cached database layer (60s TTL) for performance.
  *
@@ -24,6 +24,17 @@ export interface AwardWinnerRow {
   votes_received: number | null;
   votes_possible: number | null;
   vote_percentage: number | null;
+}
+
+export interface AwardVotingRow {
+  rank: number;
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+  team_name: string | null;
+  votes_received: number | null;
+  votes_possible: number | null;
+  vote_share: number | null;
 }
 
 export interface AwardHistoryRow extends AwardWinnerRow {
@@ -87,7 +98,7 @@ export function getMVPWinner(seasonId: string): AwardWinnerRow | undefined {
       AND (ps.lg = 'NBA' OR ps.lg IS NULL)
     LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
     WHERE pa.season_id = ?
-      AND pa.award_name = 'MVP'
+      AND pa.award_name = 'NBA MVP'
     ORDER BY pa.votes_received DESC
     LIMIT 1`,
     [seasonId],
@@ -123,9 +134,45 @@ export function getMVPHistory(): AwardHistoryRow[] {
       AND ps.season_id = pa.season_id
       AND (ps.lg = 'NBA' OR ps.lg IS NULL)
     LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-    WHERE pa.award_name = 'MVP'
-    ORDER BY s.start_year DESC`,
+    WHERE pa.award_name = 'NBA MVP'
+    ORDER BY s.start_year DESC, pa.votes_received DESC`,
     [],
+    60_000
+  );
+}
+
+/**
+ * Get full MVP voting breakdown for a specific season (all candidates, sorted by votes).
+ *
+ * @param seasonId - Season identifier (e.g., "2024-25")
+ * @returns Array of all MVP voting candidates sorted by votes descending
+ */
+export function getMVPVotingBySeason(
+  seasonId: string
+): Array<Record<string, string | number | null>> {
+  return getCachedQueryMany<Array<Record<string, string | number | null>>>(
+    `SELECT 
+      ROW_NUMBER() OVER (ORDER BY pa.votes_received DESC) as rank,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev,
+      t.full_name as team_name,
+      pa.votes_received,
+      pa.votes_possible,
+      CASE 
+        WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 1.0 / pa.votes_possible, 4)
+        ELSE NULL
+      END as vote_share
+    FROM fact_player_award pa
+    JOIN dim_player p ON p.bref_id = pa.player_id
+    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
+      AND ps.season_id = pa.season_id
+      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    WHERE pa.season_id = ?
+      AND pa.award_name = 'NBA MVP'
+    ORDER BY pa.votes_received DESC`,
+    [seasonId],
     60_000
   );
 }
@@ -155,8 +202,8 @@ export function getDPOYWinner(seasonId: string): AwardWinnerRow | undefined {
       AND ps.season_id = pa.season_id
       AND (ps.lg = 'NBA' OR ps.lg IS NULL)
     LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-     WHERE pa.season_id = ?
-       AND pa.award_name = 'DPOY'
+    WHERE pa.season_id = ?
+      AND pa.award_name = 'NBA DPOY'
     ORDER BY pa.votes_received DESC
     LIMIT 1`,
     [seasonId],
@@ -192,9 +239,45 @@ export function getDPOYHistory(): AwardHistoryRow[] {
       AND ps.season_id = pa.season_id
       AND (ps.lg = 'NBA' OR ps.lg IS NULL)
     LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-    WHERE pa.award_name = 'DPOY'
-    ORDER BY s.start_year DESC`,
+    WHERE pa.award_name = 'NBA DPOY'
+    ORDER BY s.start_year DESC, pa.votes_received DESC`,
     [],
+    60_000
+  );
+}
+
+/**
+ * Get full DPOY voting breakdown for a specific season (all candidates, sorted by votes).
+ *
+ * @param seasonId - Season identifier (e.g., "2024-25")
+ * @returns Array of all DPOY voting candidates sorted by votes descending
+ */
+export function getDPOYVotingBySeason(
+  seasonId: string
+): Array<Record<string, string | number | null>> {
+  return getCachedQueryMany<Array<Record<string, string | number | null>>>(
+    `SELECT 
+      ROW_NUMBER() OVER (ORDER BY pa.votes_received DESC) as rank,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev,
+      t.full_name as team_name,
+      pa.votes_received,
+      pa.votes_possible,
+      CASE 
+        WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 1.0 / pa.votes_possible, 4)
+        ELSE NULL
+      END as vote_share
+    FROM fact_player_award pa
+    JOIN dim_player p ON p.bref_id = pa.player_id
+    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
+      AND ps.season_id = pa.season_id
+      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    WHERE pa.season_id = ?
+      AND pa.award_name = 'NBA DPOY'
+    ORDER BY pa.votes_received DESC`,
+    [seasonId],
     60_000
   );
 }
@@ -224,8 +307,8 @@ export function getROYWinner(seasonId: string): AwardWinnerRow | undefined {
       AND ps.season_id = pa.season_id
       AND (ps.lg = 'NBA' OR ps.lg IS NULL)
     LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-     WHERE pa.season_id = ?
-       AND pa.award_name = 'ROY'
+    WHERE pa.season_id = ?
+      AND pa.award_name = 'NBA ROY'
     ORDER BY pa.votes_received DESC
     LIMIT 1`,
     [seasonId],
@@ -261,9 +344,45 @@ export function getROYHistory(): AwardHistoryRow[] {
       AND ps.season_id = pa.season_id
       AND (ps.lg = 'NBA' OR ps.lg IS NULL)
     LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-    WHERE pa.award_name = 'ROY'
-    ORDER BY s.start_year DESC`,
+    WHERE pa.award_name = 'NBA ROY'
+    ORDER BY s.start_year DESC, pa.votes_received DESC`,
     [],
+    60_000
+  );
+}
+
+/**
+ * Get full ROY voting breakdown for a specific season (all candidates, sorted by votes).
+ *
+ * @param seasonId - Season identifier (e.g., "2024-25")
+ * @returns Array of all ROY voting candidates sorted by votes descending
+ */
+export function getROYVotingBySeason(
+  seasonId: string
+): Array<Record<string, string | number | null>> {
+  return getCachedQueryMany<Array<Record<string, string | number | null>>>(
+    `SELECT 
+      ROW_NUMBER() OVER (ORDER BY pa.votes_received DESC) as rank,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev,
+      t.full_name as team_name,
+      pa.votes_received,
+      pa.votes_possible,
+      CASE 
+        WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 1.0 / pa.votes_possible, 4)
+        ELSE NULL
+      END as vote_share
+    FROM fact_player_award pa
+    JOIN dim_player p ON p.bref_id = pa.player_id
+    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
+      AND ps.season_id = pa.season_id
+      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    WHERE pa.season_id = ?
+      AND pa.award_name = 'NBA ROY'
+    ORDER BY pa.votes_received DESC`,
+    [seasonId],
     60_000
   );
 }
@@ -463,7 +582,7 @@ export function getAwardTypes(): string[] {
 /**
  * Get all award winners for a specific award type.
  *
- * @param awardName - Award name (e.g., "MVP", "DPOY", "ROY")
+ * @param awardName - Award name (e.g., "NBA MVP", "NBA DPOY", "NBA ROY")
  * @returns Array of winner records ordered by season (newest first)
  */
 export function getAwardWinners(awardName: string): AwardWinnerWithTrophyRow[] {
