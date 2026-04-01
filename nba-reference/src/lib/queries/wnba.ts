@@ -127,34 +127,41 @@ export function getWnbaLatestSeasonId(): string | null {
   return row?.season_id ?? null;
 }
 
+/** Allowed stat columns for WNBA season leaders. */
+export type WnbaLeaderStat = 'pts' | 'reb' | 'ast' | 'stl' | 'blk';
+
+const WNBA_STAT_COLUMNS: Record<WnbaLeaderStat, string> = {
+  pts: 'pts',
+  reb: 'reb',
+  ast: 'ast',
+  stl: 'stl',
+  blk: 'blk',
+};
+
 /**
  * Retrieves per-game stat leaders for a WNBA season.
  *
  * @param seasonId - The season ID to retrieve leaders for
- * @param stat - The stat column to rank by (e.g., 'pts', 'reb', 'ast')
+ * @param stat - The stat column to rank by ('pts', 'reb', 'ast', 'stl', or 'blk')
  * @param minGames - Minimum games played threshold
  * @param limit - Maximum number of leaders to return
  * @returns Array of leader rows
  */
 export function getWnbaSeasonLeaders(
   seasonId: string,
-  stat: string,
+  stat: WnbaLeaderStat,
   minGames = 10,
   limit = 25
 ): WnbaLeaderRow[] {
-  const allowedStats = ['pts', 'reb', 'ast', 'stl', 'blk'] as const;
-  type AllowedStat = (typeof allowedStats)[number];
-  const safeStat: AllowedStat = (allowedStats as readonly string[]).includes(stat)
-    ? (stat as AllowedStat)
-    : 'pts';
+  const statCol = WNBA_STAT_COLUMNS[stat];
 
   return getCachedQueryMany<WnbaLeaderRow[]>(
     `SELECT p.bref_id,
             p.full_name,
             GROUP_CONCAT(DISTINCT fpss.team_abbrev) AS team,
             SUM(fpss.g) AS g,
-            SUM(fpss.${safeStat}) AS stat_total,
-            ROUND(1.0 * SUM(fpss.${safeStat}) / SUM(fpss.g), 1) AS stat_per_game
+            SUM(fpss.${statCol}) AS stat_total,
+            ROUND(1.0 * SUM(fpss.${statCol}) / SUM(fpss.g), 1) AS stat_per_game
      FROM fact_player_season_stats fpss
      JOIN dim_player p ON p.bref_id = fpss.bref_player_id
      WHERE fpss.season_id = ?

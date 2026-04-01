@@ -193,11 +193,22 @@ export function getInternationalLatestSeasonId(leagueName?: string): string | nu
   return row?.season_id ?? null;
 }
 
+/** Allowed stat columns for international basketball season leaders. */
+export type InternationalLeaderStat = 'pts' | 'reb' | 'ast' | 'stl' | 'blk';
+
+const INTL_STAT_COLUMNS: Record<InternationalLeaderStat, string> = {
+  pts: 'pts',
+  reb: 'reb',
+  ast: 'ast',
+  stl: 'stl',
+  blk: 'blk',
+};
+
 /**
  * Retrieves per-game stat leaders for an international basketball season.
  *
  * @param seasonId - The season ID to retrieve leaders for
- * @param stat - The stat column to rank by (e.g., 'pts', 'reb', 'ast')
+ * @param stat - The stat column to rank by ('pts', 'reb', 'ast', 'stl', or 'blk')
  * @param minGames - Minimum games played threshold
  * @param limit - Maximum number of leaders to return
  * @param leagueName - Optional specific league to filter by
@@ -205,16 +216,12 @@ export function getInternationalLatestSeasonId(leagueName?: string): string | nu
  */
 export function getInternationalSeasonLeaders(
   seasonId: string,
-  stat: string,
+  stat: InternationalLeaderStat,
   minGames = 10,
   limit = 25,
   leagueName?: string
 ): InternationalLeaderRow[] {
-  const allowedStats = ['pts', 'reb', 'ast', 'stl', 'blk'] as const;
-  type AllowedStat = (typeof allowedStats)[number];
-  const safeStat: AllowedStat = (allowedStats as readonly string[]).includes(stat)
-    ? (stat as AllowedStat)
-    : 'pts';
+  const statCol = INTL_STAT_COLUMNS[stat];
 
   if (leagueName != null) {
     return getCachedQueryMany<InternationalLeaderRow[]>(
@@ -222,8 +229,8 @@ export function getInternationalSeasonLeaders(
               p.full_name,
               GROUP_CONCAT(DISTINCT fpss.team_abbrev) AS team,
               SUM(fpss.g) AS g,
-              SUM(fpss.${safeStat}) AS stat_total,
-              ROUND(1.0 * SUM(fpss.${safeStat}) / SUM(fpss.g), 1) AS stat_per_game
+              SUM(fpss.${statCol}) AS stat_total,
+              ROUND(1.0 * SUM(fpss.${statCol}) / SUM(fpss.g), 1) AS stat_per_game
        FROM fact_player_season_stats fpss
        JOIN dim_player p ON p.bref_id = fpss.bref_player_id
        WHERE fpss.season_id = ?
@@ -243,8 +250,8 @@ export function getInternationalSeasonLeaders(
             p.full_name,
             GROUP_CONCAT(DISTINCT fpss.team_abbrev) AS team,
             SUM(fpss.g) AS g,
-            SUM(fpss.${safeStat}) AS stat_total,
-            ROUND(1.0 * SUM(fpss.${safeStat}) / SUM(fpss.g), 1) AS stat_per_game
+            SUM(fpss.${statCol}) AS stat_total,
+            ROUND(1.0 * SUM(fpss.${statCol}) / SUM(fpss.g), 1) AS stat_per_game
      FROM fact_player_season_stats fpss
      JOIN dim_player p ON p.bref_id = fpss.bref_player_id
      WHERE fpss.season_id = ?
