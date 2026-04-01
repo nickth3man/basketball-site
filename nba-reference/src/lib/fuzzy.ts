@@ -65,8 +65,8 @@ export function fuzzyScore(query: string, target: string): FuzzyMatchResult {
 
 export function fuzzyFilter<T extends { label: string }>(
   query: string,
-    items: Array<T>,
-    minScore = 0.4
+  items: Array<T>,
+  minScore = 0.4
 ): Array<T & { score: number }> {
   return items
     .map(item => ({

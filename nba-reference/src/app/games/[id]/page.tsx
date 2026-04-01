@@ -50,10 +50,7 @@ export async function generateMetadata({ params }: GamePageParams): Promise<Meta
   };
 }
 
-function getGameJsonLd(
-  id: string,
-  game: Record<string, unknown>
-): Record<string, unknown> {
+function getGameJsonLd(id: string, game: Record<string, unknown>): Record<string, unknown> {
   const siteUrl = getSiteUrl();
 
   return {

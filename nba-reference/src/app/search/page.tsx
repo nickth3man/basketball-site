@@ -107,7 +107,10 @@ export default async function SearchPage({
             </Link>
           ))}
           {query.length >= 2 ? (
-            <SaveViewButton currentUrl={`/search?q=${encodeURIComponent(query)}${activeFilter !== 'all' ? `&type=${activeFilter}` : ''}`} type="search" />
+            <SaveViewButton
+              currentUrl={`/search?q=${encodeURIComponent(query)}${activeFilter !== 'all' ? `&type=${activeFilter}` : ''}`}
+              type="search"
+            />
           ) : null}
         </div>
       </section>

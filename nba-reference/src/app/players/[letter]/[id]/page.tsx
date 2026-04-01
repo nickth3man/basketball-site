@@ -131,9 +131,7 @@ function getPlayerJsonLd(
     sport: 'Basketball',
     nationality: { '@type': 'Country', name: 'United States' },
     ...(player.is_active === 1 ? { memberOf: { '@type': 'SportsTeam', name: 'NBA' } } : {}),
-    ...(summary['pts_pg'] != null
-      ? { award: `Career PPG: ${summary['pts_pg']}` }
-      : {}),
+    ...(summary['pts_pg'] != null ? { award: `Career PPG: ${summary['pts_pg']}` } : {}),
   };
 }
 

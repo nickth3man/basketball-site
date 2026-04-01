@@ -27,7 +27,9 @@ export function SaveViewButton({ currentUrl, type }: SaveViewButtonProps): JSX.E
     return (
       <button
         type="button"
-        onClick={() => { setIsOpen(true); }}
+        onClick={() => {
+          setIsOpen(true);
+        }}
         className="rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-1.5 text-xs outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover"
       >
         Save View
@@ -40,7 +42,9 @@ export function SaveViewButton({ currentUrl, type }: SaveViewButtonProps): JSX.E
       <input
         type="text"
         value={name}
-        onChange={e => { setName(e.target.value); }}
+        onChange={e => {
+          setName(e.target.value);
+        }}
         placeholder="View name..."
         className="rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-1.5 text-xs outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)]"
         onKeyDown={e => {
@@ -57,7 +61,9 @@ export function SaveViewButton({ currentUrl, type }: SaveViewButtonProps): JSX.E
       </button>
       <button
         type="button"
-        onClick={() => { setIsOpen(false); }}
+        onClick={() => {
+          setIsOpen(false);
+        }}
         className="rounded-md px-2 py-1.5 text-xs text-muted hover:bg-button-hover"
       >
         Cancel
@@ -80,21 +86,24 @@ export function SavedViewsWidget({ type }: SavedViewsWidgetProps): JSX.Element |
 
   return (
     <section className="mb-6 surface-pedestal p-4">
-      <div className="mb-2 text-xs font-bold tracking-wide text-crumb uppercase">
-        Saved Views
-      </div>
+      <div className="mb-2 text-xs font-bold tracking-wide text-crumb uppercase">Saved Views</div>
       <div className="flex flex-wrap gap-2">
         {filtered.map(view => (
           <div
             key={view.id}
             className="flex items-center gap-2 rounded-md bg-[var(--dc-surface-container-highest)] px-3 py-1.5 text-xs outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)]"
           >
-            <Link href={view.url as `/search?q=${string}`} className="text-link hover:brightness-110">
+            <Link
+              href={view.url as `/search?q=${string}`}
+              className="text-link hover:brightness-110"
+            >
               {view.name}
             </Link>
             <button
               type="button"
-              onClick={() => { removeView(view.id); }}
+              onClick={() => {
+                removeView(view.id);
+              }}
               className="text-muted hover:text-heading"
               aria-label={`Remove ${view.name}`}
             >

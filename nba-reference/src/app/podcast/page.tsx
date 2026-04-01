@@ -8,6 +8,7 @@
  */
 
 import type React from 'react';
+import type { Route } from 'next';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllPodcastEpisodes } from '@/lib/content';
@@ -53,10 +54,10 @@ export default function PodcastIndexPage(): React.JSX.Element {
       {/* Subscribe links */}
       <div className="mb-8 flex flex-wrap gap-3">
         {[
-          { label: 'Apple Podcasts', href: '#' },
-          { label: 'Spotify', href: '#' },
-          { label: 'Overcast', href: '#' },
-          { label: 'RSS Feed', href: '/rss/blog.xml' },
+          { label: 'Apple Podcasts', href: '#' as Route },
+          { label: 'Spotify', href: '#' as Route },
+          { label: 'Overcast', href: '#' as Route },
+          { label: 'Blog RSS', href: '/rss/blog.xml' as Route },
         ].map(({ label, href }) => (
           <Link
             key={label}
@@ -122,7 +123,7 @@ export default function PodcastIndexPage(): React.JSX.Element {
                     >
                       <source src={episode.audioUrl} type="audio/mpeg" />
                       Your browser does not support the audio element.{' '}
-                      <Link href={episode.audioUrl} className="text-link underline">
+                      <Link href={episode.audioUrl as Route} className="text-link underline">
                         Download the episode
                       </Link>
                       .

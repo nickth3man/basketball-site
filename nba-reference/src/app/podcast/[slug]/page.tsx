@@ -9,6 +9,7 @@
 
 import type React from 'react';
 import type { CSSProperties } from 'react';
+import type { Route } from 'next';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -150,7 +151,7 @@ export default async function PodcastEpisodePage({
               >
                 <source src={episode.audioUrl} type="audio/mpeg" />
                 Your browser does not support the audio element.{' '}
-                <Link href={episode.audioUrl} className="text-white underline">
+                <Link href={episode.audioUrl as Route} className="text-white underline">
                   Download the episode
                 </Link>
                 .
