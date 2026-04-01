@@ -15,6 +15,7 @@ import type { Metadata } from 'next';
 import { Newsreader, Noto_Serif } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/site-header';
+import { BottomNav } from '@/components/bottom-nav';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ThemeProvider } from '@/components/theme';
 import { WebVitalsReporter } from '@/components/web-vitals';
@@ -86,10 +87,11 @@ export default function RootLayout({
           </a>
           <SiteHeader />
           <ErrorBoundary>
-            <div id="main-content" tabIndex={-1}>
+            <div id="main-content" tabIndex={-1} className="pb-16 lg:pb-0">
               {children}
             </div>
           </ErrorBoundary>
+          <BottomNav />
         </ThemeProvider>
       </body>
     </html>

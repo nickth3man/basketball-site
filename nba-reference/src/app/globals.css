@@ -211,6 +211,8 @@ body {
     var(--background);
   color: var(--foreground);
   font-family: var(--font-body), ui-serif, Georgia, serif;
+  /* Minimum 14px body text for mobile readability */
+  font-size: max(14px, 1em);
 }
 
 html.dark body {
