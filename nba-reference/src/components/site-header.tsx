@@ -4,6 +4,7 @@
  * Provides the main navigation header displayed on all pages.
  * Uses sticky positioning to remain visible during scroll.
  * Editorial gradient band without hard divider lines; illuminated hover on links.
+ * Includes a compact search box on large screens with global keyboard shortcut support.
  *
  * @module @/components/site-header
  */
@@ -12,6 +13,7 @@ import type { JSX } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { MobileNav } from '@/components/mobile-nav';
+import { SearchBox } from '@/components/search-box';
 import { ThemeToggle } from '@/components/theme';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +21,7 @@ const navLinkClass =
   'illuminated-tab rounded-md px-2 py-1.5 text-sm text-header-text/90 transition-all duration-200 hover:bg-white/10 hover:text-header-text hover:shadow-[0_0_14px_color-mix(in_srgb,var(--dc-tertiary-container)_28%,transparent)]';
 
 /**
- * Renders the global site header with logo and primary navigation.
+ * Renders the global site header with logo, primary navigation, and a compact search box.
  *
  * @returns The header JSX element for the site's global navigation.
  */
@@ -84,6 +86,12 @@ export function SiteHeader(): JSX.Element {
           </Link>
           <ThemeToggle />
         </nav>
+
+        {/* Compact header search — desktop only, carries the global `/` / Cmd+K shortcut */}
+        <div className="hidden w-48 xl:block">
+          <SearchBox enableGlobalShortcut />
+        </div>
+
         <MobileNav />
       </div>
     </header>
