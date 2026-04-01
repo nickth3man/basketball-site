@@ -55,6 +55,18 @@ export function SiteHeader(): JSX.Element {
           <Link href="/leagues" className={navLinkClass}>
             Leagues
           </Link>
+          <Link href={'/wnba' as Route} className={navLinkClass}>
+            WNBA
+          </Link>
+          <Link href={'/gleague' as Route} className={navLinkClass}>
+            G-League
+          </Link>
+          <Link href={'/college' as Route} className={navLinkClass}>
+            College
+          </Link>
+          <Link href={'/international' as Route} className={navLinkClass}>
+            International
+          </Link>
           <Link href="/boxscores" className={navLinkClass}>
             Box Scores
           </Link>
