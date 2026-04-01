@@ -44,6 +44,55 @@ export default function AwardsPage(): React.JSX.Element {
       href: '/awards/all_defense',
       trophy: 'Annual Selection',
     },
+    {
+      name: 'All-Rookie Teams',
+      description:
+        'First-team and second-team All-Rookie selections — 5 players per team each season',
+      href: '/awards/all_rookie',
+      trophy: 'Annual Selection',
+    },
+    {
+      name: 'Scoring Champions',
+      description: 'Player with the highest points per game each season (min. 25 games)',
+      href: '/awards/scoring',
+      trophy: 'Scoring Title',
+    },
+    {
+      name: 'Assists Leaders',
+      description: 'Player with the highest assists per game each season (min. 25 games)',
+      href: '/awards/assists',
+      trophy: 'Assists Title',
+    },
+    {
+      name: 'Steals Leaders',
+      description: 'Player with the highest steals per game each season (min. 25 games)',
+      href: '/awards/steals',
+      trophy: 'Steals Title',
+    },
+    {
+      name: 'Blocks Leaders',
+      description: 'Player with the highest blocks per game each season (min. 25 games)',
+      href: '/awards/blocks',
+      trophy: 'Blocks Title',
+    },
+    {
+      name: 'Rebounds Leaders',
+      description: 'Player with the highest rebounds per game each season (min. 25 games)',
+      href: '/awards/rebounds',
+      trophy: 'Rebounds Title',
+    },
+    {
+      name: 'NBA All-Star Game MVP',
+      description: 'Most Valuable Player of the NBA All-Star Game by season',
+      href: '/awards/allstar_mvp',
+      trophy: 'Kobe Bryant Trophy',
+    },
+    {
+      name: 'NBA All-Star Selections',
+      description: 'All-Star game rosters — starters and reserves for each conference by season',
+      href: '/awards/allstar_voting',
+      trophy: 'Annual Selection',
+    },
   ];
 
   return (

@@ -43,6 +43,52 @@ export interface PlayerAllStarSelectionRow {
   is_starter: number;
 }
 
+export interface AllStarSelectionHistoryRow {
+  season_id: string;
+  start_year: number;
+  end_year: number;
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+  selection_team: string;
+  is_starter: number;
+  is_replacement: number;
+}
+
+/**
+ * Get all NBA All-Star selections across all seasons.
+ *
+ * @returns Array of All-Star selections ordered by season (newest first), then conference and name
+ */
+export function getAllStarSelectionHistory(): AllStarSelectionHistoryRow[] {
+  return getCachedQueryMany<AllStarSelectionHistoryRow[]>(
+    `SELECT
+      fa.season_id,
+      s.start_year,
+      s.end_year,
+      p.bref_id,
+      p.full_name,
+      ps.team_abbrev,
+      fa.selection_team,
+      fa.is_starter,
+      fa.is_replacement
+    FROM fact_all_star fa
+    JOIN dim_season s ON s.season_id = fa.season_id
+    JOIN dim_player p ON p.player_id = fa.player_id
+    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = p.bref_id
+      AND ps.season_id = fa.season_id
+      AND ps.lg = 'NBA'
+      AND ps.team_abbrev IS NOT NULL
+    WHERE EXISTS (
+      SELECT 1 FROM fact_team_season ts
+      WHERE ts.season_id = fa.season_id AND (ts.lg = 'NBA' OR ts.lg IS NULL)
+    )
+    ORDER BY s.start_year DESC, fa.selection_team, fa.is_starter DESC, p.full_name`,
+    [],
+    60_000
+  );
+}
+
 /**
  * Get all seasons that have All-Star games.
  */
@@ -165,12 +211,13 @@ export function getAllStarMVPs(): AllStarMvpHistoryRow[] {
       t.bref_abbrev as team_abbrev
     FROM fact_player_award pa
     JOIN dim_season s ON s.season_id = pa.season_id
-    JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id 
+    JOIN dim_player p ON p.player_id = pa.player_id
+    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = p.bref_id
       AND ps.season_id = pa.season_id
       AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+      AND ps.team_abbrev IS NOT NULL
     LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-    WHERE pa.award_name LIKE '%All-Star%MVP%'
+    WHERE pa.award_name = 'NBA All-Star Most Valuable Player'
     ORDER BY s.start_year DESC`,
     [],
     60_000
