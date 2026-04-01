@@ -5,6 +5,7 @@ import {
   getGamePbpEvents,
   getGamePlayerAdvancedBoxScore,
   getGamePlayerBoxScore,
+  getGameReferees,
   getGameTeamBoxScores,
   getGameTeamFourFactors,
 } from '@/lib/queries';
@@ -25,6 +26,7 @@ export interface GamePageData {
   pbp: DbRecord[];
   playerAdvanced: DbRecord[];
   players: DbRecord[];
+  referees: DbRecord[];
 }
 
 export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageData | undefined => {
@@ -39,6 +41,7 @@ export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageD
   const lineScore = getGameLineScore(gameId);
   const fourFactors = getGameTeamFourFactors(gameId);
   const pbp = getGamePbpEvents(gameId, pbpLimit);
+  const referees = getGameReferees(gameId);
   const awayTeam = String(game['away_abbrev'] ?? '');
   const homeTeam = String(game['home_abbrev'] ?? '');
   const awayPlayers = players.filter(player => String(player['team']) === awayTeam);
@@ -60,5 +63,6 @@ export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageD
     pbp,
     playerAdvanced,
     players,
+    referees,
   };
 });

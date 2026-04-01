@@ -22,6 +22,7 @@ export * from './franchise';
 export * from './frivolities';
 export * from './salaries';
 export * from './compare';
+export * from './referees';
 
 // Re-export feature queries for convenience
 export {

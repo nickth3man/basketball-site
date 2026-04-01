@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
 import { StructuredData } from '@/components/structured-data';
 import { getGamePageData } from '@/lib/query';
+import { routes } from '@/lib/routes';
 import { getSiteUrl } from '@/lib/site-config';
 import { notFound } from 'next/navigation';
 
@@ -50,10 +51,7 @@ export async function generateMetadata({ params }: GamePageParams): Promise<Meta
   };
 }
 
-function getGameJsonLd(
-  id: string,
-  game: Record<string, unknown>
-): Record<string, unknown> {
+function getGameJsonLd(id: string, game: Record<string, unknown>): Record<string, unknown> {
   const siteUrl = getSiteUrl();
 
   return {
@@ -92,6 +90,7 @@ export default async function GamePage({
     homeTeam,
     lineScore,
     pbp: playByPlay,
+    referees,
   } = gamePageData;
 
   const navActive =
@@ -273,6 +272,28 @@ export default async function GamePage({
           initialSort="game_score"
         />
       </section>
+
+      {/* Officials */}
+      {referees.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-2 text-xl font-bold">Officials</h2>
+          <ul className="flex flex-wrap gap-4 text-sm">
+            {referees.map(ref => (
+              <li key={String(ref['referee_id'])} className="flex items-center gap-1.5">
+                <span className="text-muted-strong capitalize">
+                  {String(ref['role']).replace('_', ' ')}:
+                </span>
+                <Link
+                  href={routes.referee(String(ref['referee_id']))}
+                  className="text-link underline decoration-transparent transition-all duration-200 hover:decoration-current hover:brightness-110"
+                >
+                  {String(ref['full_name'])}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Play-by-Play */}
       <section>
