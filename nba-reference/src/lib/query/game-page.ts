@@ -3,11 +3,13 @@ import {
   getGameById,
   getGameLineScore,
   getGamePbpEvents,
+  getGamePbpWithShotDetails,
   getGamePlayerAdvancedBoxScore,
   getGamePlayerBoxScore,
   getGameTeamBoxScores,
   getGameTeamFourFactors,
 } from '@/lib/queries';
+import type { ShotEvent } from '@/lib/queries/games';
 
 type DbRecord = Record<string, string | number | null>;
 
@@ -25,6 +27,7 @@ export interface GamePageData {
   pbp: DbRecord[];
   playerAdvanced: DbRecord[];
   players: DbRecord[];
+  shotDetails: ShotEvent[];
 }
 
 export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageData | undefined => {
@@ -39,6 +42,7 @@ export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageD
   const lineScore = getGameLineScore(gameId);
   const fourFactors = getGameTeamFourFactors(gameId);
   const pbp = getGamePbpEvents(gameId, pbpLimit);
+  const shotDetails = getGamePbpWithShotDetails(gameId);
   const awayTeam = String(game['away_abbrev'] ?? '');
   const homeTeam = String(game['home_abbrev'] ?? '');
   const awayPlayers = players.filter(player => String(player['team']) === awayTeam);
@@ -60,5 +64,6 @@ export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageD
     pbp,
     playerAdvanced,
     players,
+    shotDetails,
   };
 });

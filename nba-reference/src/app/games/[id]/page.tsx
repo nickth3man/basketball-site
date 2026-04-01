@@ -8,19 +8,26 @@
  * - Four Factors comparison
  * - Player box scores (home and away teams separately)
  * - Advanced player stats (eFG%, TS%, Game Score)
- * - Play-by-play event stream
+ * - Play-by-play event stream (text or structured shot-detail view)
  *
  * @module @/app/games/[id]/page
  */
 
 import type React from 'react';
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { StatsTable } from '@/components/stats-table';
 import { StructuredData } from '@/components/structured-data';
+import { COLOR_SHOT_MADE, COLOR_SHOT_MISSED } from '@/components/charts/chart-theme';
 import { getGamePageData } from '@/lib/query';
 import { getSiteUrl } from '@/lib/site-config';
 import { notFound } from 'next/navigation';
+
+const ShotChart = dynamic(
+  () => import('@/components/charts/shot-chart').then(m => ({ default: m.ShotChart })),
+  { ssr: false }
+);
 
 interface GamePageParams {
   params: Promise<{ id: string }>;
@@ -50,10 +57,7 @@ export async function generateMetadata({ params }: GamePageParams): Promise<Meta
   };
 }
 
-function getGameJsonLd(
-  id: string,
-  game: Record<string, unknown>
-): Record<string, unknown> {
+function getGameJsonLd(id: string, game: Record<string, unknown>): Record<string, unknown> {
   const siteUrl = getSiteUrl();
 
   return {
@@ -76,6 +80,7 @@ export default async function GamePage({
 }: GamePageParams): Promise<React.JSX.Element> {
   const { id } = await params;
   const { pbp: pbpMode } = await searchParams;
+  const isShotDetailMode = pbpMode === 'shot-details';
   const pbpLimit = pbpMode === 'full' ? 1000 : pbpMode === 'recent' ? 50 : 250;
 
   const gamePageData = getGamePageData(id, pbpLimit);
@@ -92,6 +97,7 @@ export default async function GamePage({
     homeTeam,
     lineScore,
     pbp: playByPlay,
+    shotDetails,
   } = gamePageData;
 
   const navActive =
@@ -126,18 +132,27 @@ export default async function GamePage({
           </Link>
           <Link
             href={`/games/${id}?pbp=recent` as const}
-            className={pbpLimit === 50 ? navActive : navIdle}
+            className={pbpLimit === 50 && !isShotDetailMode ? navActive : navIdle}
           >
             Recent PBP
           </Link>
-          <Link href={`/games/${id}` as const} className={pbpLimit === 250 ? navActive : navIdle}>
+          <Link
+            href={`/games/${id}` as const}
+            className={pbpLimit === 250 && !isShotDetailMode ? navActive : navIdle}
+          >
             Extended PBP
           </Link>
           <Link
             href={`/games/${id}?pbp=full` as const}
-            className={pbpLimit === 1000 ? navActive : navIdle}
+            className={pbpLimit === 1000 && !isShotDetailMode ? navActive : navIdle}
           >
             Fuller PBP
+          </Link>
+          <Link
+            href={`/games/${id}?pbp=shot-details` as const}
+            className={isShotDetailMode ? navActive : navIdle}
+          >
+            Shot Details
           </Link>
         </div>
       </section>
@@ -276,18 +291,94 @@ export default async function GamePage({
 
       {/* Play-by-Play */}
       <section>
-        <h2 className="mb-2 text-xl font-bold">Play-by-Play ({playByPlay.length} events)</h2>
-        <StatsTable
-          columns={[
-            { key: 'period', label: 'Q', align: 'right' },
-            { key: 'pc_time_string', label: 'Time' },
-            { key: 'visitor_description', label: `${String(game['away_abbrev'] ?? '')} Event` },
-            { key: 'home_description', label: `${String(game['home_abbrev'] ?? '')} Event` },
-            { key: 'score', label: 'Score' },
-          ]}
-          rows={playByPlay}
-          initialSort="period"
-        />
+        {isShotDetailMode ? (
+          <>
+            <h2 className="mb-2 text-xl font-bold">
+              Shot Details ({shotDetails.length} field goal attempts)
+            </h2>
+            <p className="mb-4 text-sm text-muted-strong">
+              Shot type, distance, and zone are parsed from play-by-play descriptions. Distances and
+              zones are approximate — see{' '}
+              <code className="text-xs">docs/data-pipeline-contract.md</code> for details.
+            </p>
+            <div className="mb-6 overflow-x-auto">
+              <table className="w-full min-w-max border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--dc-outline-variant)] text-left text-xs text-muted-strong uppercase">
+                    <th className="py-2 pr-4">Q</th>
+                    <th className="py-2 pr-4">Time</th>
+                    <th className="py-2 pr-4">Player</th>
+                    <th className="py-2 pr-4">Team</th>
+                    <th className="py-2 pr-4">Result</th>
+                    <th className="py-2 pr-4">Type</th>
+                    <th className="py-2 pr-4 text-right">Dist (ft)</th>
+                    <th className="py-2 pr-4">Zone</th>
+                    <th className="py-2 pr-4 text-right">Pts</th>
+                    <th className="py-2">AST</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shotDetails.map(shot => (
+                    <tr
+                      key={shot.event_id}
+                      className="border-b border-[color-mix(in_srgb,var(--dc-outline-variant)_30%,transparent)]"
+                      style={{
+                        color:
+                          shot.shot_result === 'made'
+                            ? 'var(--heading)'
+                            : 'color-mix(in srgb, var(--muted-strong) 70%, transparent)',
+                      }}
+                    >
+                      <td className="py-1 pr-4">{shot.period}</td>
+                      <td className="py-1 pr-4 tabular-nums">{shot.pc_time_string ?? '—'}</td>
+                      <td className="py-1 pr-4">{shot.player_name ?? '—'}</td>
+                      <td className="py-1 pr-4">{shot.team ?? '—'}</td>
+                      <td
+                        className="py-1 pr-4 font-semibold"
+                        style={{
+                          color: shot.shot_result === 'made' ? COLOR_SHOT_MADE : COLOR_SHOT_MISSED,
+                        }}
+                      >
+                        {shot.shot_result === 'made' ? 'Made' : 'Missed'}
+                      </td>
+                      <td className="py-1 pr-4">{shot.shot_type ?? '—'}</td>
+                      <td className="py-1 pr-4 text-right tabular-nums">
+                        {shot.shot_distance ?? '—'}
+                      </td>
+                      <td className="py-1 pr-4">{shot.shot_zone ?? '—'}</td>
+                      <td className="py-1 pr-4 text-right tabular-nums">
+                        {shot.shot_result === 'made' && shot.shot_value != null
+                          ? shot.shot_value
+                          : '—'}
+                      </td>
+                      <td className="py-1">{shot.assisted ? 'Yes' : 'No'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <h3 className="mb-2 text-lg font-semibold">Shot Zones</h3>
+            <ShotChart shots={shotDetails} height={320} />
+          </>
+        ) : (
+          <>
+            <h2 className="mb-2 text-xl font-bold">Play-by-Play ({playByPlay.length} events)</h2>
+            <StatsTable
+              columns={[
+                { key: 'period', label: 'Q', align: 'right' },
+                { key: 'pc_time_string', label: 'Time' },
+                {
+                  key: 'visitor_description',
+                  label: `${String(game['away_abbrev'] ?? '')} Event`,
+                },
+                { key: 'home_description', label: `${String(game['home_abbrev'] ?? '')} Event` },
+                { key: 'score', label: 'Score' },
+              ]}
+              rows={playByPlay}
+              initialSort="period"
+            />
+          </>
+        )}
       </section>
     </main>
   );
