@@ -31,7 +31,7 @@ describe('newsletter-db', () => {
   });
 
   afterEach(() => {
-    // Delete the DB file after each test group so each test starts fresh
+    // Delete the DB file after each test so each test starts fresh
     try {
       fs.unlinkSync(tmpDbPath);
       // Also remove WAL/SHM files if present

@@ -179,7 +179,7 @@ export default function NewsletterPage(): React.JSX.Element {
           <section className="surface-altar rounded-xl p-6">
             <h2 className="mb-1 inscription-title text-lg">Subscribe — it&apos;s free</h2>
             <p className="mb-5 text-sm text-muted">
-              Join thousands of fans who wake up to NBA news every morning.
+              Get last night&apos;s NBA scores, top performers, and highlights every morning — free.
             </p>
             <SubscribeForm />
           </section>

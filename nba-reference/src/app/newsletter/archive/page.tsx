@@ -10,6 +10,7 @@
 
 import type React from 'react';
 import type { Metadata } from 'next';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { getSentEditions, countSentEditions } from '@/lib/newsletter-db';
 import { getSiteUrl } from '@/lib/site-config';
@@ -111,7 +112,7 @@ export default async function NewsletterArchivePage({
                       <td className={tableCellClass('left')}>{edition.date}</td>
                       <td className={tableCellClass('left')}>
                         <Link
-                          href={`/newsletter/archive/${String(edition.edition_id)}`}
+                          href={`/newsletter/archive/${String(edition.edition_id)}` as Route}
                           className={tableLinkClass}
                         >
                           {edition.subject_line}
