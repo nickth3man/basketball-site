@@ -86,6 +86,7 @@ export function validatePlayerCriteria(brefId: string, criteria: GridCriteria): 
     case 'all_nba':
       return validateAllNbaCriteria(brefId);
   }
+  return false;
 }
 
 /** Check if a player has appeared in at least one NBA season for the given team */
@@ -194,6 +195,7 @@ function validateAllNbaCriteria(brefId: string): boolean {
     `SELECT 1 AS found
      FROM fact_all_nba
      WHERE player_id = ?
+       AND team_type = 'All-NBA'
      LIMIT 1`,
     [brefId],
     300_000

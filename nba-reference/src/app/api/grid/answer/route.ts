@@ -21,8 +21,10 @@ import { getGridPlayerById, validatePlayerCriteria } from '@/lib/queries/grid';
 import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 
-export function OPTIONS(): Response {
-  return createApiOptionsResponse();
+export function OPTIONS(req: NextRequest): Response {
+  const res = createApiOptionsResponse();
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  return res;
 }
 
 /**

@@ -62,7 +62,7 @@ export default function ImmaculateGridHistoryPage(): React.JSX.Element {
           {puzzles.map(puzzle => (
             <Link
               key={puzzle.puzzleId}
-              href={'/friv/immaculate-grid' as Route}
+              href={`/friv/immaculate-grid?date=${puzzle.date}` as Route}
               className="block panel-paper p-4 transition-shadow hover:shadow-[var(--shadow-glow-gold)]"
               aria-label={`Puzzle from ${puzzle.date}`}
             >
