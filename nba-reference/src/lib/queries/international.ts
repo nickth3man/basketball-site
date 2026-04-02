@@ -1,7 +1,7 @@
 /**
  * @fileoverview International basketball query functions.
  * Since the DB does not yet contain international data, these queries will return empty arrays or null.
- * All queries filter by lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE'), or optionally a specific league.
+ * All queries filter by lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE', 'COLLEGE'), or optionally a specific league.
  * @module @/lib/queries/international
  */
 
@@ -57,7 +57,7 @@ export function getInternationalPlayerDirectory(
        AND EXISTS (
          SELECT 1 FROM fact_player_season_stats fps
          WHERE fps.bref_player_id = p.bref_id
-           AND fps.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE')
+           AND fps.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE', 'COLLEGE')
        )
      ORDER BY is_active DESC, full_name ASC
      LIMIT ? OFFSET ?`,
@@ -116,7 +116,7 @@ export function getInternationalPlayerDirectoryCount(letter?: string, leagueName
          SELECT 1
          FROM fact_player_season_stats fps
          WHERE fps.bref_player_id = p.bref_id
-           AND fps.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE')
+           AND fps.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE', 'COLLEGE')
        )`,
     params,
     60_000
@@ -154,7 +154,7 @@ export function getInternationalTeamDirectory(leagueName?: string): TeamDirector
        SELECT 1
        FROM fact_team_season ts
        WHERE ts.bref_abbrev = t.bref_abbrev
-         AND ts.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE')
+         AND ts.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE', 'COLLEGE')
      )
      ORDER BY t.full_name ASC`,
     [],
@@ -184,7 +184,7 @@ export function getInternationalLatestSeasonId(leagueName?: string): string | nu
   const row = getCachedQueryOne<{ season_id: string } | undefined>(
     `SELECT season_id
      FROM fact_player_season_stats
-     WHERE lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE')
+     WHERE lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE', 'COLLEGE')
      ORDER BY season_id DESC
      LIMIT 1`,
     [],
@@ -255,7 +255,7 @@ export function getInternationalSeasonLeaders(
      FROM fact_player_season_stats fpss
      JOIN dim_player p ON p.bref_id = fpss.bref_player_id
      WHERE fpss.season_id = ?
-       AND fpss.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE')
+       AND fpss.lg NOT IN ('NBA', 'ABA', 'BAA', 'WNBA', 'GLEAGUE', 'COLLEGE')
        AND fpss.team_abbrev NOT LIKE '%TM'
      GROUP BY p.bref_id, p.full_name
      HAVING SUM(fpss.g) >= ?

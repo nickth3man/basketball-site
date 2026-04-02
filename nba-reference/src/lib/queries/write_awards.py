@@ -1,4 +1,7 @@
-/**
+#!/usr/bin/env python3
+import shutil
+
+content = """/**
  * @fileoverview Awards data queries - retrieves MVP, DPOY, ROY, and All-NBA team information.
  *
  * This module provides query functions for NBA awards:
@@ -673,3 +676,12 @@ export function getAllNBAVotingBySeason(
     60_000
   );
 }
+"""
+
+with open(
+    r"C:\Users\nicolas\Documents\GitHub\sites\basketball-site\nba-reference\src\lib\queries\awards.ts",
+    "w",
+    encoding="utf-8",
+) as f:
+    f.write(content)
+print("File written successfully")
