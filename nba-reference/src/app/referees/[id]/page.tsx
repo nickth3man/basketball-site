@@ -47,6 +47,7 @@ export default async function RefereeDetailPage({
   const gamesTotal = Number(careerStats?.['games_total'] ?? 0);
   const gamesCrewChief = Number(careerStats?.['games_crew_chief'] ?? 0);
   const gamesReferee = Number(careerStats?.['games_referee'] ?? 0);
+  const gamesAlternate = Number(careerStats?.['games_alternate'] ?? 0);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
@@ -67,7 +68,7 @@ export default async function RefereeDetailPage({
       {/* Career summary cards */}
       <section className="mb-8 surface-altar p-5">
         <h2 className="mb-4 inscription-title text-lg">Career Summary</h2>
-        <div className="grid grid-cols-3 gap-4 text-center text-sm sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 text-center text-sm sm:grid-cols-4">
           <div>
             <div className="text-2xl font-bold tabular-nums">{gamesTotal}</div>
             <div className="text-muted">Total Games</div>
@@ -79,6 +80,10 @@ export default async function RefereeDetailPage({
           <div>
             <div className="text-2xl font-bold tabular-nums">{gamesReferee}</div>
             <div className="text-muted">Referee</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold tabular-nums">{gamesAlternate}</div>
+            <div className="text-muted">Alternate</div>
           </div>
         </div>
       </section>
@@ -93,6 +98,7 @@ export default async function RefereeDetailPage({
               { key: 'games_total', label: 'G', align: 'right' },
               { key: 'games_crew_chief', label: 'Crew Chief', align: 'right' },
               { key: 'games_referee', label: 'Referee', align: 'right' },
+              { key: 'games_alternate', label: 'Alternate', align: 'right' },
             ]}
             rows={seasonStats}
             initialSort="season_id"

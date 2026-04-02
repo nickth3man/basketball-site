@@ -84,12 +84,13 @@ export function getRefereeCareerStats(
          r.career_start_year,
          r.active,
          COUNT(fgr.game_id) AS games_total,
-         SUM(CASE WHEN fgr.role = 'crew_chief' THEN 1 ELSE 0 END) AS games_crew_chief,
-         SUM(CASE WHEN fgr.role = 'referee' THEN 1 ELSE 0 END) AS games_referee
-       FROM dim_referee r
-       LEFT JOIN fact_game_referee fgr ON fgr.referee_id = r.referee_id
-       WHERE r.referee_id = ?
-       GROUP BY r.referee_id`,
+          SUM(CASE WHEN fgr.role = 'crew_chief' THEN 1 ELSE 0 END) AS games_crew_chief,
+          SUM(CASE WHEN fgr.role = 'referee' THEN 1 ELSE 0 END) AS games_referee,
+          SUM(CASE WHEN fgr.role = 'alternate' THEN 1 ELSE 0 END) AS games_alternate
+        FROM dim_referee r
+        LEFT JOIN fact_game_referee fgr ON fgr.referee_id = r.referee_id
+        WHERE r.referee_id = ?
+        GROUP BY r.referee_id`,
       [refereeId],
       30_000
     );
@@ -112,12 +113,13 @@ export function getRefereeSeasonStats(
       `SELECT
          g.season_id,
          COUNT(fgr.game_id) AS games_total,
-         SUM(CASE WHEN fgr.role = 'crew_chief' THEN 1 ELSE 0 END) AS games_crew_chief,
-         SUM(CASE WHEN fgr.role = 'referee' THEN 1 ELSE 0 END) AS games_referee
-       FROM fact_game_referee fgr
-       JOIN fact_game g ON g.game_id = fgr.game_id
-       WHERE fgr.referee_id = ?
-       GROUP BY g.season_id
+          SUM(CASE WHEN fgr.role = 'crew_chief' THEN 1 ELSE 0 END) AS games_crew_chief,
+          SUM(CASE WHEN fgr.role = 'referee' THEN 1 ELSE 0 END) AS games_referee,
+          SUM(CASE WHEN fgr.role = 'alternate' THEN 1 ELSE 0 END) AS games_alternate
+        FROM fact_game_referee fgr
+        JOIN fact_game g ON g.game_id = fgr.game_id
+        WHERE fgr.referee_id = ?
+        GROUP BY g.season_id
        ORDER BY g.season_id DESC`,
       [refereeId],
       30_000
