@@ -13,6 +13,7 @@
  */
 
 import { getCachedQueryMany, getCachedQueryOne } from '@/lib/db';
+import { buildPlayoffBracket } from './playoff-bracket';
 
 export interface PlayoffSeasonRow {
   season_id: string;
@@ -384,83 +385,6 @@ export function getPlayoffBracket(seasonId: string): {
   finals: NbaFinalsRow | undefined;
 } {
   const allSeries = getPlayoffSeriesBySeason(seasonId);
-
-  // This is a simplified bracket - in reality, you'd need more data
-  // to properly identify rounds. This assumes we can infer from game counts.
-  const east: Record<string, PlayoffSeriesRow[]> = {
-    'First Round': [],
-    'Conference Semifinals': [],
-    'Conference Finals': [],
-  };
-  const west: Record<string, PlayoffSeriesRow[]> = {
-    'First Round': [],
-    'Conference Semifinals': [],
-    'Conference Finals': [],
-  };
-
-  // Infer conference from team abbreviations (simplified)
-  // East teams: BOS, BRK, NYK, PHI, TOR, CHI, CLE, IND, DET, MIL, ATL, CHO, MIA, ORL, WAS
-  const eastTeams = new Set([
-    'BOS',
-    'BRK',
-    'NYK',
-    'PHI',
-    'TOR',
-    'CHI',
-    'CLE',
-    'IND',
-    'DET',
-    'MIL',
-    'ATL',
-    'CHO',
-    'MIA',
-    'ORL',
-    'WAS',
-  ]);
-  // West teams: DEN, MIN, OKC, POR, UTA, GSW, LAC, LAL, PHO, SAC, DAL, HOU, MEM, NOP, SAS
-  const westTeams = new Set([
-    'DEN',
-    'MIN',
-    'OKC',
-    'POR',
-    'UTA',
-    'GSW',
-    'LAC',
-    'LAL',
-    'PHO',
-    'SAC',
-    'DAL',
-    'HOU',
-    'MEM',
-    'NOP',
-    'SAS',
-  ]);
-
-  for (const series of allSeries) {
-    const homeAbbrev = series.home_abbrev;
-    const awayAbbrev = series.away_abbrev;
-    const totalGames = series.total_games;
-
-    // Infer round from series position (simplified logic)
-    // This would need refinement with actual seeding data
-    let round = 'First Round';
-    if (totalGames >= 4) {
-      // Could be later rounds - need more logic
-      round = 'Conference Semifinals';
-    }
-
-    // Assign to conference
-    if (eastTeams.has(homeAbbrev) && eastTeams.has(awayAbbrev)) {
-      const roundKey = round;
-      east[roundKey] = [...(east[roundKey] ?? []), series];
-    } else if (westTeams.has(homeAbbrev) && westTeams.has(awayAbbrev)) {
-      const roundKey = round;
-      west[roundKey] = [...(west[roundKey] ?? []), series];
-    }
-    // Cross-conference series would be finals
-  }
-
   const finals = getNBAFinals(seasonId);
-
-  return { east, west, finals };
+  return buildPlayoffBracket(allSeries, finals);
 }

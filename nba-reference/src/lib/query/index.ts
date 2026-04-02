@@ -9,7 +9,14 @@ export { getGamePageData } from './game-page';
 export { getHomeSeasonId, getHomeStandings, getRecentGames } from './home';
 export { getPlayerPageData } from './player-page';
 export { getRefereePageData } from './referee-page';
-export { getSearchTypeLabel, SEARCH_RESULT_TYPES, searchEntities } from './search';
+export {
+  getSearchTypeLabel,
+  normalizeSearchQuery,
+  parseSearchResultType,
+  SEARCH_API_RESULT_LIMIT,
+  SEARCH_RESULT_TYPES,
+  searchEntities,
+} from './search';
 export { getTeamPageData } from './team-page';
 export type { GamePageData } from './game-page';
 export type { PlayerPageData } from './player-page';

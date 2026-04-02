@@ -14,7 +14,7 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   AnswerResponse,
   CellState,
@@ -22,70 +22,14 @@ import type {
   GridGameState,
   GridPuzzle,
 } from '@/lib/puzzles/types';
-
-// ---------------------------------------------------------------------------
-// Storage helpers
-// ---------------------------------------------------------------------------
-
-const STORAGE_KEY_PREFIX = 'grid_game_';
-
-function loadGameState(puzzleId: string): GridGameState | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(`${STORAGE_KEY_PREFIX}${puzzleId}`);
-    if (raw === null) return null;
-    const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) return null;
-    return parsed as GridGameState;
-  } catch {
-    return null;
-  }
-}
-
-function saveGameState(state: GridGameState): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(`${STORAGE_KEY_PREFIX}${state.puzzleId}`, JSON.stringify(state));
-  } catch {
-    // localStorage may be unavailable in private browsing
-  }
-}
-
-function buildInitialState(puzzleId: string): GridGameState {
-  return {
-    puzzleId,
-    cells: {},
-    completed: false,
-    startedAt: Date.now(),
-    completedAt: null,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Share helper
-// ---------------------------------------------------------------------------
-
-function buildShareText(puzzle: GridPuzzle, cells: Record<string, CellState>): string {
-  const lines: string[] = [`NBA Immaculate Grid — ${puzzle.date}`, ''];
-  for (let r = 0; r < puzzle.gridSize; r++) {
-    let row = '';
-    for (let c = 0; c < puzzle.gridSize; c++) {
-      const key = `${r}-${c}`;
-      const cell = cells[key];
-      if (cell?.submitted !== true) {
-        row += '⬛';
-      } else if (cell.correct) {
-        row += '🟨';
-      } else {
-        row += '⬜';
-      }
-    }
-    lines.push(row);
-  }
-  lines.push('');
-  lines.push('Play at nba-reference.com/friv/immaculate-grid');
-  return lines.join('\n');
-}
+import { CellDialog, ShareOverlay } from './grid-game-dialog';
+import {
+  buildInitialState,
+  buildShareText,
+  getCriteriaKey,
+  loadGameState,
+  saveGameState,
+} from './grid-game-utils';
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -154,286 +98,6 @@ function GridCell({ rowIndex, colIndex, state, onClick }: CellProps): JSX.Elemen
         </span>
       )}
     </button>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Player autocomplete
-// ---------------------------------------------------------------------------
-
-interface PlayerSuggestion {
-  id: string;
-  label: string;
-}
-
-interface PlayerSearchResult {
-  id: string;
-  label: string;
-  type: string;
-}
-
-interface SearchApiResponse {
-  results: PlayerSearchResult[];
-}
-
-function usePlayerSearch(
-  query: string,
-  enabled: boolean
-): {
-  suggestions: PlayerSuggestion[];
-} {
-  const [suggestions, setSuggestions] = useState<PlayerSuggestion[]>([]);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (timerRef.current !== null) clearTimeout(timerRef.current);
-    if (!enabled || query.trim().length < 2) {
-      return;
-    }
-    timerRef.current = setTimeout(() => {
-      void fetch(`/api/search?q=${encodeURIComponent(query.trim())}&type=player`)
-        .then(r => r.json() as Promise<SearchApiResponse>)
-        .then(data => {
-          const players = data.results.filter((r: PlayerSearchResult) => r.type === 'player');
-          setSuggestions(players.map((r: PlayerSearchResult) => ({ id: r.id, label: r.label })));
-        })
-        .catch(() => {
-          setSuggestions([]);
-        });
-    }, 250);
-
-    return () => {
-      if (timerRef.current !== null) clearTimeout(timerRef.current);
-    };
-  }, [query, enabled]);
-
-  // Only surface suggestions when the input is long enough and the search is active
-  const displayedSuggestions = enabled && query.trim().length >= 2 ? suggestions : [];
-
-  return { suggestions: displayedSuggestions };
-}
-
-// ---------------------------------------------------------------------------
-// Cell input dialog
-// ---------------------------------------------------------------------------
-
-interface CellDialogProps {
-  rowIndex: number;
-  colIndex: number;
-  rowCriteria: GridCriteria;
-  colCriteria: GridCriteria;
-  puzzleId: string;
-  onClose: () => void;
-  onResult: (row: number, col: number, result: AnswerResponse, playerName: string) => void;
-}
-
-function CellDialog({
-  rowIndex,
-  colIndex,
-  rowCriteria,
-  colCriteria,
-  puzzleId,
-  onClose,
-  onResult,
-}: CellDialogProps): JSX.Element {
-  const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<PlayerSuggestion | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { suggestions } = usePlayerSearch(query, selected === null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSelect = useCallback((suggestion: PlayerSuggestion): void => {
-    setSelected(suggestion);
-    setQuery(suggestion.label);
-    setError(null);
-  }, []);
-
-  const handleSubmit = useCallback(async (): Promise<void> => {
-    if (selected === null) {
-      setError('Please select a player from the suggestions.');
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/grid/answer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          puzzleId,
-          rowIndex,
-          colIndex,
-          brefId: selected.id,
-        }),
-      });
-      if (!res.ok) {
-        setError('Failed to validate answer. Please try again.');
-        return;
-      }
-      const data = (await res.json()) as AnswerResponse;
-      onResult(rowIndex, colIndex, data, selected.label);
-      onClose();
-    } catch {
-      setError('Failed to validate answer. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  }, [selected, puzzleId, rowIndex, colIndex, onResult, onClose]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>): void => {
-      if (e.key === 'Enter') {
-        void handleSubmit();
-      } else if (e.key === 'Escape') {
-        onClose();
-      }
-    },
-    [handleSubmit, onClose]
-  );
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--dc-primary)]/40 p-4 backdrop-blur-sm"
-      onClick={e => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Enter player for ${rowCriteria.label} × ${colCriteria.label}`}
-    >
-      <div className="w-full max-w-sm panel-paper p-5">
-        <h2 className="mb-1 inscription-title text-lg">Enter a Player</h2>
-        <p className="mb-4 text-xs text-muted">
-          Must satisfy: <strong className="text-ink">{rowCriteria.label}</strong> &amp;{' '}
-          <strong className="text-ink">{colCriteria.label}</strong>
-        </p>
-
-        <div className="mb-3">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={e => {
-              setQuery(e.target.value);
-              setSelected(null);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a player name…"
-            className="w-full rounded-md bg-paper-soft/95 px-3 py-2 text-sm text-ink shadow-input outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_16%,transparent)] focus:ring-2 focus:ring-[var(--focus-ring)] focus:outline-none"
-            autoComplete="off"
-          />
-        </div>
-
-        {suggestions.length > 0 && selected === null && (
-          <ul className="mb-3 max-h-48 overflow-y-auto surface-inset rounded-md">
-            {suggestions.map(s => (
-              <li key={s.id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSelect(s);
-                  }}
-                  className="w-full px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-[var(--row-hover)]"
-                >
-                  {s.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {error !== null && <p className="mb-3 text-xs text-[var(--danger)]">{error}</p>}
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              void handleSubmit();
-            }}
-            disabled={submitting || selected === null}
-            className="flex-1 rounded-md bg-[var(--dc-primary)] px-4 py-2 text-sm font-semibold text-[var(--dc-on-primary)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {submitting ? 'Checking…' : 'Submit'}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md bg-[var(--button-bg)] px-4 py-2 text-sm text-ink transition-colors hover:bg-[var(--button-hover)]"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Share overlay
-// ---------------------------------------------------------------------------
-
-interface ShareOverlayProps {
-  shareText: string;
-  onClose: () => void;
-}
-
-function ShareOverlay({ shareText, onClose }: ShareOverlayProps): JSX.Element {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = useCallback(async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopied(true);
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch {
-      // clipboard API unavailable
-    }
-  }, [shareText]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--dc-primary)]/40 p-4 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Share your result"
-    >
-      <div className="w-full max-w-sm panel-paper p-5">
-        <h2 className="mb-1 inscription-title text-lg">🏆 You Completed the Grid!</h2>
-        <p className="mb-4 text-sm text-muted">Share your result with others.</p>
-        <textarea
-          readOnly
-          value={shareText}
-          rows={7}
-          className="mb-3 w-full resize-none rounded-md bg-paper-soft/95 px-3 py-2 font-mono text-xs text-ink"
-          aria-label="Shareable result text"
-        />
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              void handleCopy();
-            }}
-            className="flex-1 rounded-md bg-[var(--dc-tertiary)] px-4 py-2 text-sm font-semibold text-[var(--dc-on-tertiary-fixed)] transition-opacity hover:opacity-90"
-          >
-            {copied ? '✓ Copied!' : 'Copy to Clipboard'}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md bg-[var(--button-bg)] px-4 py-2 text-sm text-ink transition-colors hover:bg-[var(--button-hover)]"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -560,9 +224,9 @@ export function GridGame({ puzzle }: GridGameProps): JSX.Element {
         <div className="min-h-[2.5rem]" />
 
         {/* Column headers */}
-        {cols.map((col, ci) => (
+        {cols.map(col => (
           <div
-            key={ci}
+            key={getCriteriaKey(col)}
             className="fresco-hero min-h-[2.5rem] rounded p-1 text-center text-xs leading-tight font-semibold text-[var(--dc-on-primary)] sm:text-sm"
           >
             <CriteriaLabel criteria={col} />
@@ -570,28 +234,29 @@ export function GridGame({ puzzle }: GridGameProps): JSX.Element {
         ))}
 
         {/* Rows */}
-        {rows.map((row, ri) => (
-          <>
-            {/* Row header */}
-            <div
-              key={`row-${ri}`}
-              className="fresco-hero flex min-h-[4.5rem] items-center justify-center rounded p-1 sm:min-h-[5.5rem]"
-            >
-              <CriteriaLabel criteria={row} />
-            </div>
+        {rows.map((row, ri) => {
+          const rowKey = getCriteriaKey(row);
 
-            {/* Cells */}
-            {cols.map((_col, ci) => (
-              <GridCell
-                key={`${ri}-${ci}`}
-                rowIndex={ri}
-                colIndex={ci}
-                state={gameState.cells[`${ri}-${ci}`]}
-                onClick={handleCellClick}
-              />
-            ))}
-          </>
-        ))}
+          return (
+            <Fragment key={rowKey}>
+              {/* Row header */}
+              <div className="fresco-hero flex min-h-[4.5rem] items-center justify-center rounded p-1 sm:min-h-[5.5rem]">
+                <CriteriaLabel criteria={row} />
+              </div>
+
+              {/* Cells */}
+              {cols.map((col, ci) => (
+                <GridCell
+                  key={`${rowKey}-${getCriteriaKey(col)}`}
+                  rowIndex={ri}
+                  colIndex={ci}
+                  state={gameState.cells[`${ri}-${ci}`]}
+                  onClick={handleCellClick}
+                />
+              ))}
+            </Fragment>
+          );
+        })}
       </div>
 
       {/* Cell input dialog */}

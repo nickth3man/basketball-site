@@ -3,6 +3,7 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
 import { Button } from '@/components/ui/button';
+import { logError } from '@/lib/logger';
 
 interface Props {
   children: ReactNode;
@@ -36,7 +37,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Error caught by boundary:', error, errorInfo);
+    logError('Error caught by boundary', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   override render(): ReactNode {
@@ -50,8 +55,10 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         nodeFallback ?? (
           <div className="mx-auto max-w-2xl p-6 text-center">
-            <h2 className="mb-4 text-xl font-bold text-red-600">Something went wrong</h2>
-            <p className="mb-4 text-gray-600">
+            <h2 className="mb-4 inscription-title text-xl text-[var(--dc-secondary)]">
+              Something went wrong
+            </h2>
+            <p className="mb-4 text-muted">
               We encountered an error while loading this page. Please try refreshing.
             </p>
             <Button

@@ -25,11 +25,16 @@ import { StatsTable } from '@/components/stats-table';
 import { StructuredData } from '@/components/structured-data';
 import { formatSignedNumber } from '@/lib/formatters';
 import { getTeamPageData } from '@/lib/query';
-import { routes } from '@/lib/routes';
 import { getSiteUrl } from '@/lib/site-config';
 import { notFound } from 'next/navigation';
 import { validateTeamAbbrev } from '@/lib/validation';
 import { seasonIdToEndYear } from '@/lib/season-utils';
+import {
+  buildTeamRelatedLinks,
+  getTeamJsonLd,
+  TEAM_PAGE_ANCHORS,
+  TEAM_SEASON_CHIP_CLASS,
+} from './page-helpers';
 
 interface TeamPageParams {
   params: Promise<{ abbrev: string }>;
@@ -61,33 +66,6 @@ export async function generateMetadata({ params }: TeamPageParams): Promise<Meta
   };
 }
 
-function getTeamJsonLd(
-  abbrev: string,
-  team: { full_name: string; conference: string | null; division: string | null },
-  current: Record<string, unknown> | null
-): Record<string, unknown> {
-  const siteUrl = getSiteUrl();
-
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'SportsTeam',
-    name: team.full_name,
-    url: `${siteUrl}/teams/${abbrev}`,
-    sport: 'Basketball',
-    ...(team.conference != null
-      ? { memberOf: { '@type': 'SportsOrganization', name: `NBA ${team.conference} Conference` } }
-      : {}),
-    ...(current?.['w'] != null && current['l'] != null
-      ? {
-          additionalProperty: [
-            { '@type': 'PropertyValue', name: 'Wins', value: current['w'] },
-            { '@type': 'PropertyValue', name: 'Losses', value: current['l'] },
-          ],
-        }
-      : {}),
-  };
-}
-
 export default async function TeamPage({ params }: TeamPageParams): Promise<JSX.Element> {
   const { abbrev } = await params;
 
@@ -110,49 +88,11 @@ export default async function TeamPage({ params }: TeamPageParams): Promise<JSX.
   } = teamPageData;
   const currentSeasonEndYear =
     typeof seasonLabel === 'string' ? (seasonIdToEndYear(seasonLabel)?.toString() ?? null) : null;
-  const relatedLinks = [
-    currentSeasonEndYear == null
-      ? null
-      : {
-          href: `/teams/${team.abbreviation}/${currentSeasonEndYear}` as Route,
-          label: 'Current Season Page',
-          description: 'Jump into the team-specific breakdown for the latest season.',
-        },
-    {
-      href: `/teams/${team.abbreviation}/franchise` as Route,
-      label: 'Franchise History',
-      description: 'Browse the franchise timeline, relocations, and historical summary.',
-    },
-    {
-      href: `/teams/${team.abbreviation}/salaries` as Route,
-      label: 'Salary History',
-      description: 'Review team salary commitments across seasons.',
-    },
-    {
-      href: routes.search(team.full_name),
-      label: 'Search This Team',
-      description: 'Use site-wide search to find seasons, games, and related pages for this team.',
-    },
-    {
-      href: '/standings' as Route,
-      label: 'Standings By Date',
-      description: 'Compare this team against historical standings snapshots.',
-    },
-  ].filter(link => link != null);
-
-  // Navigation anchors for sticky sidebar
-  const anchors = [
-    { id: 'summary', label: 'Summary' },
-    { id: 'recent-games', label: 'Recent Games' },
-    { id: 'roster', label: 'Roster' },
-    { id: 'four-factors', label: 'Four Factors' },
-    { id: 'team-stats', label: 'Team Stats' },
-    { id: 'leaders', label: 'Player Leaders' },
-    { id: 'history', label: 'Season History' },
-  ];
-
-  const seasonChipClass =
-    'rounded-md bg-[var(--dc-surface-container-highest)] px-2 py-1 text-xs outline outline-1 outline-[color-mix(in_srgb,var(--dc-outline-variant)_12%,transparent)] transition-all hover:bg-button-hover';
+  const relatedLinks = buildTeamRelatedLinks(
+    team.abbreviation,
+    team.full_name,
+    currentSeasonEndYear
+  );
   const jsonLd = getTeamJsonLd(team.abbreviation, team, current ?? null);
 
   return (
@@ -232,13 +172,16 @@ export default async function TeamPage({ params }: TeamPageParams): Promise<JSX.
               <Link
                 key={rowSeasonId}
                 href={`/teams/${team.abbreviation}/${endYear}` as Route}
-                className={seasonChipClass}
+                className={TEAM_SEASON_CHIP_CLASS}
               >
                 {rowSeasonId}
               </Link>
             );
           })}
-          <Link href={`/teams/${team.abbreviation}/salaries` as Route} className={seasonChipClass}>
+          <Link
+            href={`/teams/${team.abbreviation}/salaries` as Route}
+            className={TEAM_SEASON_CHIP_CLASS}
+          >
             Salaries
           </Link>
         </div>
@@ -252,7 +195,7 @@ export default async function TeamPage({ params }: TeamPageParams): Promise<JSX.
             On this page
           </div>
           <nav aria-label="Team page sections" className="space-y-1 text-sm">
-            {anchors.map(anchor => (
+            {TEAM_PAGE_ANCHORS.map(anchor => (
               <a
                 key={anchor.id}
                 href={`#${anchor.id}`}

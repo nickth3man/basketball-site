@@ -14,9 +14,9 @@ import {
   createApiJsonResponse,
   createApiOptionsResponse,
   logApiError,
+  parseApiJsonBody,
 } from '@/lib/api-response';
 import { addSubscriber } from '@/lib/newsletter-db';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 
 /** RFC 5322–inspired email regex — good enough for server-side pre-validation. */
@@ -39,16 +39,16 @@ export function OPTIONS(): Response {
  *          and the subscriber's `unsubscribe_token`.
  */
 export async function POST(req: NextRequest): Promise<Response> {
-  const rateLimitResponse = checkRateLimit(req);
-  if (rateLimitResponse) return rateLimitResponse;
-
   try {
-    let body: Record<string, unknown>;
-    try {
-      body = (await req.json()) as Record<string, unknown>;
-    } catch {
-      return createApiErrorResponse(req, 400, 'invalid_json', 'Request body must be valid JSON.');
+    const parsedBody = await parseApiJsonBody(req);
+    if (!parsedBody.ok) {
+      return parsedBody.response;
     }
+
+    const body =
+      typeof parsedBody.body === 'object' && parsedBody.body !== null
+        ? (parsedBody.body as Record<string, unknown>)
+        : {};
 
     const rawEmail = typeof body['email'] === 'string' ? body['email'].trim().toLowerCase() : '';
     if (rawEmail.length === 0) {

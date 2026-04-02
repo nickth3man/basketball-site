@@ -23,7 +23,7 @@ export default function ROYPage(): React.JSX.Element {
       winnersBySeason.set(candidate.season_id, candidate);
     }
   }
-  const winners = Array.from(winnersBySeason.values());
+  const winners = Array.from(winnersBySeason.values()).sort((a, b) => b.start_year - a.start_year);
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">

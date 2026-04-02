@@ -1,11 +1,8 @@
 import type { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/lib/site-config';
 
 export default function robots(): MetadataRoute.Robots {
-  const configuredBaseUrl = process.env['NEXT_PUBLIC_SITE_URL']?.trim();
-  const baseUrl =
-    configuredBaseUrl != null && configuredBaseUrl.length > 0
-      ? configuredBaseUrl
-      : 'https://nba-reference.com';
+  const baseUrl = getSiteUrl();
 
   return {
     rules: {

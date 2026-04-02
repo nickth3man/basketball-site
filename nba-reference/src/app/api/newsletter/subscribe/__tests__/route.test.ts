@@ -1,24 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 vi.mock('@/lib/newsletter-db', () => ({
   addSubscriber: vi.fn(),
 }));
 
-vi.mock('@/middleware/rate-limit', () => ({
-  checkRateLimit: vi.fn(),
-  extractClientIp: vi.fn(() => '127.0.0.1'),
-  getRateLimitStatus: vi.fn(() => ({ remaining: 99, reset: 1_710_000_000_000 })),
-  RATE_LIMIT: 100,
-}));
-
 import { addSubscriber } from '@/lib/newsletter-db';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import { POST } from '@/app/api/newsletter/subscribe/route';
 
 const addSubscriberMock = vi.mocked(addSubscriber);
-const checkRateLimitMock = vi.mocked(checkRateLimit);
 
 const MOCK_SUBSCRIBER = {
   id: 1,
@@ -44,7 +34,6 @@ function makeRequest(body: unknown): NextRequest {
 describe('POST /api/newsletter/subscribe', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    checkRateLimitMock.mockReturnValue(null);
   });
 
   it('subscribes a new user and returns status=subscribed', async () => {
@@ -143,18 +132,6 @@ describe('POST /api/newsletter/subscribe', () => {
 
     expect(res.status).toBe(400);
     expect(body.error.code).toBe('invalid_json');
-    expect(addSubscriberMock).not.toHaveBeenCalled();
-  });
-
-  it('returns 429 when rate limited', async () => {
-    checkRateLimitMock.mockReturnValue(
-      NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-    );
-
-    const req = makeRequest({ email: 'fan@example.com' });
-    const res = await POST(req);
-
-    expect(res.status).toBe(429);
     expect(addSubscriberMock).not.toHaveBeenCalled();
   });
 

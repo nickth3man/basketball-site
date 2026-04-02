@@ -3,7 +3,13 @@ import Link from 'next/link';
 import { PaginationNav } from '@/components/pagination-nav';
 import { SavedViewsWidget, SaveViewButton } from '@/components/saved-views';
 import { SearchBox } from '@/components/search-box';
-import { getSearchTypeLabel, SEARCH_RESULT_TYPES, searchEntities } from '@/lib/query';
+import {
+  getSearchTypeLabel,
+  normalizeSearchQuery,
+  parseSearchResultType,
+  SEARCH_RESULT_TYPES,
+  searchEntities,
+} from '@/lib/query';
 import type { SearchEntityResult, SearchResultType } from '@/lib/query';
 import { coercePageNumber, paginateItems } from '@/lib/pagination';
 import { routes } from '@/lib/routes';
@@ -35,26 +41,24 @@ function normalizeFilter(value: string | undefined): SearchFilter {
     return 'all';
   }
 
-  return SEARCH_RESULT_TYPES.find(type => type === value) ?? 'all';
+  return parseSearchResultType(value) ?? 'all';
 }
 
 function groupResults(
   results: SearchEntityResult[]
 ): Record<SearchResultType, SearchEntityResult[]> {
-  return results.reduce<Record<SearchResultType, SearchEntityResult[]>>(
-    (grouped, result) => {
-      grouped[result.type].push(result);
-      return grouped;
-    },
-    {
-      page: [],
-      player: [],
-      team: [],
-      season: [],
-      game: [],
-      award: [],
-    }
-  );
+  const grouped: Record<SearchResultType, SearchEntityResult[]> = {
+    page: [],
+    player: [],
+    team: [],
+    season: [],
+    game: [],
+    award: [],
+  };
+  for (const result of results) {
+    grouped[result.type].push(result);
+  }
+  return grouped;
 }
 
 function getSearchTypeChipLabel(type: SearchResultType): string {
@@ -66,7 +70,7 @@ export default async function SearchPage({
   searchParams,
 }: SearchPageProps): Promise<React.JSX.Element> {
   const { page, q, type } = await searchParams;
-  const query = q?.trim() ?? '';
+  const query = normalizeSearchQuery(q);
   const activeFilter = normalizeFilter(type);
   const requestedPage = coercePageNumber(page);
 
@@ -86,7 +90,7 @@ export default async function SearchPage({
 
   const paginatedResults = paginateItems(displayResults, requestedPage, SEARCH_PAGE_SIZE);
   const groupedResults = groupResults(paginatedResults.items);
-  const isResultSetCapped = allResults.length === SEARCH_RESULTS_FETCH_LIMIT;
+  const isResultSetCapped = allResults.length >= SEARCH_RESULTS_FETCH_LIMIT;
   const summary =
     query.length < 2
       ? undefined
@@ -265,7 +269,8 @@ export default async function SearchPage({
                       {getSearchTypeLabel(searchType)}
                     </h2>
                     <span className="text-xs tracking-wide text-crumb uppercase">
-                      {sectionResults.length} result{sectionResults.length === 1 ? '' : 's'}
+                      {allGrouped[searchType].length} result
+                      {allGrouped[searchType].length === 1 ? '' : 's'}
                     </span>
                   </div>
                   <div className="space-y-3">

@@ -10,7 +10,8 @@
  */
 
 import Database from 'better-sqlite3';
-import path from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 
 /** Singleton writable database instance */
@@ -27,7 +28,8 @@ let newsletterDb: Database.Database | null = null;
 export function resolveNewsletterDbPath(): string {
   const envPath = process.env['NEWSLETTER_DB_PATH'];
   if (envPath !== undefined && envPath.trim().length > 0) return envPath.trim();
-  return path.join(process.cwd(), '../db/newsletter.db');
+  const _dir = dirname(fileURLToPath(import.meta.url));
+  return join(_dir, '../../../db/newsletter.db');
 }
 
 /**
@@ -231,7 +233,10 @@ export function getSentEditions(limit = 20, offset = 0): NewsletterEdition[] {
   return db
     .prepare(
       `SELECT edition_id, date, subject_line, html_content, sent_at, open_rate
-         FROM newsletter_editions`
+         FROM newsletter_editions
+         WHERE sent_at IS NOT NULL
+         ORDER BY date DESC
+         LIMIT ? OFFSET ?`
     )
     .all(limit, offset) as NewsletterEdition[];
 }

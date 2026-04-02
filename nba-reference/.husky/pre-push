@@ -1,0 +1,5 @@
+set -e
+
+printf '%s\n' 'Running full quality gate before push...'
+cd nba-reference
+npm run quality-gate

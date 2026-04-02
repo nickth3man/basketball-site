@@ -17,7 +17,6 @@ import {
 } from '@/lib/api-response';
 import { getTodayPuzzle } from '@/lib/puzzles/data';
 import type { TodayPuzzleResponse } from '@/lib/puzzles/types';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 
 /** Returns today's ET date as a YYYY-MM-DD string */
@@ -36,9 +35,6 @@ export function OPTIONS(): Response {
  * @returns Today's puzzle or a 404 if no puzzles are available
  */
 export function GET(req: NextRequest): Response {
-  const rateLimitResponse = checkRateLimit(req);
-  if (rateLimitResponse) return rateLimitResponse;
-
   try {
     const today = getTodayDateET();
     const puzzle = getTodayPuzzle(today);

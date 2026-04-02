@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Route } from 'next';
 import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 vi.mock('@/lib/query/home', () => ({
   getHomeStandings: vi.fn(),
@@ -9,25 +8,17 @@ vi.mock('@/lib/query/home', () => ({
 }));
 
 vi.mock('@/lib/query/search', () => ({
+  normalizeSearchQuery: (query: string | null | undefined) => query?.trim() ?? '',
   searchEntities: vi.fn(),
-}));
-
-vi.mock('@/middleware/rate-limit', () => ({
-  checkRateLimit: vi.fn(),
-  extractClientIp: vi.fn(() => '127.0.0.1'),
-  getRateLimitStatus: vi.fn(() => ({ remaining: 99, reset: 1_710_000_000_000 })),
-  RATE_LIMIT: 100,
 }));
 
 import { getHomeStandings, getRecentGames } from '@/lib/query/home';
 import { searchEntities } from '@/lib/query/search';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import { GET } from '@/app/api/export/[type]/route';
 
 const getHomeStandingsMock = vi.mocked(getHomeStandings);
 const getRecentGamesMock = vi.mocked(getRecentGames);
 const searchEntitiesMock = vi.mocked(searchEntities);
-const checkRateLimitMock = vi.mocked(checkRateLimit);
 
 function createExportRequest(pathname: string, acceptEncoding?: string): NextRequest {
   if (acceptEncoding === undefined) {
@@ -57,7 +48,6 @@ function createSearchResult(href: Route): {
 
 describe('GET /api/export/[type]', () => {
   beforeEach(() => {
-    checkRateLimitMock.mockReturnValue(null);
     getHomeStandingsMock.mockReturnValue([
       {
         season_id: '2024-25',
@@ -103,9 +93,6 @@ describe('GET /api/export/[type]', () => {
     expect(response.headers.get('Content-Disposition')).toContain('standings.csv');
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
-    expect(response.headers.get('X-RateLimit-Limit')).toBe('100');
-    expect(response.headers.get('X-RateLimit-Remaining')).toBe('99');
-    expect(response.headers.get('X-RateLimit-Reset')).toBe('1710000000');
   });
 
   it('uses trimmed query value for search export', async () => {
@@ -155,24 +142,6 @@ describe('GET /api/export/[type]', () => {
         message: 'Invalid export type.',
       },
     });
-  });
-
-  it('returns rate limit response when blocked', async () => {
-    checkRateLimitMock.mockReturnValue(
-      NextResponse.json(
-        {
-          error: { code: 'rate_limited', message: 'Rate limit exceeded. Try again in 1 seconds.' },
-        },
-        { status: 429 }
-      )
-    );
-
-    const request = createExportRequest('/api/export/standings');
-    const params = Promise.resolve({ type: 'standings' });
-    const response = await GET(request, { params });
-
-    expect(response.status).toBe(429);
-    expect(getHomeStandingsMock).not.toHaveBeenCalled();
   });
 
   it('returns a structured error response when export generation fails', async () => {

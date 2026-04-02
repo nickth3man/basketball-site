@@ -184,6 +184,14 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/restrict-plus-operands': 'error',
 
       // ============================================
+      // FILE STRUCTURE & LINE LIMITS
+      // ============================================
+      // Hard limit: error at 400 lines for all TS/TSX files.
+      // Files >400 lines should be evaluated for splitting.
+      // Per-project guidelines: sweet spot 100-300, soft limit ~400, hard warning >600.
+      'max-lines': ['error', { max: 400 }],
+
+      // ============================================
       // STRICT UNUSED CODE
       // ============================================
       '@typescript-eslint/no-unused-vars': [

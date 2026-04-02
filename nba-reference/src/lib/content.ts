@@ -9,7 +9,8 @@
  */
 
 import fs from 'node:fs';
-import path from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import { remark } from 'remark';
 import remarkHtml from 'remark-html';
@@ -27,7 +28,10 @@ import remarkHtml from 'remark-html';
 const contentRoot =
   process.env['CONTENT_ROOT'] !== undefined && process.env['CONTENT_ROOT'].trim().length > 0
     ? process.env['CONTENT_ROOT'].trim()
-    : path.join(process.cwd(), '..', 'content');
+    : (() => {
+        const _dir = dirname(fileURLToPath(import.meta.url));
+        return join(_dir, '../../../content');
+      })();
 
 // ---------------------------------------------------------------------------
 // Blog posts
@@ -47,11 +51,11 @@ export interface BlogPost {
 export type BlogPostMeta = Omit<BlogPost, 'content'>;
 
 function getBlogDir(): string {
-  return path.join(contentRoot, 'blog');
+  return join(contentRoot, 'blog');
 }
 
 function getPodcastDir(): string {
-  return path.join(contentRoot, 'podcast');
+  return join(contentRoot, 'podcast');
 }
 
 function str(v: unknown, fallback = ''): string {
@@ -88,7 +92,7 @@ export function getBlogSlugs(): string[] {
 export function getAllBlogPosts(): BlogPostMeta[] {
   const slugs = getBlogSlugs();
   const posts = slugs.map(slug => {
-    const fullPath = path.join(getBlogDir(), `${slug}.md`);
+    const fullPath = join(getBlogDir(), `${slug}.md`);
     const raw = fs.readFileSync(fullPath, 'utf8');
     const { data } = matter(raw);
     return {
@@ -120,7 +124,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
 
   if (match === undefined) return null;
 
-  const fullPath = path.join(dir, match);
+  const fullPath = join(dir, match);
   const raw = fs.readFileSync(fullPath, 'utf8');
   const { data, content: rawContent } = matter(raw);
 
@@ -177,7 +181,7 @@ export function getPodcastSlugs(): string[] {
 export function getAllPodcastEpisodes(): PodcastEpisodeMeta[] {
   const slugs = getPodcastSlugs();
   const episodes = slugs.map(slug => {
-    const fullPath = path.join(getPodcastDir(), `${slug}.md`);
+    const fullPath = join(getPodcastDir(), `${slug}.md`);
     const raw = fs.readFileSync(fullPath, 'utf8');
     const { data } = matter(raw);
     return {
@@ -212,7 +216,7 @@ export async function getPodcastEpisode(slug: string): Promise<PodcastEpisode | 
 
   if (match === undefined) return null;
 
-  const fullPath = path.join(dir, match);
+  const fullPath = join(dir, match);
   const raw = fs.readFileSync(fullPath, 'utf8');
   const { data, content: rawContent } = matter(raw);
 

@@ -13,9 +13,9 @@ import {
   createApiJsonResponse,
   createApiOptionsResponse,
   logApiError,
+  parseApiJsonBody,
 } from '@/lib/api-response';
 import { unsubscribeByToken } from '@/lib/newsletter-db';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 
 export function OPTIONS(): Response {
@@ -30,16 +30,16 @@ export function OPTIONS(): Response {
  * @returns JSON `{ status: "unsubscribed" }` on success, or an error response.
  */
 export async function POST(req: NextRequest): Promise<Response> {
-  const rateLimitResponse = checkRateLimit(req);
-  if (rateLimitResponse) return rateLimitResponse;
-
   try {
-    let body: Record<string, unknown>;
-    try {
-      body = (await req.json()) as Record<string, unknown>;
-    } catch {
-      return createApiErrorResponse(req, 400, 'invalid_json', 'Request body must be valid JSON.');
+    const parsedBody = await parseApiJsonBody(req);
+    if (!parsedBody.ok) {
+      return parsedBody.response;
     }
+
+    const body =
+      typeof parsedBody.body === 'object' && parsedBody.body !== null
+        ? (parsedBody.body as Record<string, unknown>)
+        : {};
 
     const token = typeof body['token'] === 'string' ? body['token'].trim() : '';
     if (token.length === 0) {

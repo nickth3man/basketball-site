@@ -14,11 +14,11 @@ import {
   createApiJsonResponse,
   createApiOptionsResponse,
   logApiError,
+  parseApiJsonBody,
 } from '@/lib/api-response';
 import { getPuzzleByDate } from '@/lib/puzzles/data';
 import type { AnswerRequest, AnswerResponse } from '@/lib/puzzles/types';
 import { getGridPlayerById, validatePlayerCriteria } from '@/lib/queries/grid';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 
 export function OPTIONS(_req: NextRequest): Response {
@@ -37,16 +37,13 @@ export function OPTIONS(_req: NextRequest): Response {
  * @returns `AnswerResponse` indicating correctness and player details
  */
 export async function POST(req: NextRequest): Promise<Response> {
-  const rateLimitResponse = checkRateLimit(req);
-  if (rateLimitResponse) return rateLimitResponse;
-
   try {
-    let body: unknown;
-    try {
-      body = await req.json();
-    } catch {
-      return createApiErrorResponse(req, 400, 'invalid_json', 'Request body must be valid JSON.');
+    const parsedBody = await parseApiJsonBody(req);
+    if (!parsedBody.ok) {
+      return parsedBody.response;
     }
+
+    const body = parsedBody.body;
 
     if (!isAnswerRequest(body)) {
       return createApiErrorResponse(
@@ -109,7 +106,11 @@ function isAnswerRequest(value: unknown): value is AnswerRequest {
   return (
     typeof obj['puzzleId'] === 'string' &&
     typeof obj['rowIndex'] === 'number' &&
+    obj['rowIndex'] >= 0 &&
+    Number.isInteger(obj['rowIndex']) &&
     typeof obj['colIndex'] === 'number' &&
+    obj['colIndex'] >= 0 &&
+    Number.isInteger(obj['colIndex']) &&
     typeof obj['brefId'] === 'string'
   );
 }

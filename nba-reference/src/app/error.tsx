@@ -3,6 +3,7 @@
 import type { JSX } from 'react';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { logError } from '@/lib/logger';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -11,7 +12,7 @@ interface ErrorPageProps {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps): JSX.Element {
   useEffect(() => {
-    console.error('[Page Error]', {
+    logError('[Page Error]', {
       message: error.message,
       digest: error.digest,
       timestamp: new Date().toISOString(),
