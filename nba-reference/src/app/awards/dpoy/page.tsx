@@ -13,7 +13,13 @@ import {
 } from '@/lib/table-styles';
 
 export default function DPOYPage(): React.JSX.Element {
-  const winners = getDPOYHistory();
+  const allCandidates = getDPOYHistory();
+  const seenSeasons = new Set<string>();
+  const winners = allCandidates.filter(w => {
+    if (seenSeasons.has(w.season_id)) return false;
+    seenSeasons.add(w.season_id);
+    return true;
+  });
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
@@ -36,12 +42,13 @@ export default function DPOYPage(): React.JSX.Element {
                 <th className={tableHeaderCellClass('left')}>Team</th>
                 <th className={tableHeaderCellClass('right')}>Votes</th>
                 <th className={tableHeaderCellClass('right')}>Vote %</th>
+                <th className={tableHeaderCellClass('left')}>Voting</th>
               </tr>
             </thead>
             <tbody>
               {winners.map((winner, index) => (
                 <tr
-                  key={winner.season_id}
+                  key={`${winner.season_id}-${winner.bref_id}`}
                   className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
                 >
                   <td className={tableCellClass('left')}>
@@ -72,6 +79,14 @@ export default function DPOYPage(): React.JSX.Element {
                   <td className={tableCellClass('right')}>{winner.votes_received ?? '-'}</td>
                   <td className={tableCellClass('right')}>
                     {winner.vote_percentage == null ? '-' : `${String(winner.vote_percentage)}%`}
+                  </td>
+                  <td className={tableCellClass('left')}>
+                    <Link
+                      href={`/awards/dpoy/${winner.season_id}` as Route}
+                      className={tableLinkClass}
+                    >
+                      View
+                    </Link>
                   </td>
                 </tr>
               ))}
