@@ -3,13 +3,12 @@ import {
   getGameById,
   getGameLineScore,
   getGamePbpEvents,
-  getGamePbpWithShotDetails,
   getGamePlayerAdvancedBoxScore,
   getGamePlayerBoxScore,
+  getGameReferees,
   getGameTeamBoxScores,
   getGameTeamFourFactors,
 } from '@/lib/queries';
-import type { ShotEvent } from '@/lib/queries/games';
 
 type DbRecord = Record<string, string | number | null>;
 
@@ -27,45 +26,43 @@ export interface GamePageData {
   pbp: DbRecord[];
   playerAdvanced: DbRecord[];
   players: DbRecord[];
-  shotDetails: ShotEvent[] | null;
+  referees: DbRecord[];
 }
 
-export const getGamePageData = cache(
-  (gameId: string, pbpLimit = 250, pbpMode = 0): GamePageData | undefined => {
-    const game = getGameById(gameId);
-    if (game == null) {
-      return undefined;
-    }
-
-    const box = getGameTeamBoxScores(gameId);
-    const players = getGamePlayerBoxScore(gameId);
-    const playerAdvanced = getGamePlayerAdvancedBoxScore(gameId);
-    const lineScore = getGameLineScore(gameId);
-    const fourFactors = getGameTeamFourFactors(gameId);
-    const pbp = getGamePbpEvents(gameId, pbpLimit);
-    const shotDetails = pbpMode === 1 ? getGamePbpWithShotDetails(gameId) : null;
-    const awayTeam = String(game['away_abbrev'] ?? '');
-    const homeTeam = String(game['home_abbrev'] ?? '');
-    const awayPlayers = players.filter(player => String(player['team']) === awayTeam);
-    const homePlayers = players.filter(player => String(player['team']) === homeTeam);
-    const awayAdvanced = playerAdvanced.filter(player => String(player['team']) === awayTeam);
-    const homeAdvanced = playerAdvanced.filter(player => String(player['team']) === homeTeam);
-
-    return {
-      awayAdvanced,
-      awayPlayers,
-      awayTeam,
-      box,
-      fourFactors,
-      game,
-      homeAdvanced,
-      homePlayers,
-      homeTeam,
-      lineScore,
-      pbp,
-      playerAdvanced,
-      players,
-      shotDetails,
-    };
+export const getGamePageData = cache((gameId: string, pbpLimit = 250): GamePageData | undefined => {
+  const game = getGameById(gameId);
+  if (game == null) {
+    return undefined;
   }
-);
+
+  const box = getGameTeamBoxScores(gameId);
+  const players = getGamePlayerBoxScore(gameId);
+  const playerAdvanced = getGamePlayerAdvancedBoxScore(gameId);
+  const lineScore = getGameLineScore(gameId);
+  const fourFactors = getGameTeamFourFactors(gameId);
+  const pbp = getGamePbpEvents(gameId, pbpLimit);
+  const referees = getGameReferees(gameId);
+  const awayTeam = String(game['away_abbrev'] ?? '');
+  const homeTeam = String(game['home_abbrev'] ?? '');
+  const awayPlayers = players.filter(player => String(player['team']) === awayTeam);
+  const homePlayers = players.filter(player => String(player['team']) === homeTeam);
+  const awayAdvanced = playerAdvanced.filter(player => String(player['team']) === awayTeam);
+  const homeAdvanced = playerAdvanced.filter(player => String(player['team']) === homeTeam);
+
+  return {
+    awayAdvanced,
+    awayPlayers,
+    awayTeam,
+    box,
+    fourFactors,
+    game,
+    homeAdvanced,
+    homePlayers,
+    homeTeam,
+    lineScore,
+    pbp,
+    playerAdvanced,
+    players,
+    referees,
+  };
+});
