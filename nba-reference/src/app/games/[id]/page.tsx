@@ -24,9 +24,8 @@ import { getGamePageData } from '@/lib/query';
 import { getSiteUrl } from '@/lib/site-config';
 import { notFound } from 'next/navigation';
 
-const ShotChart = dynamic(
-  () => import('@/components/charts/shot-chart').then(m => ({ default: m.ShotChart })),
-  { ssr: false }
+const ShotChart = dynamic(() =>
+  import('@/components/charts/shot-chart').then(m => ({ default: m.ShotChart }))
 );
 
 interface GamePageParams {
@@ -83,7 +82,7 @@ export default async function GamePage({
   const isShotDetailMode = pbpMode === 'shot-details';
   const pbpLimit = pbpMode === 'full' ? 1000 : pbpMode === 'recent' ? 50 : 250;
 
-  const gamePageData = getGamePageData(id, pbpLimit);
+  const gamePageData = getGamePageData(id, pbpLimit, isShotDetailMode ? 1 : 0);
   if (gamePageData?.game == null) notFound();
   const {
     awayAdvanced,
@@ -294,7 +293,7 @@ export default async function GamePage({
         {isShotDetailMode ? (
           <>
             <h2 className="mb-2 text-xl font-bold">
-              Shot Details ({shotDetails.length} field goal attempts)
+              Shot Details ({shotDetails?.length ?? 0} field goal attempts)
             </h2>
             <p className="mb-4 text-sm text-muted-strong">
               Shot type, distance, and zone are parsed from play-by-play descriptions. Distances and
@@ -318,7 +317,7 @@ export default async function GamePage({
                   </tr>
                 </thead>
                 <tbody>
-                  {shotDetails.map(shot => (
+                  {shotDetails?.map(shot => (
                     <tr
                       key={shot.event_id}
                       className="border-b border-[color-mix(in_srgb,var(--dc-outline-variant)_30%,transparent)]"
@@ -358,7 +357,7 @@ export default async function GamePage({
               </table>
             </div>
             <h3 className="mb-2 text-lg font-semibold">Shot Zones</h3>
-            <ShotChart shots={shotDetails} height={320} />
+            {shotDetails && <ShotChart shots={shotDetails} height={320} />}
           </>
         ) : (
           <>

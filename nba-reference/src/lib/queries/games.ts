@@ -14,7 +14,7 @@
  * @module @/lib/queries/games
  */
 
-import { getDb } from '@/lib/db';
+import { getCachedQueryMany, getDb } from '@/lib/db';
 
 /**
  * Structured shot event derived from a play-by-play row.
@@ -66,6 +66,17 @@ function parseShotDescription(
   ShotEvent,
   'shot_type' | 'shot_distance' | 'shot_zone' | 'assisted' | 'shot_value' | 'shot_result'
 > {
+  if (description.trim() === '') {
+    return {
+      shot_type: null,
+      shot_distance: null,
+      shot_zone: null,
+      assisted: false,
+      shot_value: null,
+      shot_result: eventmsgtype === 1 ? 'made' : 'missed',
+    };
+  }
+
   const is3pt = description.includes('3PT');
   const distanceExec = /(\d+)'/.exec(description);
   const shotDistance = distanceExec?.[1] != null ? parseInt(distanceExec[1], 10) : null;
@@ -460,26 +471,26 @@ export function getGameTeamBoxScores(
  * @returns Array of {@link ShotEvent} records with parsed shot details
  */
 export function getGamePbpWithShotDetails(gameId: string, limit = 500): ShotEvent[] {
-  const rows = getDb()
-    .prepare(
-      `SELECT pbp.event_id,
-              pbp.period,
-              pbp.pc_time_string,
-              pbp.home_description,
-              pbp.visitor_description,
-              pbp.score,
-              pbp.eventmsgtype,
-              p.full_name AS player_name,
-              t.abbreviation AS team
-       FROM fact_play_by_play pbp
-       LEFT JOIN dim_player p ON p.player_id = pbp.player1_id
-       LEFT JOIN dim_team t ON t.team_id = pbp.team1_id
-       WHERE pbp.game_id = ?
-         AND pbp.eventmsgtype IN (1, 2)
-       ORDER BY pbp.period ASC, pbp.pc_time_string DESC
-       LIMIT ?`
-    )
-    .all(gameId, limit) as Array<Record<string, string | number | null>>;
+  const rows = getCachedQueryMany<Array<Record<string, string | number | null>>>(
+    `SELECT pbp.event_id,
+            pbp.period,
+            pbp.pc_time_string,
+            pbp.home_description,
+            pbp.visitor_description,
+            pbp.score,
+            pbp.eventmsgtype,
+            p.full_name AS player_name,
+            t.abbreviation AS team
+     FROM fact_play_by_play pbp
+     LEFT JOIN dim_player p ON p.player_id = pbp.player1_id
+     LEFT JOIN dim_team t ON t.team_id = pbp.team1_id
+     WHERE pbp.game_id = ?
+       AND pbp.eventmsgtype IN (1, 2)
+     ORDER BY pbp.period ASC, pbp.pc_time_string DESC
+     LIMIT ?`,
+    [gameId, limit],
+    30_000
+  );
 
   return rows.map(row => {
     const description = String(row['home_description'] ?? row['visitor_description'] ?? '');
