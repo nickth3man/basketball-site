@@ -76,6 +76,24 @@ export default async function TeamSeasonPage({
           >
             Salaries
           </Link>
+          <Link
+            href={`/teams/${team.abbreviation}/${seasonId}/lineups` as Route}
+            className={seasonChipClass}
+          >
+            Lineups
+          </Link>
+          <Link
+            href={`/teams/${team.abbreviation}/${seasonId}/on-off` as Route}
+            className={seasonChipClass}
+          >
+            On/Off
+          </Link>
+          <Link
+            href={`/teams/${team.abbreviation}/${seasonId}/depth-chart` as Route}
+            className={seasonChipClass}
+          >
+            Depth Chart
+          </Link>
           {previousEndYear == null ? (
             <span className={seasonChipDisabledClass}>Previous Season</span>
           ) : (
