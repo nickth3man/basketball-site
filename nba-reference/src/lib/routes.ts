@@ -61,6 +61,10 @@ export const routes = {
   // Games
   game: (gameId: string): Route => `/games/${gameId}` as Route,
 
+  // Referees
+  referee: (refereeId: string | number): Route => `/referees/${refereeId}` as Route,
+  referees: (): Route => '/referees' as Route,
+
   // Compare players
   compare: (p1?: string, p2?: string): Route => {
     const params = new URLSearchParams();
