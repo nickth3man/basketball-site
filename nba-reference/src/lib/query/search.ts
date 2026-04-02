@@ -175,6 +175,34 @@ const SEARCHABLE_SITE_PAGES: SearchStaticDefinition[] = [
     href: '/friv/colleges',
     keywords: ['colleges', 'college', 'alma mater', 'school'],
   },
+  {
+    id: 'wnba',
+    label: 'WNBA',
+    description: 'WNBA standings, players, and team stats.',
+    href: '/wnba' as Route,
+    keywords: ['wnba', "women's basketball", 'women nba'],
+  },
+  {
+    id: 'gleague',
+    label: 'G-League',
+    description: 'NBA G-League player development and statistics.',
+    href: '/gleague' as Route,
+    keywords: ['g-league', 'gleague', 'nba g league', 'development league', 'dleague'],
+  },
+  {
+    id: 'college',
+    label: 'College Basketball',
+    description: 'NCAA college basketball statistics and players.',
+    href: '/college' as Route,
+    keywords: ['college', 'ncaa', 'college basketball', 'university'],
+  },
+  {
+    id: 'international',
+    label: 'International Basketball',
+    description: 'EuroLeague, CBA, NBL, and other international leagues.',
+    href: '/international' as Route,
+    keywords: ['international', 'euroleague', 'cba', 'nbl', 'fiba', 'overseas'],
+  },
 ];
 
 function normalizeQuery(query: string): string {
