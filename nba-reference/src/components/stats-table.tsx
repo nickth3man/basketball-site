@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'reac
 import { convertRowsToCsvWithColumns } from '@/lib/csv';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { ScrollHint } from '@/components/scroll-hint';
 import { routes } from '@/lib/routes';
 import { seasonIdToLeagueSlug } from '@/lib/season-utils';
 import {
@@ -314,14 +315,14 @@ export function StatsTable({ columns, rows, initialSort, tableId }: StatsTablePr
             </Button>
           </div>
 
-          <div className="overflow-x-auto rounded-md">
+          <ScrollHint>
             <table className={tableClass}>
               <thead>
                 <tr className={tableHeadRowClass}>
-                  {columns.map(column => (
+                  {columns.map((column, index) => (
                     <th
                       key={column.key}
-                      className={tableHeaderCellClass(column.align)}
+                      className={tableHeaderCellClass(column.align, index === 0)}
                       aria-sort={
                         sortKey === column.key
                           ? direction === 'asc'
@@ -364,7 +365,7 @@ export function StatsTable({ columns, rows, initialSort, tableId }: StatsTablePr
                 {keyedRows.map(({ row, rowKey }) => {
                   return (
                     <tr key={rowKey} className={tableBodyRowClass}>
-                      {columns.map(column => {
+                      {columns.map((column, index) => {
                         const rawValue = row[column.key];
                         const displayValue = rawValue == null ? '-' : String(rawValue);
                         const href = resolveLinkedHref(row, column.link, column.key);
@@ -372,7 +373,7 @@ export function StatsTable({ columns, rows, initialSort, tableId }: StatsTablePr
                         return (
                           <td
                             key={`${rowKey}-${column.key}`}
-                            className={tableCellClass(column.align)}
+                            className={tableCellClass(column.align, index === 0)}
                           >
                             {href != null && rawValue != null ? (
                               <Link className={tableLinkClass} href={href}>
@@ -389,7 +390,7 @@ export function StatsTable({ columns, rows, initialSort, tableId }: StatsTablePr
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollHint>
         </>
       )}
     </div>

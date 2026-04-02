@@ -43,14 +43,19 @@ export const tableLinkClass =
 
 export type TableAlign = 'left' | 'right';
 
-export function tableHeaderCellClass(align?: TableAlign): string {
-  return cn('px-3 py-2.5 font-semibold', align === 'right' ? 'text-right' : 'text-left');
+export function tableHeaderCellClass(align?: TableAlign, isFirst?: boolean): string {
+  return cn(
+    'px-3 py-2.5 font-semibold',
+    align === 'right' ? 'text-right' : 'text-left',
+    isFirst === true && 'sticky left-0 z-20 bg-thead'
+  );
 }
 
-export function tableCellClass(align?: TableAlign): string {
+export function tableCellClass(align?: TableAlign, isFirst?: boolean): string {
   return cn(
     'px-3 py-2.5 align-middle',
-    align === 'right' ? 'text-right tabular-nums' : 'text-left'
+    align === 'right' ? 'text-right tabular-nums' : 'text-left',
+    isFirst === true && 'sticky left-0 z-10 bg-inherit'
   );
 }
 
