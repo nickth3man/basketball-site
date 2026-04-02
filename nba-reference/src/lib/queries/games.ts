@@ -6,7 +6,7 @@
  * - Player box scores (traditional stats)
  * - Advanced player box scores (eFG%, TS%, Game Score)
  * - Team box scores and Four Factors
- * - Play-by-play event streams
+ * - Play-by-play event streams (text and structured shot-detail modes)
  * - Line score by period
  *
  * All queries use the cached database layer (30s TTL) for performance.
@@ -14,7 +14,129 @@
  * @module @/lib/queries/games
  */
 
-import { getDb } from '@/lib/db';
+import { getCachedQueryMany, getDb } from '@/lib/db';
+
+/**
+ * Structured shot event derived from a play-by-play row.
+ *
+ * Fields are parsed from the free-text description columns because the
+ * `fact_play_by_play` table does not yet store structured shot columns
+ * (see `docs/data-pipeline-contract.md` for the full schema audit and
+ * proposed additions).
+ */
+export interface ShotEvent {
+  event_id: string;
+  period: number;
+  pc_time_string: string | null;
+  home_description: string | null;
+  visitor_description: string | null;
+  score: string | null;
+  /** 1 = made field goal, 2 = missed field goal */
+  eventmsgtype: number;
+  player_name: string | null;
+  team: string | null;
+  shot_result: 'made' | 'missed';
+  /** Parsed shot type label, e.g. "Jump Shot", "Layup", "Dunk", "3-Point" */
+  shot_type: string | null;
+  /** Shot distance in feet parsed from description, or null if not found */
+  shot_distance: number | null;
+  /** Inferred shot zone from distance + shot type */
+  shot_zone: string | null;
+  assisted: boolean;
+  /** 2 or 3 depending on whether description contains "3PT" */
+  shot_value: 2 | 3 | null;
+}
+
+/**
+ * Parse structured shot metadata from a PBP event description.
+ *
+ * This is a best-effort parser that extracts shot type, distance, zone, assist
+ * flag, and shot value from the free-text description strings stored in
+ * `fact_play_by_play`. It is used in `getGamePbpWithShotDetails` to produce
+ * the `ShotEvent` shape until the ETL pipeline provides structured columns
+ * (see `docs/data-pipeline-contract.md`).
+ *
+ * @param description - The non-null description string from the PBP row
+ * @param eventmsgtype - 1 for made shot, 2 for missed shot
+ */
+function parseShotDescription(
+  description: string,
+  eventmsgtype: number
+): Pick<
+  ShotEvent,
+  'shot_type' | 'shot_distance' | 'shot_zone' | 'assisted' | 'shot_value' | 'shot_result'
+> {
+  if (description.trim() === '') {
+    return {
+      shot_type: null,
+      shot_distance: null,
+      shot_zone: null,
+      assisted: false,
+      shot_value: null,
+      shot_result: eventmsgtype === 1 ? 'made' : 'missed',
+    };
+  }
+
+  const is3pt = description.includes('3PT');
+  const distanceExec = /(\d+)'/.exec(description);
+  const shotDistance = distanceExec?.[1] != null ? parseInt(distanceExec[1], 10) : null;
+  const assisted = /\d+\s+AST\)|AST\)/.test(description);
+
+  let shotType: string | null;
+  if (is3pt) {
+    shotType = '3-Point';
+  } else if (/dunk/i.test(description)) {
+    shotType = 'Dunk';
+  } else if (/alley.?oop/i.test(description)) {
+    shotType = 'Alley Oop';
+  } else if (/layup/i.test(description)) {
+    shotType = 'Layup';
+  } else if (/hook/i.test(description)) {
+    shotType = 'Hook Shot';
+  } else if (/tip/i.test(description)) {
+    shotType = 'Tip Shot';
+  } else if (/floater/i.test(description)) {
+    shotType = 'Floater';
+  } else if (/pull.?up/i.test(description)) {
+    shotType = 'Pull-Up Jump Shot';
+  } else if (/step.?back/i.test(description)) {
+    shotType = 'Step-Back Jump Shot';
+  } else if (/fadeaway/i.test(description)) {
+    shotType = 'Fadeaway';
+  } else if (/jump/i.test(description)) {
+    shotType = 'Jump Shot';
+  } else {
+    shotType = 'Field Goal';
+  }
+
+  let shotZone: string | null;
+  if (is3pt) {
+    shotZone = shotDistance !== null && shotDistance <= 22 ? 'Corner 3' : 'Above Break 3';
+  } else if (
+    /dunk|alley.?oop/i.test(description) ||
+    shotType === 'Layup' ||
+    (shotDistance !== null && shotDistance <= 4)
+  ) {
+    shotZone = 'Restricted Area';
+  } else if (shotDistance !== null && shotDistance <= 8) {
+    shotZone = 'In The Paint';
+  } else if (shotDistance !== null && shotDistance <= 16) {
+    shotZone = 'Mid-Range';
+  } else if (shotDistance !== null) {
+    shotZone = 'Long 2';
+  } else {
+    shotZone = null;
+  }
+
+  return {
+    shot_type: shotType,
+    shot_distance: shotDistance,
+    shot_zone: shotZone,
+    assisted,
+    shot_value: is3pt ? 3 : 2,
+    shot_result: eventmsgtype === 1 ? 'made' : 'missed',
+  };
+}
 
 /**
  * Retrieve basic game information for the specified game ID.
@@ -332,4 +454,61 @@ export function getGameTeamBoxScores(
        ORDER BY t.abbreviation`
     )
     .all(gameId) as Array<Record<string, string | number | null>>;
+}
+
+/**
+ * Return structured shot-detail events for a game.
+ *
+ * Only made and missed field goal events (`eventmsgtype` 1 or 2) are returned.
+ * Shot metadata (type, distance, zone, assist flag, shot value) is parsed from
+ * the free-text description columns since `fact_play_by_play` does not yet
+ * carry dedicated structured columns (see `docs/data-pipeline-contract.md`).
+ *
+ * Results are ordered chronologically (period ASC, clock DESC).
+ *
+ * @param gameId - Game identifier
+ * @param limit - Maximum number of shot events to return (default: 500)
+ * @returns Array of {@link ShotEvent} records with parsed shot details
+ */
+export function getGamePbpWithShotDetails(gameId: string, limit = 500): ShotEvent[] {
+  const rows = getCachedQueryMany<Array<Record<string, string | number | null>>>(
+    `SELECT pbp.event_id,
+            pbp.period,
+            pbp.pc_time_string,
+            pbp.home_description,
+            pbp.visitor_description,
+            pbp.score,
+            pbp.eventmsgtype,
+            p.full_name AS player_name,
+            t.abbreviation AS team
+     FROM fact_play_by_play pbp
+     LEFT JOIN dim_player p ON p.player_id = pbp.player1_id
+     LEFT JOIN dim_team t ON t.team_id = pbp.team1_id
+     WHERE pbp.game_id = ?
+       AND pbp.eventmsgtype IN (1, 2)
+     ORDER BY pbp.period ASC, pbp.pc_time_string DESC
+     LIMIT ?`,
+    [gameId, limit],
+    30_000
+  );
+
+  return rows.map(row => {
+    const description = String(row['home_description'] ?? row['visitor_description'] ?? '');
+    const eventmsgtype = Number(row['eventmsgtype']);
+    const parsed = parseShotDescription(description, eventmsgtype);
+
+    return {
+      event_id: String(row['event_id'] ?? ''),
+      period: Number(row['period']),
+      pc_time_string: row['pc_time_string'] != null ? String(row['pc_time_string']) : null,
+      home_description: row['home_description'] != null ? String(row['home_description']) : null,
+      visitor_description:
+        row['visitor_description'] != null ? String(row['visitor_description']) : null,
+      score: row['score'] != null ? String(row['score']) : null,
+      eventmsgtype,
+      player_name: row['player_name'] != null ? String(row['player_name']) : null,
+      team: row['team'] != null ? String(row['team']) : null,
+      ...parsed,
+    };
+  });
 }

@@ -4,6 +4,7 @@ vi.mock('@/lib/queries', () => ({
   getGameById: vi.fn(),
   getGameLineScore: vi.fn(),
   getGamePbpEvents: vi.fn(),
+  getGamePbpWithShotDetails: vi.fn(),
   getGamePlayerAdvancedBoxScore: vi.fn(),
   getGamePlayerBoxScore: vi.fn(),
   getGameTeamBoxScores: vi.fn(),
@@ -139,6 +140,7 @@ describe('page loaders', () => {
     mockedQueries.getGameLineScore.mockReturnValue([]);
     mockedQueries.getGameTeamFourFactors.mockReturnValue([]);
     mockedQueries.getGamePbpEvents.mockReturnValue([]);
+    mockedQueries.getGamePbpWithShotDetails.mockReturnValue([]);
 
     const data = getGamePageData('0022400001');
 
@@ -161,6 +163,7 @@ describe('page loaders', () => {
     mockedQueries.getGameLineScore.mockReturnValue([]);
     mockedQueries.getGameTeamFourFactors.mockReturnValue([]);
     mockedQueries.getGamePbpEvents.mockReturnValue([]);
+    mockedQueries.getGamePbpWithShotDetails.mockReturnValue([]);
 
     getGamePageData('0022400001', 1000);
 

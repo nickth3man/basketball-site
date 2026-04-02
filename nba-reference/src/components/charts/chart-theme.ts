@@ -4,6 +4,11 @@ export const chartColors = {
   tertiary: 'hsl(140 60% 50%)',
 };
 
+/** Gold — made shots, positive events (marble/gold palette) */
+export const COLOR_SHOT_MADE = '#c9a227';
+/** Terracotta — missed shots, negative events */
+export const COLOR_SHOT_MISSED = '#9f402d';
+
 export const chartStyles = {
   grid: { stroke: 'var(--line)', strokeDasharray: '3 3' },
   axis: { stroke: 'var(--muted)' },
