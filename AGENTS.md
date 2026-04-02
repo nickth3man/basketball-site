@@ -1,51 +1,72 @@
 # Basketball Site Agent Guide
 
-## Search First
+**Generated:** 2026-04-02 America/New_York
+**Commit:** `83ae9ef`
+**Branch:** `dev`
 
-- Begin every codebase search with `tree` and `rg`.
-- Use `tree -L 2` or `tree -L 3` first to confirm the local shape of the area you are about to inspect.
-- Use `rg` immediately after `tree` to find the exact files, symbols, or strings you need.
+## Overview
 
-## Workspace Scope
+Repository root is mostly coordination: docs, database payload, content, and one real product app in `nba-reference/`.
+Treat `nba-reference/` as the default destination for code changes unless the task is explicitly about docs, content, or data payload ownership.
 
-- Repository root contains documentation, the SQLite payload in `db/`, and a Next.js app in `nba-reference/`.
-- Most product code changes belong in `nba-reference/`.
-- Repository-level maintenance assets live in `scripts/`, but `scripts/migrate.sh` is legacy and not part of normal day-to-day work.
+## Structure
 
-## Default Working Directory
+```text
+basketball-site/
+├── nba-reference/   # Next.js 16 app, tests, scripts, all product code
+├── db/              # SQLite payload + migration artifact + runtime notes
+├── content/         # Blog and podcast markdown source
+├── docs/            # Data-pipeline and repo docs
+├── scripts/         # Legacy repo-level shell helper
+└── .github/         # CI and OpenCode workflow files
+```
 
-- For app work, switch to `nba-reference/` before running `npm` commands.
-- Useful commands from `nba-reference/`:
-  - `npm run dev`
-  - `npm run verify:db`
-  - `npm run type-check`
-  - `npm run lint`
-  - `npm run test`
-  - `npm run ci`
+## Where To Look
 
-## Architecture Boundaries
+| Task | Location | Notes |
+|---|---|---|
+| App pages, route handlers, metadata | `nba-reference/src/app/` | See `nba-reference/src/app/AGENTS.md` |
+| Shared UI, client widgets, table/search UX | `nba-reference/src/components/` | See `nba-reference/src/components/AGENTS.md` |
+| DB access, caching, feature loaders | `nba-reference/src/lib/` | See `nba-reference/src/lib/AGENTS.md` |
+| Raw SQL/domain query modules | `nba-reference/src/lib/queries/` | See `nba-reference/src/lib/queries/AGENTS.md` |
+| Database payload/runtime notes | `db/` | App reads from `nba_raw_data.db`; payload refresh is external |
+| Long-form content | `content/` | Markdown-only; not the live data layer |
+| Legacy repo helper | `scripts/migrate.sh` | Legacy; not normal product workflow |
 
-- The application is a read-only stats site backed by `db/nba_raw_data.db`.
-- Never add runtime writes to SQLite.
-- Keep SQL and database access in `nba-reference/src/lib/`; do not scatter queries through route files or components.
-- Pages and route segments in `nba-reference/src/app/` should stay Server Components by default; add `'use client'` only when interactivity requires it.
+## Conventions
 
-## Nested Instructions
+- Start codebase discovery with `tree -L 2` or `tree -L 3`, then `rg`.
+- Ignore `nba-reference/node_modules` during search.
+- Run app commands from `nba-reference/`, not repo root.
+- Keep code changes scoped; update nearby tests and adjacent docs when behavior or workflow changes.
 
-- Check for more specific `AGENTS.md` files before editing inside a subtree.
-- Follow `nba-reference/src/components/AGENTS.md` for shared component work.
-- Follow `nba-reference/src/lib/queries/AGENTS.md` for query modules.
-- When nested guidance exists, treat it as the source of truth for that subtree.
+## Anti-Patterns (This Project)
 
-## Editing Expectations
+- Do not add runtime writes to `db/nba_raw_data.db`.
+- Do not place SQL in route files or shared components; keep DB access in `nba-reference/src/lib/`.
+- Do not treat `scripts/migrate.sh` as an active workflow.
+- Do not add `'use client'` to `src/app/**` pages by default; prefer Server Components unless interactivity forces a client boundary.
 
-- Keep changes minimal and scoped to the request.
-- Match existing project patterns, naming, and file placement.
-- Update nearby tests when behavior changes.
-- Update documentation when commands, architecture boundaries, or contributor workflow changes.
+## Unique Styles
 
-## Validation
+- Repo docs point at app-local guidance when a subtree has sharper rules; always load the nearest child `AGENTS.md` before editing there.
+- `README.md` and `CONTRIBUTING.md` document commands and architecture; keep AGENTS files terse and action-oriented rather than explanatory.
+- CI runs from `nba-reference/` and verifies DB readability before the normal quality pipeline.
 
-- Run the smallest relevant checks for the files you changed.
-- If you touched shared UI, routing, data access, or multiple layers, prefer running `npm run ci` from `nba-reference/` before finishing.
-- If your change depends on the local database payload, run `npm run verify:db` first.
+## Commands
+
+```bash
+cd nba-reference
+npm run verify:db
+npm run type-check
+npm run lint
+npm run test
+npm run ci
+npm run build
+```
+
+## Notes
+
+- `README.md` references `nba-reference/AGENTS.md`; that file should exist and remain the app-level entry point.
+- `db/README.md` documents the only intentional write exception: newsletter data uses a separate writable SQLite file, not the read-only stats DB.
+- If a task spans shared UI, routing, or data access, prefer `npm run ci` over narrow checks.

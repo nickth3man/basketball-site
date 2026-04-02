@@ -15,42 +15,58 @@ import { createApiErrorResponse, createApiOptionsResponse, logApiError } from '@
 import { API_CORS_HEADERS, API_NO_STORE_HEADERS } from '@/lib/api-headers';
 import { convertRowsToCsv, castToDbRows } from '@/lib/csv';
 import { getHomeStandings, getRecentGames } from '@/lib/query/home';
-import { searchEntities } from '@/lib/query/search';
+import { normalizeSearchQuery, searchEntities } from '@/lib/query/search';
 import type { DbRows } from '@/lib/types';
-import {
-  checkRateLimit,
-  extractClientIp,
-  getRateLimitStatus,
-  RATE_LIMIT,
-} from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 import { gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 
 const gzipAsync = promisify(gzip);
+const EXPORT_TYPES = ['standings', 'games', 'search'] as const;
+
+type ExportType = (typeof EXPORT_TYPES)[number];
 
 export function OPTIONS(): Response {
   return createApiOptionsResponse();
 }
 
 function buildExportHeaders(
-  req: NextRequest,
   type: string,
   extraHeaders: Record<string, string> = {}
 ): Record<string, string> {
-  const rateLimitStatus = getRateLimitStatus(extractClientIp(req));
-
   return {
     ...API_CORS_HEADERS,
     ...API_NO_STORE_HEADERS,
     'Content-Type': 'text/csv; charset=utf-8',
     'Content-Disposition': `attachment; filename="${type}.csv"`,
     Vary: 'Accept-Encoding',
-    'X-RateLimit-Limit': String(RATE_LIMIT),
-    'X-RateLimit-Remaining': String(rateLimitStatus.remaining),
-    'X-RateLimit-Reset': String(Math.ceil(rateLimitStatus.reset / 1000)),
     ...extraHeaders,
   };
+}
+
+function parseExportType(type: string): ExportType | undefined {
+  return EXPORT_TYPES.find(exportType => exportType === type);
+}
+
+function getExportRows(type: ExportType, req: NextRequest): DbRows {
+  switch (type) {
+    case 'standings':
+      return castToDbRows(getHomeStandings(30));
+    case 'games':
+      return castToDbRows(getRecentGames(100));
+    case 'search': {
+      const query = normalizeSearchQuery(req.nextUrl.searchParams.get('q'));
+      return castToDbRows(
+        searchEntities(query).map(result => ({
+          type: result.type,
+          id: result.id,
+          label: result.label,
+          description: result.description,
+          href: result.href,
+        }))
+      );
+    }
+  }
 }
 
 /**
@@ -71,31 +87,15 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ type: string }> }
 ): Promise<Response> {
-  const rateLimitResponse = checkRateLimit(req);
-  if (rateLimitResponse) return rateLimitResponse;
+  const routeParams = await params;
 
   try {
-    const { type } = await params;
-    if (type !== 'standings' && type !== 'games' && type !== 'search') {
+    const exportType = parseExportType(routeParams.type);
+    if (exportType === undefined) {
       return createApiErrorResponse(req, 400, 'invalid_export_type', 'Invalid export type.');
     }
 
-    let rows: DbRows = [];
-
-    if (type === 'standings') rows = castToDbRows(getHomeStandings(30));
-    if (type === 'games') rows = castToDbRows(getRecentGames(100));
-    if (type === 'search') {
-      const query = req.nextUrl.searchParams.get('q')?.trim() ?? '';
-      rows = castToDbRows(
-        searchEntities(query).map(result => ({
-          type: result.type,
-          id: result.id,
-          label: result.label,
-          description: result.description,
-          href: result.href,
-        }))
-      );
-    }
+    const rows = getExportRows(exportType, req);
 
     const csv = convertRowsToCsv(rows);
     const acceptEncoding = req.headers.get('accept-encoding') ?? '';
@@ -104,18 +104,18 @@ export async function GET(
     if (supportsGzip && csv.length > 1024) {
       const compressed = await gzipAsync(Buffer.from(csv, 'utf-8'));
       return new Response(compressed, {
-        headers: buildExportHeaders(req, type, { 'Content-Encoding': 'gzip' }),
+        headers: buildExportHeaders(exportType, { 'Content-Encoding': 'gzip' }),
       });
     }
 
     return new Response(csv, {
-      headers: buildExportHeaders(req, type),
+      headers: buildExportHeaders(exportType),
     });
   } catch (error) {
-    const routeParams = await params;
+    const normalizedQuery = normalizeSearchQuery(req.nextUrl.searchParams.get('q'));
     logApiError('export', error, {
       exportType: routeParams.type,
-      query: req.nextUrl.searchParams.get('q')?.trim() ?? null,
+      query: normalizedQuery.length > 0 ? normalizedQuery : null,
     });
     return createApiErrorResponse(
       req,

@@ -21,6 +21,42 @@ export interface Favorite {
 
 const STORAGE_KEY = 'nba-reference-favorites';
 
+function isStoredFavorite(value: unknown): value is Favorite {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate['id'] === 'string' &&
+    (candidate['type'] === 'player' || candidate['type'] === 'team') &&
+    typeof candidate['name'] === 'string' &&
+    typeof candidate['addedAt'] === 'string'
+  );
+}
+
+function loadFavorites(): Favorite[] {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored == null || stored.length === 0) {
+      return [];
+    }
+
+    const parsed: unknown = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter(isStoredFavorite);
+  } catch (_error: unknown) {
+    return [];
+  }
+}
+
 export function useFavorites(): {
   favorites: Favorite[];
   addFavorite: (id: string, type: FavoriteType, name: string) => void;
@@ -28,29 +64,15 @@ export function useFavorites(): {
   isFavorite: (id: string, type: FavoriteType) => boolean;
   isLoaded: boolean;
 } {
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [favorites, setFavorites] = useState<Favorite[]>(loadFavorites);
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (stored != null && stored.length > 0) setFavorites(JSON.parse(stored) as Favorite[]);
-    } catch {
-      // ignore parse errors
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+    } catch (_error: unknown) {
+      return;
     }
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-      } catch {
-        // Ignore storage errors (quota exceeded, storage disabled, etc.)
-      }
-    }
-  }, [favorites, isLoaded]);
+  }, [favorites]);
 
   const addFavorite = useCallback((id: string, type: FavoriteType, name: string): void => {
     setFavorites(prev => {
@@ -68,6 +90,10 @@ export function useFavorites(): {
       favorites.some(f => f.id === id && f.type === type),
     [favorites]
   );
+
+  // Favorites are loaded synchronously from localStorage on first render.
+  // No async loading state is needed — the initial state is always available.
+  const isLoaded = true;
 
   return { favorites, addFavorite, removeFavorite, isFavorite, isLoaded };
 }

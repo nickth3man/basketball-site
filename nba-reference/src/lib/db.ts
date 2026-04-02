@@ -12,7 +12,8 @@
  */
 
 import Database from 'better-sqlite3';
-import path from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { logQuery } from '@/lib/logger';
 
 /** Singleton database instance - initialized on first access */
@@ -31,6 +32,7 @@ interface CacheEntry {
 
 /** Maximum number of cached query results to prevent unbounded memory growth */
 const MAX_QUERY_CACHE_SIZE = 500;
+const DATABASE_LOCK_TIMEOUT_MS = 10_000;
 
 /**
  * In-memory cache for query results.
@@ -138,7 +140,8 @@ function writeCachedResult<T>(key: string, value: T, ttlMs: number): T {
 export function resolveDbPath(): string {
   const envPath = process.env['DB_PATH'];
   if (envPath !== undefined && envPath.trim().length > 0) return envPath;
-  return path.join(process.cwd(), '../db/nba_raw_data.db');
+  const _dir = dirname(fileURLToPath(import.meta.url));
+  return join(_dir, '../../../db/nba_raw_data.db');
 }
 
 /**
@@ -148,8 +151,11 @@ export function resolveDbPath(): string {
  */
 export function getDb(): Database.Database {
   if (!db) {
-    const readonly = true;
-    db = new Database(resolveDbPath(), { readonly });
+    db = new Database(resolveDbPath(), {
+      readonly: true,
+      fileMustExist: true,
+      timeout: DATABASE_LOCK_TIMEOUT_MS,
+    });
     db.pragma('foreign_keys = ON');
   }
 

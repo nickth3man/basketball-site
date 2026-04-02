@@ -12,15 +12,39 @@ export interface SavedView {
 
 const STORAGE_KEY = 'nba-reference-saved-views';
 
+function isSavedViewType(value: unknown): value is SavedView['type'] {
+  return value === 'search' || value === 'compare' || value === 'leaders' || value === 'standings';
+}
+
+function isSavedView(value: unknown): value is SavedView {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate['id'] === 'string' &&
+    typeof candidate['name'] === 'string' &&
+    typeof candidate['url'] === 'string' &&
+    isSavedViewType(candidate['type']) &&
+    typeof candidate['createdAt'] === 'string'
+  );
+}
+
 function loadSavedViews(): SavedView[] {
   if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored != null && stored.length > 0) {
-      return JSON.parse(stored) as SavedView[];
+      const parsed: unknown = JSON.parse(stored);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      return parsed.filter(isSavedView);
     }
-  } catch {
-    // ignore parse errors
+  } catch (_error: unknown) {
+    return [];
   }
   return [];
 }
@@ -36,8 +60,8 @@ export function useSavedViews(): {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedViews));
-    } catch {
-      // Ignore storage errors
+    } catch (_error: unknown) {
+      return;
     }
   }, [savedViews]);
 
@@ -50,5 +74,7 @@ export function useSavedViews(): {
     setSavedViews(prev => prev.filter(v => v.id !== id));
   }, []);
 
+  // Saved views are loaded synchronously from localStorage on first render.
+  // No async loading state is needed — the initial state is always available.
   return { savedViews, saveView, removeView, isLoaded: true };
 }

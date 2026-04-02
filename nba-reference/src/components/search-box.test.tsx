@@ -257,6 +257,23 @@ describe('SearchBox', () => {
     expect(stored).toContain('Jordan');
   });
 
+  it('trims and deduplicates saved recent searches on submit', () => {
+    localStorage.setItem('recentSearches', JSON.stringify(['Jordan', 'LeBron']));
+
+    render(<SearchBox />);
+    const input = screen.getByPlaceholderText<HTMLInputElement>(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '  Jordan  ' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    const stored = JSON.parse(localStorage.getItem('recentSearches') ?? '[]') as string[];
+    expect(stored).toEqual(['Jordan', 'LeBron']);
+    expect(pushMock).toHaveBeenCalledWith('/search?q=Jordan');
+  });
+
   it('shows filter chips after results load', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       createSearchResponse([

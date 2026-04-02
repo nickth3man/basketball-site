@@ -15,7 +15,6 @@ import {
 } from '@/lib/api-response';
 import { getAvailablePuzzles } from '@/lib/puzzles/data';
 import type { HistoryResponse } from '@/lib/puzzles/types';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import type { NextRequest } from 'next/server';
 
 /** Returns today's ET date as a YYYY-MM-DD string */
@@ -34,9 +33,6 @@ export function OPTIONS(): Response {
  * @returns All available puzzles ordered newest-first
  */
 export function GET(req: NextRequest): Response {
-  const rateLimitResponse = checkRateLimit(req);
-  if (rateLimitResponse) return rateLimitResponse;
-
   try {
     const today = getTodayDateET();
     const puzzles = getAvailablePuzzles(today);

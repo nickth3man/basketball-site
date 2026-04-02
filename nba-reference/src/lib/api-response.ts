@@ -2,7 +2,6 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { API_CORS_HEADERS, API_NO_STORE_HEADERS } from '@/lib/api-headers';
 import { logError } from '@/lib/logger';
-import { extractClientIp, getRateLimitStatus, RATE_LIMIT } from '@/middleware/rate-limit';
 
 interface ApiErrorResponse {
   error: {
@@ -11,14 +10,15 @@ interface ApiErrorResponse {
   };
 }
 
-function buildRateLimitHeaders(req: NextRequest): Record<string, string> {
-  const rateLimitStatus = getRateLimitStatus(extractClientIp(req));
-  return {
-    'X-RateLimit-Limit': String(RATE_LIMIT),
-    'X-RateLimit-Remaining': String(rateLimitStatus.remaining),
-    'X-RateLimit-Reset': String(Math.ceil(rateLimitStatus.reset / 1000)),
-  };
-}
+export type ParsedApiJsonBodyResult =
+  | {
+      ok: true;
+      body: unknown;
+    }
+  | {
+      ok: false;
+      response: NextResponse<ApiErrorResponse>;
+    };
 
 export function createApiOptionsResponse(): Response {
   return new Response(null, {
@@ -31,7 +31,7 @@ export function createApiOptionsResponse(): Response {
 }
 
 export function createApiJsonResponse<T>(
-  req: NextRequest,
+  _req: NextRequest,
   body: T,
   init?: { headers?: Record<string, string>; status?: number }
 ): NextResponse<T> {
@@ -40,20 +40,19 @@ export function createApiJsonResponse<T>(
     headers: {
       ...API_CORS_HEADERS,
       ...API_NO_STORE_HEADERS,
-      ...buildRateLimitHeaders(req),
       ...init?.headers,
     },
   });
 }
 
 export function createApiErrorResponse(
-  req: NextRequest,
+  _req: NextRequest,
   status: number,
   code: string,
   message: string
 ): NextResponse<ApiErrorResponse> {
   return createApiJsonResponse(
-    req,
+    _req,
     {
       error: {
         code,
@@ -62,6 +61,21 @@ export function createApiErrorResponse(
     },
     { status }
   );
+}
+
+export async function parseApiJsonBody(
+  req: NextRequest,
+  invalidJsonMessage = 'Request body must be valid JSON.'
+): Promise<ParsedApiJsonBodyResult> {
+  try {
+    const body: unknown = await req.json();
+    return { ok: true, body };
+  } catch {
+    return {
+      ok: false,
+      response: createApiErrorResponse(req, 400, 'invalid_json', invalidJsonMessage),
+    };
+  }
 }
 
 export function logApiError(

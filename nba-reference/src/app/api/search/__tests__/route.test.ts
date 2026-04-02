@@ -1,22 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Route } from 'next';
 import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 vi.mock('@/lib/query/search', () => ({
+  SEARCH_API_RESULT_LIMIT: 8,
   SEARCH_RESULT_TYPES: ['player', 'team', 'season', 'game', 'award', 'page'],
+  normalizeSearchQuery: (query: string | null | undefined) => query?.trim() ?? '',
+  parseSearchResultType: (value: string | null | undefined) => {
+    const normalizedValue = value?.trim().toLowerCase();
+    return ['player', 'team', 'season', 'game', 'award', 'page'].find(
+      type => type === normalizedValue
+    );
+  },
   searchEntities: vi.fn(),
 }));
 
-vi.mock('@/middleware/rate-limit', () => ({
-  checkRateLimit: vi.fn(),
-  extractClientIp: vi.fn(() => '127.0.0.1'),
-  getRateLimitStatus: vi.fn(() => ({ remaining: 99, reset: 1_710_000_000_000 })),
-  RATE_LIMIT: 100,
-}));
-
 import { searchEntities } from '@/lib/query/search';
-import { checkRateLimit } from '@/middleware/rate-limit';
 import { GET } from '@/app/api/search/route';
 
 interface SearchResponse {
@@ -35,7 +34,6 @@ interface SearchResponse {
 }
 
 const searchEntitiesMock = vi.mocked(searchEntities);
-const checkRateLimitMock = vi.mocked(checkRateLimit);
 
 function createSearchRequest(query: string): NextRequest {
   return new NextRequest(`http://localhost/api/search?q=${encodeURIComponent(query)}`);
@@ -56,7 +54,6 @@ function createResult(
 describe('GET /api/search', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    checkRateLimitMock.mockReturnValue(null);
   });
 
   it('returns empty results for short queries', async () => {
@@ -86,20 +83,6 @@ describe('GET /api/search', () => {
     expect(searchEntitiesMock).toHaveBeenCalledWith('james', { limit: 8 });
     expect(payload.meta).toEqual({ limit: 8, query: 'james', type: null });
     expect(payload.results).toEqual(expectedResults);
-  });
-
-  it('returns rate limit response when blocked', async () => {
-    checkRateLimitMock.mockReturnValue(
-      NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-    );
-
-    const request = createSearchRequest('james');
-    const response = GET(request);
-    const payload = (await response.json()) as { error: string };
-
-    expect(response.status).toBe(429);
-    expect(payload.error).toBe('Too many requests');
-    expect(searchEntitiesMock).not.toHaveBeenCalled();
   });
 
   it('returns empty results for trimmed input below 2-character boundary', async () => {
@@ -270,7 +253,18 @@ describe('GET /api/search', () => {
     expect(payload.meta).toEqual({ limit: 8, query: 'james', type: 'player' });
   });
 
-  it('includes explicit cache and rate-limit headers on successful responses', () => {
+  it('normalizes whitespace and casing for recognized type filters', async () => {
+    searchEntitiesMock.mockReturnValue([]);
+
+    const request = new NextRequest('http://localhost/api/search?q=james&type=%20PLAYER%20');
+    const response = GET(request);
+    const payload = (await response.json()) as SearchResponse;
+
+    expect(searchEntitiesMock).toHaveBeenCalledWith('james', { limit: 8, types: ['player'] });
+    expect(payload.meta).toEqual({ limit: 8, query: 'james', type: 'player' });
+  });
+
+  it('includes explicit cache and CORS headers on successful responses', () => {
     searchEntitiesMock.mockReturnValue([]);
 
     const request = createSearchRequest('james');
@@ -278,9 +272,6 @@ describe('GET /api/search', () => {
 
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
-    expect(response.headers.get('X-RateLimit-Limit')).toBe('100');
-    expect(response.headers.get('X-RateLimit-Remaining')).toBe('99');
-    expect(response.headers.get('X-RateLimit-Reset')).toBe('1710000000');
   });
 
   it('returns a structured error response when search fails', async () => {

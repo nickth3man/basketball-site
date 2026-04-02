@@ -37,9 +37,16 @@ type SortDirection = 'asc' | 'desc';
 type SearchParamsLike = Pick<URLSearchParams, 'get' | 'toString'> | null;
 const tableUrlChangeEvent = 'stats-table-url-change';
 
-interface StatsTableColumnLink {
+export interface StatsTableColumnLink {
   type: 'player' | 'team' | 'league' | 'boxscore' | 'game';
   valueKey?: string;
+}
+
+export interface StatsTableColumn {
+  key: string;
+  label: string;
+  align?: 'left' | 'right';
+  link?: StatsTableColumnLink;
 }
 
 /**
@@ -47,12 +54,7 @@ interface StatsTableColumnLink {
  */
 interface StatsTableProps {
   /** Column definitions with key, label, optional alignment, and optional link behavior */
-  columns: Array<{
-    key: string;
-    label: string;
-    align?: 'left' | 'right';
-    link?: StatsTableColumnLink;
-  }>;
+  columns: StatsTableColumn[];
   /** Array of data rows to display */
   rows: DbRows;
   /** Initial column to sort by (defaults to first column) */

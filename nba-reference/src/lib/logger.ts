@@ -14,19 +14,32 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   error: 3,
 };
 
-const MIN_LEVEL: LogLevel = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+function getMinLevel(): LogLevel {
+  return process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+}
 
 function shouldLog(level: LogLevel): boolean {
-  return LOG_LEVELS[level] >= LOG_LEVELS[MIN_LEVEL];
+  return LOG_LEVELS[level] >= LOG_LEVELS[getMinLevel()];
 }
 
 function formatEntry(entry: LogEntry): string {
   const { level, message, timestamp, context } = entry;
   const parts = [`[${level.toUpperCase()}]`, timestamp, message];
   if (context != null && Object.keys(context).length > 0) {
-    parts.push(JSON.stringify(context));
+    parts.push(formatContext(context));
   }
   return parts.join(' ');
+}
+
+function formatContext(context: Record<string, unknown>): string {
+  try {
+    return JSON.stringify(context);
+  } catch {
+    return JSON.stringify({
+      contextSerialization: 'failed',
+      contextType: Object.prototype.toString.call(context),
+    });
+  }
 }
 
 function emit(entry: LogEntry): void {
