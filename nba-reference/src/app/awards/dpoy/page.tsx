@@ -14,12 +14,14 @@ import {
 
 export default function DPOYPage(): React.JSX.Element {
   const allCandidates = getDPOYHistory();
-  const seenSeasons = new Set<string>();
-  const winners = allCandidates.filter(w => {
-    if (seenSeasons.has(w.season_id)) return false;
-    seenSeasons.add(w.season_id);
-    return true;
-  });
+  const winnersBySeason = new Map<string, (typeof allCandidates)[number]>();
+  for (const candidate of allCandidates) {
+    const existing = winnersBySeason.get(candidate.season_id);
+    if (existing == null || (candidate.votes_received ?? -1) > (existing.votes_received ?? -1)) {
+      winnersBySeason.set(candidate.season_id, candidate);
+    }
+  }
+  const winners = Array.from(winnersBySeason.values()).sort((a, b) => b.start_year - a.start_year);
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">

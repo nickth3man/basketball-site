@@ -14,12 +14,16 @@ import {
 
 export default function ROYPage(): React.JSX.Element {
   const allCandidates = getROYHistory();
-  const seenSeasons = new Set<string>();
-  const winners = allCandidates.filter(w => {
-    if (seenSeasons.has(w.season_id)) return false;
-    seenSeasons.add(w.season_id);
-    return true;
-  });
+  const winnersBySeason = new Map<string, (typeof allCandidates)[number]>();
+  for (const candidate of allCandidates) {
+    const current = winnersBySeason.get(candidate.season_id);
+    const currentVotes = current?.votes_received ?? 0;
+    const candidateVotes = candidate.votes_received ?? 0;
+    if (current == null || candidateVotes > currentVotes) {
+      winnersBySeason.set(candidate.season_id, candidate);
+    }
+  }
+  const winners = Array.from(winnersBySeason.values());
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">

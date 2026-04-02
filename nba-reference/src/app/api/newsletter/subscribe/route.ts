@@ -78,7 +78,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     return createApiJsonResponse(req, {
       status: result.isNew ? 'subscribed' : 'already_subscribed',
-      ...(result.isNew && { unsubscribe_token: result.subscriber.unsubscribe_token }),
+      unsubscribe_token: result.subscriber.unsubscribe_token,
     });
   } catch (error) {
     logApiError('newsletter/subscribe', error, {
