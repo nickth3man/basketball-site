@@ -271,6 +271,10 @@ function CellDialog({
           brefId: selected.id,
         }),
       });
+      if (!res.ok) {
+        setError('Failed to validate answer. Please try again.');
+        return;
+      }
       const data = (await res.json()) as AnswerResponse;
       onResult(rowIndex, colIndex, data, selected.label);
       onClose();

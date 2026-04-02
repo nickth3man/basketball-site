@@ -87,7 +87,7 @@ export interface GridPuzzle {
   /** Row criteria (length must equal gridSize) */
   rows: GridCriteria[];
   /** Column criteria (length must equal gridSize) */
-  cols: GridCriteria[];
+  cols: [GridCriteria, GridCriteria, GridCriteria];
 }
 
 /** Serialisable representation of a single cell's state */

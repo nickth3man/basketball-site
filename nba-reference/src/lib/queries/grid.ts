@@ -29,6 +29,9 @@ export interface GridPlayerResult {
  * @returns Array of matching player records
  */
 export function searchGridPlayers(query: string, limit = 10): GridPlayerResult[] {
+  if (query.length < 2) {
+    return [];
+  }
   const pattern = `%${query}%`;
   return getCachedQueryMany<GridPlayerResult[]>(
     `SELECT p.bref_id, p.full_name, p.position
