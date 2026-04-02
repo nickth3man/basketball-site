@@ -33,6 +33,7 @@ describe('SearchBox', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     pushMock.mockReset();
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -68,6 +69,7 @@ describe('SearchBox', () => {
       /Search players, teams, seasons, games, awards, pages/i
     );
 
+    fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'Le' } });
 
     // Advance time but stay within debounce window - fetch should not be called yet
@@ -91,7 +93,7 @@ describe('SearchBox', () => {
       await Promise.resolve();
     });
 
-    expect(screen.getByText('LeBron James')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /LeBron James/i })).toBeInTheDocument();
     expect(screen.getByText('Player')).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /LeBron James/i })).toHaveAttribute(
       'href',
@@ -125,6 +127,7 @@ describe('SearchBox', () => {
       /Search players, teams, seasons, games, awards, pages/i
     );
 
+    fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'Lak' } });
 
     // Advance past debounce period
@@ -137,7 +140,7 @@ describe('SearchBox', () => {
       await Promise.resolve();
     });
 
-    expect(screen.getByText('Lakers')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Lakers/i })).toBeInTheDocument();
     expect(screen.getByText('Team')).toBeInTheDocument();
     expect(screen.getByText('Season')).toBeInTheDocument();
     expect(screen.getByRole('option', { name: /Lakers/i })).toHaveAttribute('href', '/teams/LAL');
@@ -155,6 +158,7 @@ describe('SearchBox', () => {
       /Search players, teams, seasons, games, awards, pages/i
     );
 
+    fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'L' } });
 
     // Advance well past the debounce period
@@ -200,5 +204,159 @@ describe('SearchBox', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(pushMock).toHaveBeenCalledWith('/search?q=Jordan');
+  });
+
+  it('shows recent searches when focused with short query', async () => {
+    localStorage.setItem('recentSearches', JSON.stringify(['LeBron', 'Kobe']));
+
+    render(<SearchBox />);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
+
+    fireEvent.focus(input);
+
+    // Flush effects
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText('Recent Searches')).toBeInTheDocument();
+    expect(screen.getByText('LeBron')).toBeInTheDocument();
+    expect(screen.getByText('Kobe')).toBeInTheDocument();
+  });
+
+  it('does not show recent searches section when localStorage is empty', async () => {
+    render(<SearchBox />);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
+
+    fireEvent.focus(input);
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText('Recent Searches')).not.toBeInTheDocument();
+  });
+
+  it('saves searches to localStorage on submit', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(createSearchResponse([]));
+
+    render(<SearchBox />);
+    const input = screen.getByPlaceholderText<HTMLInputElement>(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'Jordan' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    const stored = JSON.parse(localStorage.getItem('recentSearches') ?? '[]') as string[];
+    expect(stored).toContain('Jordan');
+  });
+
+  it('shows filter chips after results load', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      createSearchResponse([
+        {
+          type: 'player',
+          id: 'jokicni01',
+          label: 'Nikola Jokić',
+          href: '/players/j/jokicni01',
+          description: 'C · Active',
+        },
+      ])
+    );
+
+    render(<SearchBox />);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'Jok' } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // Filter chips should be visible
+    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Players' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Teams' })).toBeInTheDocument();
+  });
+
+  it('highlights matched text in result labels', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      createSearchResponse([
+        {
+          type: 'player',
+          id: 'jokicni01',
+          label: 'Nikola Jokić',
+          href: '/players/j/jokicni01',
+          description: null,
+        },
+      ])
+    );
+
+    render(<SearchBox />);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'Nik' } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // The <mark> element should wrap the matched text
+    const mark = document.querySelector('mark');
+    expect(mark).not.toBeNull();
+    expect(mark?.textContent).toBe('Nik');
+  });
+
+  it('closes dropdown on Escape key', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      createSearchResponse([
+        {
+          type: 'player',
+          id: 'jamesle01',
+          label: 'LeBron James',
+          href: '/players/l/jamesle01',
+          description: null,
+        },
+      ])
+    );
+
+    render(<SearchBox />);
+    const input = screen.getByPlaceholderText(
+      /Search players, teams, seasons, games, awards, pages/i
+    );
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'Le' } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('option', { name: /LeBron James/i })).toBeInTheDocument();
+
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    expect(screen.queryByRole('option', { name: /LeBron James/i })).not.toBeInTheDocument();
   });
 });
