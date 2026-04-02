@@ -14,12 +14,13 @@
 'use client';
 
 import type { JSX } from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface BottomNavItem {
-  href: string;
+  href: Route;
   label: string;
   icon: JSX.Element;
 }
@@ -108,10 +109,10 @@ function SearchIcon(): JSX.Element {
 }
 
 const NAV_ITEMS: BottomNavItem[] = [
-  { href: '/', label: 'Home', icon: <HomeIcon /> },
-  { href: '/standings', label: 'Standings', icon: <StandingsIcon /> },
-  { href: '/leaders', label: 'Leaders', icon: <LeadersIcon /> },
-  { href: '/search', label: 'Search', icon: <SearchIcon /> },
+  { href: '/' as Route, label: 'Home', icon: <HomeIcon /> },
+  { href: '/standings' as Route, label: 'Standings', icon: <StandingsIcon /> },
+  { href: '/leaders' as Route, label: 'Leaders', icon: <LeadersIcon /> },
+  { href: '/search' as Route, label: 'Search', icon: <SearchIcon /> },
 ];
 
 /**
@@ -128,10 +129,11 @@ export function BottomNav(): JSX.Element {
   return (
     <nav
       aria-label="Bottom navigation"
-      className="fixed right-0 bottom-0 left-0 z-30 flex h-16 items-stretch bg-[var(--dc-primary)] shadow-[0_-2px_12px_rgb(0_0_0/0.18)] lg:hidden"
+      className="fixed right-0 bottom-0 left-0 z-30 flex h-16 items-stretch bg-[var(--dc-primary)] pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-2px_12px_rgb(0_0_0/0.18)] lg:hidden"
     >
       {NAV_ITEMS.map(item => {
-        const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+        const href = item.href as string;
+        const isActive = pathname === href || pathname.startsWith(href + '/');
 
         return (
           <Link
