@@ -13,6 +13,7 @@ import type { JSX } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
+import { ThemeToggle } from '@/components/theme';
 import { cn } from '@/lib/utils';
 
 interface NavLink {
@@ -84,7 +85,7 @@ function CloseIcon({ className }: { className?: string }): JSX.Element {
 }
 
 const panelLinkClass =
-  'block px-5 py-3.5 text-sm text-header-text transition-all duration-200 hover:bg-white/12 hover:pl-6 hover:shadow-[inset_3px_0_0_color-mix(in_srgb,var(--dc-tertiary-fixed)_55%,transparent)]';
+  'flex min-h-[44px] items-center px-5 text-sm text-header-text transition-all duration-200 hover:bg-white/12 hover:pl-6 hover:shadow-[inset_3px_0_0_color-mix(in_srgb,var(--dc-tertiary-fixed)_55%,transparent)]';
 
 export function MobileNav(): JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -103,10 +104,11 @@ export function MobileNav(): JSX.Element {
 
   return (
     <>
+      {/* Hamburger button — minimum 44×44 px touch target */}
       <button
         type="button"
         onClick={openMenu}
-        className="flex items-center justify-center rounded-md p-2 text-header-text transition-all duration-200 hover:bg-white/10 hover:shadow-[0_0_12px_color-mix(in_srgb,var(--dc-tertiary-container)_25%,transparent)] lg:hidden"
+        className="flex h-11 w-11 items-center justify-center rounded-md text-header-text transition-all duration-200 hover:bg-white/10 hover:shadow-[0_0_12px_color-mix(in_srgb,var(--dc-tertiary-container)_25%,transparent)] lg:hidden"
         aria-label="Open navigation menu"
         aria-expanded={isOpen}
         aria-controls="mobile-nav-panel"
@@ -126,24 +128,25 @@ export function MobileNav(): JSX.Element {
       {isOpen ? (
         <nav
           id="mobile-nav-panel"
-          className="fixed top-0 right-0 z-50 h-full w-[min(20rem,92vw)] overflow-y-auto bg-linear-to-b from-header-start to-header-mid shadow-[var(--shadow-ambient)] outline outline-1 outline-[color-mix(in_srgb,var(--dc-tertiary-fixed)_18%,transparent)] transition-transform duration-300 ease-in-out lg:hidden"
+          className="fixed top-0 right-0 z-50 flex h-full w-[min(20rem,92vw)] flex-col overflow-y-auto bg-linear-to-b from-header-start to-header-mid shadow-[var(--shadow-ambient)] outline outline-1 outline-[color-mix(in_srgb,var(--dc-tertiary-fixed)_18%,transparent)] transition-transform duration-300 ease-in-out lg:hidden"
           aria-label="Mobile navigation"
         >
-          <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center justify-between px-4 py-3">
             <span className="font-serif text-sm font-semibold tracking-wide text-[var(--dc-tertiary-fixed)]">
               Menu
             </span>
+            {/* Close button — minimum 44×44 px touch target */}
             <button
               type="button"
               onClick={closeMenu}
-              className="flex items-center justify-center rounded-md p-2 text-header-text transition-colors hover:bg-white/10"
+              className="flex h-11 w-11 items-center justify-center rounded-md text-header-text transition-colors hover:bg-white/10"
               aria-label="Close navigation menu"
             >
               <CloseIcon className="h-5 w-5" />
             </button>
           </div>
 
-          <ul className="flex flex-col gap-1 pb-6">
+          <ul className="flex flex-col gap-0.5 pb-4">
             {NAV_LINKS.map(link => (
               <li key={link.href}>
                 <Link href={link.href} onClick={handleLinkClick} className={panelLinkClass}>
@@ -152,6 +155,12 @@ export function MobileNav(): JSX.Element {
               </li>
             ))}
           </ul>
+
+          {/* Theme toggle at the bottom of the drawer */}
+          <div className="mt-auto flex items-center gap-3 border-t border-white/10 px-5 py-4">
+            <span className="text-sm text-header-text/70">Theme</span>
+            <ThemeToggle />
+          </div>
         </nav>
       ) : null}
     </>
