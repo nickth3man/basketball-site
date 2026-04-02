@@ -26,6 +26,10 @@ export * from './wnba';
 export * from './gleague';
 export * from './college';
 export * from './international';
+export * from './referees';
+export * from './depth-chart';
+export * from './lineups';
+export * from './on-off';
 
 // Re-export feature queries for convenience
 export {

@@ -118,10 +118,7 @@ export function SearchBox({
   );
 
   const showDropdown =
-    isFocused &&
-    (trimmedQuery.length >= 2
-      ? isLoading || hasSearched
-      : recentSearches.length > 0);
+    isFocused && (trimmedQuery.length >= 2 ? isLoading || hasSearched : recentSearches.length > 0);
 
   const activeResult = activeIndex >= 0 ? filteredResults[activeIndex] : undefined;
   const activeDescendant = activeResult ? `${listboxId}-${activeIndex}` : undefined;
@@ -219,15 +216,12 @@ export function SearchBox({
     setQuery(initialQuery);
   }, [initialQuery]);
 
-  const persistSearch = useCallback(
-    (searchQuery: string) => {
-      if (searchQuery.length >= 2) {
-        saveRecentSearch(searchQuery);
-        setRecentSearches(getRecentSearches());
-      }
-    },
-    []
-  );
+  const persistSearch = useCallback((searchQuery: string) => {
+    if (searchQuery.length >= 2) {
+      saveRecentSearch(searchQuery);
+      setRecentSearches(getRecentSearches());
+    }
+  }, []);
 
   const closeDropdown = useCallback(() => {
     setHasSearched(false);
@@ -290,20 +284,14 @@ export function SearchBox({
 
             if (event.key === 'ArrowDown') {
               event.preventDefault();
-              setActiveIndex(current =>
-                items.length > 0 ? (current + 1) % items.length : -1
-              );
+              setActiveIndex(current => (items.length > 0 ? (current + 1) % items.length : -1));
               return;
             }
 
             if (event.key === 'ArrowUp') {
               event.preventDefault();
               setActiveIndex(current =>
-                items.length > 0
-                  ? current <= 0
-                    ? items.length - 1
-                    : current - 1
-                  : -1
+                items.length > 0 ? (current <= 0 ? items.length - 1 : current - 1) : -1
               );
               return;
             }
@@ -339,7 +327,7 @@ export function SearchBox({
         {!isFocused ? (
           <kbd
             aria-hidden="true"
-            className="pointer-events-none absolute right-2.5 hidden select-none rounded border border-[color-mix(in_srgb,var(--dc-outline-variant)_30%,transparent)] px-1.5 py-0.5 text-xs font-medium text-muted sm:inline-block"
+            className="pointer-events-none absolute right-2.5 hidden rounded border border-[color-mix(in_srgb,var(--dc-outline-variant)_30%,transparent)] px-1.5 py-0.5 text-xs font-medium text-muted select-none sm:inline-block"
           >
             /
           </kbd>
@@ -349,7 +337,7 @@ export function SearchBox({
       {/* Dropdown */}
       {showDropdown ? (
         <div
-          className="absolute z-20 mt-2 w-full overflow-hidden fade-slide-in surface-glass shadow-popover"
+          className="absolute z-20 mt-2 w-full fade-slide-in overflow-hidden surface-glass shadow-popover"
           onMouseDown={event => {
             // Prevent the input from blurring when the user clicks inside the dropdown
             // (filter chips, result links, recent-search buttons).
@@ -430,9 +418,7 @@ export function SearchBox({
             </div>
           ) : null}
 
-          {isLoading ? (
-            <div className="px-4 py-3 text-sm text-muted">Searching…</div>
-          ) : null}
+          {isLoading ? <div className="px-4 py-3 text-sm text-muted">Searching…</div> : null}
 
           {/* Search results */}
           {!isLoading && trimmedQuery.length >= 2 && filteredResults.length > 0 ? (

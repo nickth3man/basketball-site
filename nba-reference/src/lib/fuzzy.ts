@@ -1,38 +1,26 @@
+function safeGet(row: number[], idx: number): number {
+  return row.at(idx) ?? 0;
+}
+
 function levenshteinDistance(a: string, b: string): number {
-  const rows = b.length + 1;
-  const cols = a.length + 1;
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
 
-  const matrix: number[][] = [];
-  for (let i = 0; i < rows; i++) {
-    const row: number[] = [];
-    for (let j = 0; j < cols; j++) {
-      row.push(0);
+  const initRow: number[] = Array.from({ length: a.length + 1 }, (_, j) => j);
+
+  let prevRow = initRow;
+  for (let rowIdx = 0; rowIdx < b.length; rowIdx++) {
+    const row: number[] = [rowIdx + 1];
+    for (let col = 0; col < a.length; col++) {
+      const cost = b[rowIdx] === a[col] ? 0 : 1;
+      row.push(
+        Math.min(safeGet(prevRow, col) + cost, safeGet(prevRow, col + 1) + 1, safeGet(row, col) + 1)
+      );
     }
-    matrix.push(row);
+    prevRow = row;
   }
 
-  for (let i = 0; i < rows; i++) {
-    matrix[i]![0] = i;
-  }
-
-  for (let j = 0; j < cols; j++) {
-    matrix[0]![j] = j;
-  }
-
-  for (let i = 1; i < rows; i++) {
-    for (let j = 1; j < cols; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i]![j] = matrix[i - 1]![j - 1]!;
-      } else {
-        const diag = matrix[i - 1]![j - 1]!;
-        const left = matrix[i]![j - 1]!;
-        const up = matrix[i - 1]![j]! + 1;
-        matrix[i]![j] = Math.min(diag + 1, left + 1, up + 1);
-      }
-    }
-  }
-
-  return matrix[rows - 1]![cols - 1]!;
+  return safeGet(prevRow, a.length);
 }
 
 export interface FuzzyMatchResult {
@@ -65,7 +53,7 @@ export function fuzzyScore(query: string, target: string): FuzzyMatchResult {
 
 export function fuzzyFilter<T extends { label: string }>(
   query: string,
-  items: Array<T>,
+  items: T[],
   minScore = 0.4
 ): Array<T & { score: number }> {
   return items

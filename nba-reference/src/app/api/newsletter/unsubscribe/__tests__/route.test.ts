@@ -28,7 +28,10 @@ function makeRequest(token?: string): NextRequest {
       body: JSON.stringify({ token }),
     });
   }
-  return new NextRequest(url, { method: 'POST' });
+  return new NextRequest(url, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
 }
 
 describe('POST /api/newsletter/unsubscribe', () => {
