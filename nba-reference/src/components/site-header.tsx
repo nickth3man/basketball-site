@@ -84,6 +84,12 @@ export function SiteHeader(): JSX.Element {
           <Link href={'/friv/birthdays' as Route} className={navLinkClass}>
             Frivolities
           </Link>
+          <Link href={'/blog' as Route} className={navLinkClass}>
+            Blog
+          </Link>
+          <Link href={'/podcast' as Route} className={navLinkClass}>
+            Podcast
+          </Link>
           <ThemeToggle />
         </nav>
 

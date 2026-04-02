@@ -36,6 +36,8 @@ const NAV_LINKS: NavLink[] = [
   { href: '/awards' as Route, label: 'Awards' },
   { href: '/standings' as Route, label: 'Standings' },
   { href: '/friv/birthdays' as Route, label: 'Frivolities' },
+  { href: '/blog' as Route, label: 'Blog' },
+  { href: '/podcast' as Route, label: 'Podcast' },
 ];
 
 function HamburgerIcon({ className }: { className?: string }): JSX.Element {
