@@ -1,5 +1,5 @@
-# Pre-commit hook - runs from git root but executes commands in nba-reference
+set -e
 
-# Change to nba-reference directory and run lint-staged
+printf '%s\n' 'Running staged quality checks...'
 cd nba-reference
-npx lint-staged
+npm exec lint-staged
