@@ -28,6 +28,10 @@ const NAV_LINKS: NavLink[] = [
   { href: '/games' as Route, label: 'Games' },
   { href: '/seasons' as Route, label: 'Seasons' },
   { href: '/leagues' as Route, label: 'Leagues' },
+  { href: '/wnba' as Route, label: 'WNBA' },
+  { href: '/gleague' as Route, label: 'G-League' },
+  { href: '/college' as Route, label: 'College' },
+  { href: '/international' as Route, label: 'International' },
   { href: '/boxscores' as Route, label: 'Box Scores' },
   { href: '/leaders' as Route, label: 'Leaders' },
   { href: '/draft' as Route, label: 'Draft' },
@@ -36,6 +40,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/awards' as Route, label: 'Awards' },
   { href: '/standings' as Route, label: 'Standings' },
   { href: '/friv/birthdays' as Route, label: 'Frivolities' },
+  { href: '/friv/immaculate-grid' as Route, label: 'Grid' },
 ];
 
 function HamburgerIcon({ className }: { className?: string }): JSX.Element {

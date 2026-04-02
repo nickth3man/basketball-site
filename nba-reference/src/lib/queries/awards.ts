@@ -61,12 +61,21 @@ export interface AwardWinnerWithTrophyRow extends AwardHistoryRow {
   trophy_name: string | null;
 }
 
-/**
- * MVP winner for a specific season.
- *
- * @param seasonId - Season identifier (e.g., "2024-25")
- * @returns MVP winner record or undefined
- */
+export interface AwardVotingRow {
+  season_id: string;
+  rank: number;
+  bref_id: string;
+  full_name: string;
+  team_abbrev: string | null;
+  team_name: string | null;
+  votes_received: number | null;
+  votes_possible: number | null;
+  vote_percentage: number | null;
+  first_place_votes: number | null;
+  second_place_votes: number | null;
+  third_place_votes: number | null;
+}
+
 export function getMVPWinner(seasonId: string): AwardWinnerRow | undefined {
   return getCachedQueryOne<AwardWinnerRow | undefined>(
     `SELECT 
@@ -80,26 +89,28 @@ export function getMVPWinner(seasonId: string): AwardWinnerRow | undefined {
         WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
         ELSE NULL
       END as vote_percentage
-    FROM fact_player_award pa
+    FROM (
+      SELECT DISTINCT ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ?
     JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
-      AND ps.season_id = pa.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-    WHERE pa.season_id = ?
-      AND pa.award_name = 'MVP'
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
+    WHERE pa.award_name = 'MVP'
     ORDER BY pa.votes_received DESC
     LIMIT 1`,
-    [seasonId],
+    [seasonId, seasonId],
     60_000
   );
 }
 
-/**
- * Get all MVP winners in history.
- *
- * @returns Array of MVP winner records ordered by season (newest first)
- */
 export function getMVPHistory(): AwardHistoryRow[] {
   return getCachedQueryMany<AwardHistoryRow[]>(
     `SELECT 
@@ -116,13 +127,20 @@ export function getMVPHistory(): AwardHistoryRow[] {
         WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
         ELSE NULL
       END as vote_percentage
-    FROM fact_player_award pa
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ps_dedup.season_id
     JOIN dim_season s ON s.season_id = pa.season_id
     JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
-      AND ps.season_id = pa.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE pa.award_name = 'MVP'
     ORDER BY s.start_year DESC`,
     [],
@@ -130,12 +148,45 @@ export function getMVPHistory(): AwardHistoryRow[] {
   );
 }
 
-/**
- * Defensive Player of the Year winner for a specific season.
- *
- * @param seasonId - Season identifier (e.g., "2024-25")
- * @returns DPOY winner record or undefined
- */
+export function getMVPVotingBySeason(seasonId: string): AwardVotingRow[] {
+  return getCachedQueryMany<AwardVotingRow[]>(
+    `SELECT 
+      pa.season_id,
+      RANK() OVER (ORDER BY pa.votes_received DESC) as rank,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev,
+      t.full_name as team_name,
+      pa.votes_received,
+      pa.votes_possible,
+      CASE 
+        WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
+        ELSE NULL
+      END as vote_percentage,
+      pa.first_place_votes,
+      pa.second_place_votes,
+      pa.third_place_votes
+    FROM (
+      SELECT DISTINCT ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ?
+    JOIN dim_player p ON p.bref_id = pa.player_id
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
+    WHERE pa.award_name = 'MVP'
+    ORDER BY pa.votes_received DESC`,
+    [seasonId, seasonId],
+    60_000
+  );
+}
+
 export function getDPOYWinner(seasonId: string): AwardWinnerRow | undefined {
   return getCachedQueryOne<AwardWinnerRow | undefined>(
     `SELECT 
@@ -149,26 +200,28 @@ export function getDPOYWinner(seasonId: string): AwardWinnerRow | undefined {
         WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
         ELSE NULL
       END as vote_percentage
-    FROM fact_player_award pa
+    FROM (
+      SELECT DISTINCT ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ?
     JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
-      AND ps.season_id = pa.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-     WHERE pa.season_id = ?
-       AND pa.award_name = 'DPOY'
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
+    WHERE pa.award_name = 'DPOY'
     ORDER BY pa.votes_received DESC
     LIMIT 1`,
-    [seasonId],
+    [seasonId, seasonId],
     60_000
   );
 }
 
-/**
- * Get all DPOY winners in history.
- *
- * @returns Array of DPOY winner records ordered by season (newest first)
- */
 export function getDPOYHistory(): AwardHistoryRow[] {
   return getCachedQueryMany<AwardHistoryRow[]>(
     `SELECT 
@@ -185,13 +238,20 @@ export function getDPOYHistory(): AwardHistoryRow[] {
         WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
         ELSE NULL
       END as vote_percentage
-    FROM fact_player_award pa
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ps_dedup.season_id
     JOIN dim_season s ON s.season_id = pa.season_id
     JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
-      AND ps.season_id = pa.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE pa.award_name = 'DPOY'
     ORDER BY s.start_year DESC`,
     [],
@@ -199,12 +259,45 @@ export function getDPOYHistory(): AwardHistoryRow[] {
   );
 }
 
-/**
- * Rookie of the Year winner for a specific season.
- *
- * @param seasonId - Season identifier (e.g., "2024-25")
- * @returns ROY winner record or undefined
- */
+export function getDPOYVotingBySeason(seasonId: string): AwardVotingRow[] {
+  return getCachedQueryMany<AwardVotingRow[]>(
+    `SELECT 
+      pa.season_id,
+      RANK() OVER (ORDER BY pa.votes_received DESC) as rank,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev,
+      t.full_name as team_name,
+      pa.votes_received,
+      pa.votes_possible,
+      CASE 
+        WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
+        ELSE NULL
+      END as vote_percentage,
+      pa.first_place_votes,
+      pa.second_place_votes,
+      pa.third_place_votes
+    FROM (
+      SELECT DISTINCT ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ?
+    JOIN dim_player p ON p.bref_id = pa.player_id
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
+    WHERE pa.award_name = 'DPOY'
+    ORDER BY pa.votes_received DESC`,
+    [seasonId, seasonId],
+    60_000
+  );
+}
+
 export function getROYWinner(seasonId: string): AwardWinnerRow | undefined {
   return getCachedQueryOne<AwardWinnerRow | undefined>(
     `SELECT 
@@ -218,26 +311,28 @@ export function getROYWinner(seasonId: string): AwardWinnerRow | undefined {
         WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
         ELSE NULL
       END as vote_percentage
-    FROM fact_player_award pa
+    FROM (
+      SELECT DISTINCT ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ?
     JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
-      AND ps.season_id = pa.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
-     WHERE pa.season_id = ?
-       AND pa.award_name = 'ROY'
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
+    WHERE pa.award_name = 'ROY'
     ORDER BY pa.votes_received DESC
     LIMIT 1`,
-    [seasonId],
+    [seasonId, seasonId],
     60_000
   );
 }
 
-/**
- * Get all ROY winners in history.
- *
- * @returns Array of ROY winner records ordered by season (newest first)
- */
 export function getROYHistory(): AwardHistoryRow[] {
   return getCachedQueryMany<AwardHistoryRow[]>(
     `SELECT 
@@ -254,13 +349,20 @@ export function getROYHistory(): AwardHistoryRow[] {
         WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
         ELSE NULL
       END as vote_percentage
-    FROM fact_player_award pa
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ps_dedup.season_id
     JOIN dim_season s ON s.season_id = pa.season_id
     JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
-      AND ps.season_id = pa.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE pa.award_name = 'ROY'
     ORDER BY s.start_year DESC`,
     [],
@@ -268,12 +370,45 @@ export function getROYHistory(): AwardHistoryRow[] {
   );
 }
 
-/**
- * Get All-NBA teams for a specific season.
- *
- * @param seasonId - Season identifier (e.g., "2024-25")
- * @returns Object with first, second, and third teams
- */
+export function getROYVotingBySeason(seasonId: string): AwardVotingRow[] {
+  return getCachedQueryMany<AwardVotingRow[]>(
+    `SELECT 
+      pa.season_id,
+      RANK() OVER (ORDER BY pa.votes_received DESC) as rank,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev,
+      t.full_name as team_name,
+      pa.votes_received,
+      pa.votes_possible,
+      CASE 
+        WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
+        ELSE NULL
+      END as vote_percentage,
+      pa.first_place_votes,
+      pa.second_place_votes,
+      pa.third_place_votes
+    FROM (
+      SELECT DISTINCT ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ?
+    JOIN dim_player p ON p.bref_id = pa.player_id
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
+    WHERE pa.award_name = 'ROY'
+    ORDER BY pa.votes_received DESC`,
+    [seasonId, seasonId],
+    60_000
+  );
+}
+
 export function getAllNBATeams(seasonId: string): {
   first: AllTeamSelectionRow[];
   second: AllTeamSelectionRow[];
@@ -287,16 +422,24 @@ export function getAllNBATeams(seasonId: string): {
       p.full_name,
       t.bref_abbrev as team_abbrev,
       t.full_name as team_name
-    FROM fact_all_nba an
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_all_nba an ON an.player_id = ps_dedup.bref_player_id AND an.season_id = ps_dedup.season_id
     JOIN dim_player p ON p.bref_id = an.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = an.player_id
-      AND ps.season_id = an.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = an.player_id
+      AND t_ps.season_id = an.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE an.season_id = ?
       AND an.team_type = 'All-NBA'
     ORDER BY an.team_number, an.position`,
-    [seasonId],
+    [seasonId, seasonId],
     60_000
   );
 
@@ -307,11 +450,6 @@ export function getAllNBATeams(seasonId: string): {
   };
 }
 
-/**
- * Get All-NBA teams history (all seasons).
- *
- * @returns Array of All-NBA selections ordered by season (newest first)
- */
 export function getAllNBAHistory(): AllTeamHistoryRow[] {
   return getCachedQueryMany<AllTeamHistoryRow[]>(
     `SELECT 
@@ -328,13 +466,20 @@ export function getAllNBAHistory(): AllTeamHistoryRow[] {
       p.bref_id,
       p.full_name,
       t.bref_abbrev as team_abbrev
-    FROM fact_all_nba an
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_all_nba an ON an.player_id = ps_dedup.bref_player_id AND an.season_id = ps_dedup.season_id
     JOIN dim_season s ON s.season_id = an.season_id
     JOIN dim_player p ON p.bref_id = an.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = an.player_id
-      AND ps.season_id = an.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = an.player_id
+      AND t_ps.season_id = an.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE an.team_type = 'All-NBA'
     ORDER BY s.start_year DESC, an.team_number, an.position`,
     [],
@@ -342,12 +487,6 @@ export function getAllNBAHistory(): AllTeamHistoryRow[] {
   );
 }
 
-/**
- * Get All-Defensive teams for a specific season.
- *
- * @param seasonId - Season identifier (e.g., "2024-25")
- * @returns Object with first and second teams
- */
 export function getAllDefensiveTeams(seasonId: string): {
   first: AllTeamSelectionRow[];
   second: AllTeamSelectionRow[];
@@ -360,16 +499,24 @@ export function getAllDefensiveTeams(seasonId: string): {
       p.full_name,
       t.bref_abbrev as team_abbrev,
       t.full_name as team_name
-    FROM fact_all_nba an
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.season_id = ?
+        AND ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_all_nba an ON an.player_id = ps_dedup.bref_player_id AND an.season_id = ps_dedup.season_id
     JOIN dim_player p ON p.bref_id = an.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = an.player_id
-      AND ps.season_id = an.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = an.player_id
+      AND t_ps.season_id = an.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE an.season_id = ?
       AND an.team_type = 'All-Defense'
     ORDER BY an.team_number, an.position`,
-    [seasonId],
+    [seasonId, seasonId],
     60_000
   );
 
@@ -379,11 +526,6 @@ export function getAllDefensiveTeams(seasonId: string): {
   };
 }
 
-/**
- * Get All-Defensive teams history.
- *
- * @returns Array of All-Defensive selections ordered by season (newest first)
- */
 export function getAllDefensiveHistory(): AllTeamHistoryRow[] {
   return getCachedQueryMany<AllTeamHistoryRow[]>(
     `SELECT 
@@ -399,13 +541,20 @@ export function getAllDefensiveHistory(): AllTeamHistoryRow[] {
       p.bref_id,
       p.full_name,
       t.bref_abbrev as team_abbrev
-    FROM fact_all_nba an
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_all_nba an ON an.player_id = ps_dedup.bref_player_id AND an.season_id = ps_dedup.season_id
     JOIN dim_season s ON s.season_id = an.season_id
     JOIN dim_player p ON p.bref_id = an.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = an.player_id
-      AND ps.season_id = an.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = an.player_id
+      AND t_ps.season_id = an.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE an.team_type = 'All-Defense'
     ORDER BY s.start_year DESC, an.team_number, an.position`,
     [],
@@ -413,12 +562,6 @@ export function getAllDefensiveHistory(): AllTeamHistoryRow[] {
   );
 }
 
-/**
- * Get complete award summary for a season.
- *
- * @param seasonId - Season identifier (e.g., "2024-25")
- * @returns Object with MVP, DPOY, ROY winners and All-NBA teams
- */
 export function getSeasonAwards(seasonId: string): {
   mvp: AwardWinnerRow | undefined;
   dpoy: AwardWinnerRow | undefined;
@@ -442,11 +585,6 @@ export function getSeasonAwards(seasonId: string): {
   };
 }
 
-/**
- * Get all available award types in the database.
- *
- * @returns Array of unique award names
- */
 export function getAwardTypes(): string[] {
   const results = getCachedQueryMany<AwardTypeRow[]>(
     `SELECT DISTINCT award_name 
@@ -460,12 +598,6 @@ export function getAwardTypes(): string[] {
   return results.map(result => result.award_name);
 }
 
-/**
- * Get all award winners for a specific award type.
- *
- * @param awardName - Award name (e.g., "MVP", "DPOY", "ROY")
- * @returns Array of winner records ordered by season (newest first)
- */
 export function getAwardWinners(awardName: string): AwardWinnerWithTrophyRow[] {
   return getCachedQueryMany<AwardWinnerWithTrophyRow[]>(
     `SELECT 
@@ -483,16 +615,94 @@ export function getAwardWinners(awardName: string): AwardWinnerWithTrophyRow[] {
         WHEN pa.votes_possible > 0 THEN ROUND(pa.votes_received * 100.0 / pa.votes_possible, 1)
         ELSE NULL
       END as vote_percentage
-    FROM fact_player_award pa
+    FROM (
+      SELECT DISTINCT ps.season_id, ps.bref_player_id
+      FROM fact_player_season_stats ps
+      WHERE ps.team_abbrev NOT LIKE '%TM'
+        AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    ) ps_dedup
+    JOIN fact_player_award pa ON pa.player_id = ps_dedup.bref_player_id AND pa.season_id = ps_dedup.season_id
     JOIN dim_season s ON s.season_id = pa.season_id
     JOIN dim_player p ON p.bref_id = pa.player_id
-    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = pa.player_id
-      AND ps.season_id = pa.season_id
-      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
-    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = pa.player_id
+      AND t_ps.season_id = pa.season_id
+      AND t_ps.team_abbrev NOT LIKE '%TM'
+      AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
     WHERE pa.award_name = ?
     ORDER BY s.start_year DESC`,
     [awardName],
+    60_000
+  );
+}
+
+/**
+ * Get All-Rookie teams for a specific season.
+ *
+ * @param seasonId - Season identifier (e.g., "2024-25")
+ * @returns Object with first and second All-Rookie teams
+ */
+export function getAllRookieTeams(seasonId: string): {
+  first: AllTeamSelectionRow[];
+  second: AllTeamSelectionRow[];
+} {
+  const allTeams = getCachedQueryMany<AllTeamSelectionRow[]>(
+    `SELECT
+      an.team_number,
+      an.position,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev,
+      t.full_name as team_name
+    FROM fact_all_nba an
+    JOIN dim_player p ON p.player_id = an.player_id
+    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = p.bref_id
+      AND ps.season_id = an.season_id
+      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    WHERE an.season_id = ?
+      AND an.team_type = 'All-Rookie'
+    ORDER BY an.team_number, an.position`,
+    [seasonId],
+    60_000
+  );
+
+  return {
+    first: allTeams.filter(team => team.team_number === 1),
+    second: allTeams.filter(team => team.team_number === 2),
+  };
+}
+
+/**
+ * Get All-Rookie team history (all seasons).
+ *
+ * @returns Array of All-Rookie selections ordered by season (newest first)
+ */
+export function getAllRookieHistory(): AllTeamHistoryRow[] {
+  return getCachedQueryMany<AllTeamHistoryRow[]>(
+    `SELECT
+      an.season_id,
+      s.start_year,
+      s.end_year,
+      an.team_number,
+      CASE
+        WHEN an.team_number = 1 THEN 'First Team'
+        WHEN an.team_number = 2 THEN 'Second Team'
+      END as team_name,
+      an.position,
+      p.bref_id,
+      p.full_name,
+      t.bref_abbrev as team_abbrev
+    FROM fact_all_nba an
+    JOIN dim_season s ON s.season_id = an.season_id
+    JOIN dim_player p ON p.player_id = an.player_id
+    LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = p.bref_id
+      AND ps.season_id = an.season_id
+      AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+    LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+    WHERE an.team_type = 'All-Rookie'
+    ORDER BY s.start_year DESC, an.team_number, an.position`,
+    [],
     60_000
   );
 }
@@ -514,15 +724,23 @@ export function getAllNBAVotingBySeason(
             anv.first_team_votes,
             anv.second_team_votes,
             anv.third_team_votes
-      FROM fact_all_nba_vote anv
+      FROM (
+        SELECT DISTINCT ps.season_id, ps.bref_player_id
+        FROM fact_player_season_stats ps
+        WHERE ps.season_id = ?
+          AND ps.team_abbrev NOT LIKE '%TM'
+          AND (ps.lg = 'NBA' OR ps.lg IS NULL)
+      ) ps_dedup
+      JOIN fact_all_nba_vote anv ON anv.player_id = ps_dedup.bref_player_id AND anv.season_id = ps_dedup.season_id
       JOIN dim_player p ON p.bref_id = anv.player_id
-      LEFT JOIN fact_player_season_stats ps ON ps.bref_player_id = anv.player_id
-        AND ps.season_id = anv.season_id
-        AND ps.lg = 'NBA'
-      LEFT JOIN dim_team t ON t.bref_abbrev = ps.team_abbrev
+      LEFT JOIN fact_player_season_stats t_ps ON t_ps.bref_player_id = anv.player_id
+        AND t_ps.season_id = anv.season_id
+        AND t_ps.team_abbrev NOT LIKE '%TM'
+        AND (t_ps.lg = 'NBA' OR t_ps.lg IS NULL)
+      LEFT JOIN dim_team t ON t.bref_abbrev = t_ps.team_abbrev
       WHERE anv.season_id = ?
       ORDER BY anv.pts_won DESC, anv.team_number ASC, p.full_name ASC`,
-    [seasonId],
+    [seasonId, seasonId],
     60_000
   );
 }

@@ -13,7 +13,18 @@ import {
 } from '@/lib/table-styles';
 
 export default function MVPPage(): React.JSX.Element {
-  const winners = getMVPHistory();
+  const allCandidates = getMVPHistory();
+  const winnersBySeason = new Map<string, (typeof allCandidates)[number]>();
+  for (const candidate of allCandidates) {
+    const currentWinner = winnersBySeason.get(candidate.season_id);
+    if (
+      currentWinner == null ||
+      (candidate.votes_received ?? -1) > (currentWinner.votes_received ?? -1)
+    ) {
+      winnersBySeason.set(candidate.season_id, candidate);
+    }
+  }
+  const winners = Array.from(winnersBySeason.values()).sort((a, b) => b.start_year - a.start_year);
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
@@ -36,12 +47,13 @@ export default function MVPPage(): React.JSX.Element {
                 <th className={tableHeaderCellClass('left')}>Team</th>
                 <th className={tableHeaderCellClass('right')}>Votes</th>
                 <th className={tableHeaderCellClass('right')}>Vote %</th>
+                <th className={tableHeaderCellClass('left')}>Voting</th>
               </tr>
             </thead>
             <tbody>
               {winners.map((winner, index) => (
                 <tr
-                  key={winner.season_id}
+                  key={`${winner.season_id}-${winner.bref_id}`}
                   className={index % 2 === 0 ? tableBodyRowClass : 'bg-row-alt'}
                 >
                   <td className={tableCellClass('left')}>
@@ -72,6 +84,14 @@ export default function MVPPage(): React.JSX.Element {
                   <td className={tableCellClass('right')}>{winner.votes_received ?? '-'}</td>
                   <td className={tableCellClass('right')}>
                     {winner.vote_percentage == null ? '-' : `${String(winner.vote_percentage)}%`}
+                  </td>
+                  <td className={tableCellClass('left')}>
+                    <Link
+                      href={`/awards/mvp/${winner.season_id}` as Route}
+                      className={tableLinkClass}
+                    >
+                      View
+                    </Link>
                   </td>
                 </tr>
               ))}

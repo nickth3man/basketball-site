@@ -7,7 +7,9 @@ interface TeamComparePageProps {
   searchParams: Promise<{ t1?: string; t2?: string }>;
 }
 
-export default async function TeamComparePage({ searchParams }: TeamComparePageProps): Promise<JSX.Element> {
+export default async function TeamComparePage({
+  searchParams,
+}: TeamComparePageProps): Promise<JSX.Element> {
   const { t1, t2 } = await searchParams;
 
   const team1Info = t1 != null ? getTeamInfo(t1.toUpperCase()) : undefined;
@@ -15,7 +17,8 @@ export default async function TeamComparePage({ searchParams }: TeamComparePageP
   const team1Stats = t1 != null ? getTeamCurrentStats(t1.toUpperCase()) : undefined;
   const team2Stats = t2 != null ? getTeamCurrentStats(t2.toUpperCase()) : undefined;
 
-  const showComparison = team1Info != null && team2Info != null && team1Stats != null && team2Stats != null;
+  const showComparison =
+    team1Info != null && team2Info != null && team1Stats != null && team2Stats != null;
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-6">
@@ -39,7 +42,9 @@ export default async function TeamComparePage({ searchParams }: TeamComparePageP
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs text-muted" htmlFor="team1">Team 1 Abbreviation</label>
+            <label className="mb-1 block text-xs text-muted" htmlFor="team1">
+              Team 1 Abbreviation
+            </label>
             <input
               id="team1"
               type="text"
@@ -49,7 +54,9 @@ export default async function TeamComparePage({ searchParams }: TeamComparePageP
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-muted" htmlFor="team2">Team 2 Abbreviation</label>
+            <label className="mb-1 block text-xs text-muted" htmlFor="team2">
+              Team 2 Abbreviation
+            </label>
             <input
               id="team2"
               type="text"
@@ -108,13 +115,37 @@ export default async function TeamComparePage({ searchParams }: TeamComparePageP
                 { key: 'team2', label: team2Info.abbreviation, align: 'right' },
               ]}
               rows={[
-                { stat: 'Record', team1: `${team1Stats.wins ?? '-'}-${team1Stats.losses ?? '-'}`, team2: `${team2Stats.wins ?? '-'}-${team2Stats.losses ?? '-'}` },
-                { stat: 'Offensive Rating', team1: team1Stats.o_rtg ?? '-', team2: team2Stats.o_rtg ?? '-' },
-                { stat: 'Defensive Rating', team1: team1Stats.d_rtg ?? '-', team2: team2Stats.d_rtg ?? '-' },
-                { stat: 'Net Rating', team1: team1Stats.n_rtg ?? '-', team2: team2Stats.n_rtg ?? '-' },
+                {
+                  stat: 'Record',
+                  team1: `${team1Stats.wins ?? '-'}-${team1Stats.losses ?? '-'}`,
+                  team2: `${team2Stats.wins ?? '-'}-${team2Stats.losses ?? '-'}`,
+                },
+                {
+                  stat: 'Offensive Rating',
+                  team1: team1Stats.o_rtg ?? '-',
+                  team2: team2Stats.o_rtg ?? '-',
+                },
+                {
+                  stat: 'Defensive Rating',
+                  team1: team1Stats.d_rtg ?? '-',
+                  team2: team2Stats.d_rtg ?? '-',
+                },
+                {
+                  stat: 'Net Rating',
+                  team1: team1Stats.n_rtg ?? '-',
+                  team2: team2Stats.n_rtg ?? '-',
+                },
                 { stat: 'Pace', team1: team1Stats.pace ?? '-', team2: team2Stats.pace ?? '-' },
-                { stat: 'True Shooting %', team1: team1Stats.ts_pct ?? '-', team2: team2Stats.ts_pct ?? '-' },
-                { stat: 'Effective FG%', team1: team1Stats.e_fg_pct ?? '-', team2: team2Stats.e_fg_pct ?? '-' },
+                {
+                  stat: 'True Shooting %',
+                  team1: team1Stats.ts_pct ?? '-',
+                  team2: team2Stats.ts_pct ?? '-',
+                },
+                {
+                  stat: 'Effective FG%',
+                  team1: team1Stats.e_fg_pct ?? '-',
+                  team2: team2Stats.e_fg_pct ?? '-',
+                },
               ]}
               initialSort="stat"
             />

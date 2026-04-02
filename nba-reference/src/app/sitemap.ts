@@ -5,6 +5,7 @@ import { getPlayoffSeasons } from '@/lib/queries/playoffs';
 import { getSeasonList } from '@/lib/queries/seasons';
 import { getTeamDirectory } from '@/lib/query/directory';
 import { getSiteUrl } from '@/lib/site-config';
+import { getAllBlogPosts, getAllPodcastEpisodes } from '@/lib/content';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();
@@ -67,6 +68,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/podcast`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
     },
   ];
 
@@ -168,6 +181,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
+  // Dynamic routes - Blog posts
+  const blogPosts = getAllBlogPosts();
+  const blogRoutes: MetadataRoute.Sitemap = blogPosts.map(post => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.date),
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  }));
+
+  // Dynamic routes - Podcast episodes
+  const podcastEpisodes = getAllPodcastEpisodes();
+  const podcastRoutes: MetadataRoute.Sitemap = podcastEpisodes.map(ep => ({
+    url: `${baseUrl}/podcast/${ep.slug}`,
+    lastModified: new Date(ep.date),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
+
   return [
     ...staticRoutes,
     ...teamRoutes,
@@ -178,5 +209,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...allStarRoutes,
     ...awardRoutes,
     ...allLeagueVoteRoutes,
+    ...blogRoutes,
+    ...podcastRoutes,
   ];
 }

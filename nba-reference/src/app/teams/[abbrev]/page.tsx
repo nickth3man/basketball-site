@@ -74,19 +74,21 @@ function getTeamJsonLd(
     name: team.full_name,
     url: `${siteUrl}/teams/${abbrev}`,
     sport: 'Basketball',
-    ...(team.conference != null ? { memberOf: { '@type': 'SportsOrganization', name: `NBA ${team.conference} Conference` } } : {}),
+    ...(team.conference != null
+      ? { memberOf: { '@type': 'SportsOrganization', name: `NBA ${team.conference} Conference` } }
+      : {}),
     ...(current?.['w'] != null && current['l'] != null
-      ? { additionalProperty: [
-          { '@type': 'PropertyValue', name: 'Wins', value: current['w'] },
-          { '@type': 'PropertyValue', name: 'Losses', value: current['l'] },
-        ] }
+      ? {
+          additionalProperty: [
+            { '@type': 'PropertyValue', name: 'Wins', value: current['w'] },
+            { '@type': 'PropertyValue', name: 'Losses', value: current['l'] },
+          ],
+        }
       : {}),
   };
 }
 
-export default async function TeamPage({
-  params,
-}: TeamPageParams): Promise<JSX.Element> {
+export default async function TeamPage({ params }: TeamPageParams): Promise<JSX.Element> {
   const { abbrev } = await params;
 
   // Validate team abbreviation format before querying

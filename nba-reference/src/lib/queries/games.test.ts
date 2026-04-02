@@ -6,6 +6,7 @@ import {
   getGameTeamFourFactors,
   getGameLineScore,
   getGameTeamBoxScores,
+  getGamePbpWithShotDetails,
 } from '@/lib/queries/games';
 
 describe('game queries', () => {
@@ -106,6 +107,63 @@ describe('game queries', () => {
         expect(period).toHaveProperty('period');
         expect(period).toHaveProperty('home');
         expect(period).toHaveProperty('away');
+      }
+    });
+  });
+
+  describe('getGamePbpWithShotDetails', () => {
+    it('returns an array', () => {
+      const shots = getGamePbpWithShotDetails(TEST_GAME_ID);
+      expect(Array.isArray(shots)).toBe(true);
+    });
+
+    it('only returns made or missed field goal events', () => {
+      const shots = getGamePbpWithShotDetails(TEST_GAME_ID);
+      for (const shot of shots) {
+        expect([1, 2]).toContain(shot.eventmsgtype);
+      }
+    });
+
+    it('includes required ShotEvent fields', () => {
+      const shots = getGamePbpWithShotDetails(TEST_GAME_ID);
+      if (shots.length === 0) return; // graceful if game has no shot data
+      const shot = shots[0];
+      expect(shot).toHaveProperty('event_id');
+      expect(shot).toHaveProperty('period');
+      expect(shot).toHaveProperty('shot_result');
+      expect(shot).toHaveProperty('shot_type');
+      expect(shot).toHaveProperty('shot_zone');
+      expect(shot).toHaveProperty('assisted');
+      expect(shot).toHaveProperty('shot_value');
+    });
+
+    it('shot_result matches eventmsgtype', () => {
+      const shots = getGamePbpWithShotDetails(TEST_GAME_ID);
+      for (const shot of shots) {
+        if (shot.eventmsgtype === 1) {
+          expect(shot.shot_result).toBe('made');
+        } else {
+          expect(shot.shot_result).toBe('missed');
+        }
+      }
+    });
+
+    it('respects limit parameter', () => {
+      const shots = getGamePbpWithShotDetails(TEST_GAME_ID, 5);
+      expect(shots.length).toBeLessThanOrEqual(5);
+    });
+
+    it('returns empty array for unknown game', () => {
+      const shots = getGamePbpWithShotDetails('unknown999');
+      expect(shots).toHaveLength(0);
+    });
+
+    it('shot_value is 2 or 3 when present', () => {
+      const shots = getGamePbpWithShotDetails(TEST_GAME_ID);
+      for (const shot of shots) {
+        if (shot.shot_value !== null) {
+          expect([2, 3]).toContain(shot.shot_value);
+        }
       }
     });
   });
