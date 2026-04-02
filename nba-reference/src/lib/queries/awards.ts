@@ -74,6 +74,7 @@ export interface AwardVotingRow {
   first_place_votes: number | null;
   second_place_votes: number | null;
   third_place_votes: number | null;
+  [key: string]: string | number | null;
 }
 
 export function getMVPWinner(seasonId: string): AwardWinnerRow | undefined {

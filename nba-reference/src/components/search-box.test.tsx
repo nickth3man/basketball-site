@@ -241,7 +241,7 @@ describe('SearchBox', () => {
     expect(screen.queryByText('Recent Searches')).not.toBeInTheDocument();
   });
 
-  it('saves searches to localStorage on submit', async () => {
+  it('saves searches to localStorage on submit', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(createSearchResponse([]));
 
     render(<SearchBox />);

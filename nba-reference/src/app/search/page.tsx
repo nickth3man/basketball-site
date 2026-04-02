@@ -95,7 +95,8 @@ export default async function SearchPage({
         : `Showing ${paginatedResults.startItem}–${paginatedResults.endItem} of ${paginatedResults.totalItems} matches.`;
 
   // Sidebar / top-row filter classes
-  const filterBaseClass = 'flex items-center justify-between rounded-md px-3 py-2 transition-colors text-sm';
+  const filterBaseClass =
+    'flex items-center justify-between rounded-md px-3 py-2 transition-colors text-sm';
   const filterActiveClass = `${filterBaseClass} bg-[color-mix(in_srgb,var(--dc-tertiary-container)_20%,var(--dc-surface-container-highest))] text-heading shadow-input`;
   const filterIdleClass = `${filterBaseClass} bg-[var(--dc-surface-container-highest)] text-muted-strong hover:bg-button-hover`;
 
@@ -146,8 +147,8 @@ export default async function SearchPage({
       {query.length < 2 ? (
         <section className="panel-paper p-6">
           <p className="mb-4 text-sm text-muted-strong">
-            Enter at least 2 characters to search. Try a player last name, team abbreviation,
-            season year, game date, award name, or page like playoffs, draft, or birthdays.
+            Enter at least 2 characters to search. Try a player last name, team abbreviation, season
+            year, game date, award name, or page like playoffs, draft, or birthdays.
           </p>
           <div className="mt-4">
             <p className="mb-2 text-xs font-medium tracking-wide text-muted uppercase">
@@ -232,15 +233,14 @@ export default async function SearchPage({
           </aside>
 
           {/* Main results area */}
-          <div className="space-y-6 min-w-0">
+          <div className="min-w-0 space-y-6">
             {/* Summary bar */}
             <section className="panel-paper p-4 text-sm text-muted-strong">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <span>{summary}</span>
                 {isResultSetCapped ? (
                   <span className="text-xs text-muted">
-                    Narrow your query to move beyond the first {SEARCH_RESULTS_FETCH_LIMIT}{' '}
-                    matches.
+                    Narrow your query to move beyond the first {SEARCH_RESULTS_FETCH_LIMIT} matches.
                   </span>
                 ) : null}
               </div>
