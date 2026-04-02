@@ -9,12 +9,12 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import RSS from 'rss';
-import { getAllBlogPosts } from '@/lib/content';
+import { getAllBlogPosts, getBlogPost } from '@/lib/content';
 import { getSiteUrl } from '@/lib/site-config';
 
 export const dynamic = 'force-static';
 
-export function GET(_request: NextRequest): NextResponse {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   const siteUrl = getSiteUrl();
   const posts = getAllBlogPosts();
 
@@ -31,9 +31,10 @@ export function GET(_request: NextRequest): NextResponse {
   });
 
   for (const post of posts) {
+    const fullPost = await getBlogPost(post.slug);
     feed.item({
       title: post.title,
-      description: post.excerpt,
+      description: fullPost?.content ?? post.excerpt,
       url: `${siteUrl}/blog/${post.slug}`,
       date: new Date(post.date),
       categories: post.tags,

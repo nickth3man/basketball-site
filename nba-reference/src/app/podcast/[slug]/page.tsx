@@ -51,7 +51,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 function formatDate(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return dateStr;
+    }
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -59,6 +63,13 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr;
   }
+}
+
+function formatDuration(duration: string): string {
+  if (!/^PT(\d+H)?(\d+M)?(\d+S)?$/.test(duration)) {
+    return duration;
+  }
+  return duration;
 }
 
 export default async function PodcastEpisodePage({
@@ -78,7 +89,7 @@ export default async function PodcastEpisodePage({
     description: episode.excerpt,
     episodeNumber: episode.episodeNumber,
     datePublished: episode.date,
-    duration: episode.duration,
+    duration: formatDuration(episode.duration),
     url: `${siteUrl}/podcast/${episode.slug}`,
     audio:
       episode.audioUrl.length > 0

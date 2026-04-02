@@ -26,7 +26,11 @@ export const metadata: Metadata = {
 
 function formatDate(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return dateStr;
+    }
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -53,20 +57,12 @@ export default function PodcastIndexPage(): React.JSX.Element {
 
       {/* Subscribe links */}
       <div className="mb-8 flex flex-wrap gap-3">
-        {[
-          { label: 'Apple Podcasts', href: '#' as Route },
-          { label: 'Spotify', href: '#' as Route },
-          { label: 'Overcast', href: '#' as Route },
-          { label: 'Blog RSS', href: '/rss/blog.xml' as Route },
-        ].map(({ label, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className="surface-altar rounded-full px-4 py-2 text-xs font-medium text-heading ghost-border transition-all hover:shadow-[var(--shadow-glow-gold)]"
-          >
-            {label}
-          </Link>
-        ))}
+        <Link
+          href="/rss/blog.xml"
+          className="surface-altar rounded-full px-4 py-2 text-xs font-medium text-heading ghost-border transition-all hover:shadow-[var(--shadow-glow-gold)]"
+        >
+          Blog RSS
+        </Link>
       </div>
 
       {episodes.length === 0 ? (

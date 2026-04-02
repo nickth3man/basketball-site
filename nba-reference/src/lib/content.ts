@@ -109,15 +109,13 @@ export function getAllBlogPosts(): BlogPostMeta[] {
  * Returns a single blog post including rendered HTML content.
  */
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
-  // Try both the slug itself and date-prefixed filename patterns (e.g., YYYY-MM-slug)
   const dir = getBlogDir();
   if (!fs.existsSync(dir)) return null;
 
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
   const match = files.find(f => {
     const fileSlug = f.replace(/\.md$/, '');
-    // Match exact filename or date-prefixed filenames (e.g., 2024-01-my-slug matches my-slug)
-    return fileSlug === slug || fileSlug.endsWith(`-${slug}`);
+    return fileSlug === slug;
   });
 
   if (match === undefined) return null;
@@ -126,9 +124,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   const raw = fs.readFileSync(fullPath, 'utf8');
   const { data, content: rawContent } = matter(raw);
 
-  // Content is always authored by the site owner (committed to the repository)
-  // and is therefore trusted; sanitize:false allows rich HTML in markdown posts.
-  const processed = await remark().use(remarkHtml, { sanitize: false }).process(rawContent);
+  const processed = await remark().use(remarkHtml, { sanitize: true }).process(rawContent);
   const contentHtml = processed.toString();
 
   return {
@@ -211,8 +207,7 @@ export async function getPodcastEpisode(slug: string): Promise<PodcastEpisode | 
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
   const match = files.find(f => {
     const fileSlug = f.replace(/\.md$/, '');
-    // Match exact filename or date-prefixed filenames (e.g., 2024-01-my-slug matches my-slug)
-    return fileSlug === slug || fileSlug.endsWith(`-${slug}`);
+    return fileSlug === slug;
   });
 
   if (match === undefined) return null;
@@ -221,9 +216,7 @@ export async function getPodcastEpisode(slug: string): Promise<PodcastEpisode | 
   const raw = fs.readFileSync(fullPath, 'utf8');
   const { data, content: rawContent } = matter(raw);
 
-  // Content is always authored by the site owner (committed to the repository)
-  // and is therefore trusted; sanitize:false allows rich HTML in markdown posts.
-  const processed = await remark().use(remarkHtml, { sanitize: false }).process(rawContent);
+  const processed = await remark().use(remarkHtml, { sanitize: true }).process(rawContent);
   const contentHtml = processed.toString();
 
   return {
