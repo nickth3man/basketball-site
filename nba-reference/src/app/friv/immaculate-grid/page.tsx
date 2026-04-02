@@ -31,10 +31,18 @@ function getTodayDateET(): string {
  *
  * Loads today's puzzle on the server and renders the interactive grid.
  * Falls back to an unavailable message when no puzzle exists for today.
+ *
+ * @param searchParams - Optional date query param (YYYY-MM-DD) to load a specific puzzle
  */
-export default function ImmaculateGridPage(): React.JSX.Element {
+export default async function ImmaculateGridPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}): Promise<React.JSX.Element> {
+  const { date } = await searchParams;
   const today = getTodayDateET();
-  const puzzle = getTodayPuzzle(today);
+  const puzzleDate = date ?? today;
+  const puzzle = getTodayPuzzle(puzzleDate);
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 py-6">
