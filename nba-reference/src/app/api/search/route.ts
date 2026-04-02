@@ -14,6 +14,7 @@ import {
   createApiOptionsResponse,
   logApiError,
 } from '@/lib/api-response';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limiter';
 import {
   normalizeSearchQuery,
   parseSearchResultType,
@@ -21,6 +22,8 @@ import {
   searchEntities,
 } from '@/lib/query/search';
 import type { NextRequest } from 'next/server';
+
+const checkSearchRateLimit = createRateLimiter(30, 60 * 1000);
 
 export function OPTIONS(): Response {
   return createApiOptionsResponse();
@@ -36,12 +39,29 @@ export function OPTIONS(): Response {
  * @returns An object with a `results` array of search entries, each entry having fields such as `type`, `id`, and `label`
  */
 export function GET(req: NextRequest): Response {
+  const clientIp = getClientIp(req);
+  const rateLimitResult = checkSearchRateLimit(clientIp);
+
+  if (!rateLimitResult.allowed) {
+    const resetTime = Math.ceil(Date.now() / 1000) + 60;
+    const response = createApiErrorResponse(
+      req,
+      429,
+      'rate_limit_exceeded',
+      'Too many requests. Please try again later.'
+    );
+    response.headers.set('X-RateLimit-Limit', '30');
+    response.headers.set('X-RateLimit-Remaining', '0');
+    response.headers.set('X-RateLimit-Reset', String(resetTime));
+    return response;
+  }
+
   try {
     const query = normalizeSearchQuery(req.nextUrl.searchParams.get('q'));
     const matchedType = parseSearchResultType(req.nextUrl.searchParams.get('type'));
 
     if (query.length < 2) {
-      return createApiJsonResponse(req, {
+      const response = createApiJsonResponse(req, {
         meta: {
           limit: SEARCH_API_RESULT_LIMIT,
           query,
@@ -49,9 +69,13 @@ export function GET(req: NextRequest): Response {
         },
         results: [],
       });
+      response.headers.set('X-RateLimit-Limit', '30');
+      response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
+      response.headers.set('X-RateLimit-Reset', String(Math.ceil(Date.now() / 1000) + 60));
+      return response;
     }
 
-    return createApiJsonResponse(req, {
+    const response = createApiJsonResponse(req, {
       meta: {
         limit: SEARCH_API_RESULT_LIMIT,
         query,
@@ -64,6 +88,10 @@ export function GET(req: NextRequest): Response {
           : { limit: SEARCH_API_RESULT_LIMIT }
       ),
     });
+    response.headers.set('X-RateLimit-Limit', '30');
+    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
+    response.headers.set('X-RateLimit-Reset', String(Math.ceil(Date.now() / 1000) + 60));
+    return response;
   } catch (error) {
     logApiError('search', error, {
       query: normalizeSearchQuery(req.nextUrl.searchParams.get('q')),

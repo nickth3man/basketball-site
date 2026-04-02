@@ -48,7 +48,7 @@
   ],
   "eslint.workingDirectories": [
     {
-      "mode": "auto"
+      "pattern": "nba-reference/*"
     }
   ],
   "eslint.useFlatConfig": true,
@@ -61,19 +61,15 @@
   // ============================================
   // TYPESCRIPT - STRICT WORKSPACE VERSION
   // ============================================
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "javascript.preferences.importModuleSpecifier": "relative",
-  "typescript.preferences.quoteStyle": "single",
-  "javascript.preferences.quoteStyle": "single",
+  "js/ts.tsdk.path": "nba-reference/node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "js/ts.preferences.importModuleSpecifier": "relative",
+  "js/ts.preferences.quoteStyle": "single",
   "typescript.preferences.includePackageTypeInDeclarationImports": true,
-  "typescript.tsc.autoDetect": "off",
-  "javascript.format.enable": false,
-  "typescript.format.enable": false,
-  "typescript.validate.enable": true,
-  "typescript.suggest.autoImports": true,
-  "javascript.suggest.autoImports": true,
+  "js/ts.tsc.autoDetect": "off",
+  "js/ts.format.enabled": false,
+  "js/ts.validate.enabled": true,
+  "js/ts.suggest.autoImports": true,
   "typescript.suggest.includeCompletionsForModuleExports": true,
 
   // ============================================
@@ -153,10 +149,10 @@
   },
 
   // ============================================
-  // PRETTIER SETTINGS
+  // PRETTIER SETTINGS — PATHS ADJUSTED FOR ROOT
   // ============================================
-  "prettier.configPath": ".prettierrc.json",
-  "prettier.ignorePath": ".prettierignore",
+  "prettier.configPath": "nba-reference/.prettierrc.json",
+  "prettier.ignorePath": "nba-reference/.prettierignore",
 
   // ============================================
   // GIT SETTINGS
@@ -178,10 +174,13 @@
   },
 
   // ============================================
-  // ERROR & PROBLEMS
+  // ERROR & PROBLEMS — WORKSPACE-WIDE DIAGNOSTICS
   // ============================================
   "problems.decorations.enabled": true,
-  "typescript.reportStyleChecksAsWarnings": false,
+  "problems.showCurrentContext": true,
+  "js/ts.reportStyleChecksAsWarnings": false,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "eslint.lintTask.enable": true,
 
   // ============================================
   // DEBUGGING

@@ -1,0 +1,180 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev",
+      "type": "npm",
+      "script": "dev",
+      "group": "none",
+      "detail": "Start Next.js dev server",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dev:turbopack",
+      "type": "npm",
+      "script": "dev:turbopack",
+      "group": "none",
+      "detail": "Start Next.js dev server with Turbopack",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "npm",
+      "script": "build",
+      "group": "build",
+      "detail": "Create production build",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "start",
+      "type": "npm",
+      "script": "start",
+      "group": "none",
+      "detail": "Start production server",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "lint",
+      "type": "npm",
+      "script": "lint",
+      "group": "none",
+      "detail": "Run ESLint",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "label": "lint:fix",
+      "type": "npm",
+      "script": "lint:fix",
+      "group": "none",
+      "detail": "Run ESLint with auto-fix",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "format",
+      "type": "npm",
+      "script": "format",
+      "group": "none",
+      "detail": "Format code with Prettier",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "format:check",
+      "type": "npm",
+      "script": "format:check",
+      "group": "none",
+      "detail": "Check code formatting",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "type-check",
+      "type": "npm",
+      "script": "type-check",
+      "group": "none",
+      "detail": "Run TypeScript compiler check (one-shot)",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "type-check:watch",
+      "type": "npm",
+      "script": "type-check:watch",
+      "group": "none",
+      "detail": "TypeScript compiler check — workspace-wide (auto-starts on open)",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": ["$tsc-watch"],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "never",
+        "echo": false,
+        "focus": false,
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "test",
+      "type": "npm",
+      "script": "test",
+      "group": "test",
+      "detail": "Run Vitest test suite",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "test:watch",
+      "type": "npm",
+      "script": "test:watch",
+      "group": "none",
+      "detail": "Run tests in watch mode",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "verify:db",
+      "type": "npm",
+      "script": "verify:db",
+      "group": "none",
+      "detail": "Verify SQLite payload is present and readable",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ci",
+      "type": "npm",
+      "script": "ci",
+      "group": "build",
+      "detail": "Full CI pipeline (type-check + lint + format + test)",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "quality-gate",
+      "type": "npm",
+      "script": "quality-gate",
+      "group": "none",
+      "detail": "Full quality gate (verify:db + ci + build)",
+      "options": {
+        "cwd": "${workspaceFolder}/nba-reference"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

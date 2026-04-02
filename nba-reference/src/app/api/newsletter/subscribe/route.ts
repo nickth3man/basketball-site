@@ -12,12 +12,16 @@
 import {
   createApiErrorResponse,
   createApiJsonResponse,
-  createApiOptionsResponse,
   logApiError,
   parseApiJsonBody,
 } from '@/lib/api-response';
+import { API_NO_STORE_HEADERS, WRITE_CORS_HEADERS } from '@/lib/api-headers';
 import { addSubscriber } from '@/lib/newsletter-db';
+import { getClientIp, createRateLimiter } from '@/lib/rate-limiter';
 import type { NextRequest } from 'next/server';
+
+/** Rate limiter: 5 requests per 10 minutes per IP. */
+const checkSubscribeRateLimit = createRateLimiter(5, 10 * 60 * 1000);
 
 /** RFC 5322–inspired email regex — good enough for server-side pre-validation. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -25,8 +29,19 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 /** Maximum allowed byte length for an email field value. */
 const MAX_EMAIL_LENGTH = 254;
 
-export function OPTIONS(): Response {
-  return createApiOptionsResponse();
+export function OPTIONS(req: NextRequest): Response {
+  const origin = req.headers.get('origin');
+  const corsHeaders: Record<string, string> = {
+    ...WRITE_CORS_HEADERS,
+    ...API_NO_STORE_HEADERS,
+  };
+  if (origin != null && origin.length > 0) {
+    corsHeaders['Access-Control-Allow-Origin'] = origin;
+  }
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
 }
 
 /**
@@ -39,6 +54,17 @@ export function OPTIONS(): Response {
  *          and the subscriber's `unsubscribe_token`.
  */
 export async function POST(req: NextRequest): Promise<Response> {
+  const clientIp = getClientIp(req);
+  const rateLimitResult = checkSubscribeRateLimit(clientIp);
+  if (!rateLimitResult.allowed) {
+    return createApiErrorResponse(
+      req,
+      429,
+      'rate_limit_exceeded',
+      'Too many requests. Please try again later.'
+    );
+  }
+
   try {
     const parsedBody = await parseApiJsonBody(req);
     if (!parsedBody.ok) {
@@ -78,12 +104,9 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     return createApiJsonResponse(req, {
       status: result.isNew ? 'subscribed' : 'already_subscribed',
-      unsubscribe_token: result.subscriber.unsubscribe_token,
     });
   } catch (error) {
-    logApiError('newsletter/subscribe', error, {
-      email: undefined,
-    });
+    logApiError('newsletter/subscribe', error);
     return createApiErrorResponse(
       req,
       500,

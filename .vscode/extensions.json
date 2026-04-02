@@ -24,7 +24,13 @@
     "usernamehw.errorlens",
 
     // JSON/YAML
-    "redhat.vscode-yaml"
+    "redhat.vscode-yaml",
+
+    // SQLite (for db/ directory)
+    "alexcvzz.vscode-sqlite",
+
+    // Markdown (for content/ directory)
+    "yzhang.markdown-all-in-one"
   ],
   "unwantedRecommendations": [
     "hookyqr.beautify",

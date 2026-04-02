@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * @fileoverview Newsletter database module — manages writable SQLite storage for
  * subscriber records and newsletter editions.
@@ -9,10 +11,12 @@
  * @module @/lib/newsletter-db
  */
 
-import Database from 'better-sqlite3';
+import Database, { SqliteError } from 'better-sqlite3';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { logWarn } from '@/lib/logger';
 
 /** Singleton writable database instance */
 let newsletterDb: Database.Database | null = null;
@@ -40,7 +44,11 @@ export function resolveNewsletterDbPath(): string {
  */
 export function getNewsletterDb(): Database.Database {
   if (!newsletterDb) {
-    newsletterDb = new Database(resolveNewsletterDbPath());
+    const dbPath = resolveNewsletterDbPath();
+    if (!existsSync(dbPath)) {
+      logWarn('Newsletter database file not found, creating new file', { path: dbPath });
+    }
+    newsletterDb = new Database(dbPath);
     newsletterDb.pragma('journal_mode = WAL');
     newsletterDb.pragma('foreign_keys = ON');
     applySchema(newsletterDb);
@@ -147,19 +155,32 @@ export function addSubscriber(
   }
 
   const token = crypto.randomBytes(32).toString('hex');
-  const info = db
-    .prepare(
-      `INSERT INTO subscribers (email, source, preference, unsubscribe_token)
-       VALUES (?, ?, ?, ?)`
-    )
-    .run(email, source, preference, token);
+  try {
+    const info = db
+      .prepare(
+        `INSERT INTO subscribers (email, source, preference, unsubscribe_token)
+         VALUES (?, ?, ?, ?)`
+      )
+      .run(email, source, preference, token);
 
-  return {
-    subscriber: db
-      .prepare('SELECT * FROM subscribers WHERE id = ?')
-      .get(info.lastInsertRowid) as Subscriber,
-    isNew: true,
-  };
+    return {
+      subscriber: db
+        .prepare('SELECT * FROM subscribers WHERE id = ?')
+        .get(info.lastInsertRowid) as Subscriber,
+      isNew: true,
+    };
+  } catch (err) {
+    if (err instanceof SqliteError && err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      // Concurrent request inserted the same email — treat as idempotent success
+      const reselected = db
+        .prepare('SELECT * FROM subscribers WHERE email = ? COLLATE NOCASE')
+        .get(email) as Subscriber | undefined;
+      if (reselected) {
+        return { subscriber: reselected, isNew: false };
+      }
+    }
+    throw err;
+  }
 }
 
 /**
@@ -169,8 +190,12 @@ export function addSubscriber(
  * @returns `true` if a matching active subscriber was found and updated,
  *          `false` otherwise
  */
+/** Expected format for unsubscribe tokens: 64 hex characters (32 bytes). */
+const TOKEN_HEX_RE = /^[0-9a-f]{64}$/i;
+
 export function unsubscribeByToken(token: string): boolean {
   if (token.length === 0) return false;
+  if (!TOKEN_HEX_RE.test(token)) return false;
 
   const db = getNewsletterDb();
   const info = db

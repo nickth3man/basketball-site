@@ -11,15 +11,26 @@
 import {
   createApiErrorResponse,
   createApiJsonResponse,
-  createApiOptionsResponse,
   logApiError,
   parseApiJsonBody,
 } from '@/lib/api-response';
 import { unsubscribeByToken } from '@/lib/newsletter-db';
+import { API_NO_STORE_HEADERS, WRITE_CORS_HEADERS } from '@/lib/api-headers';
 import type { NextRequest } from 'next/server';
 
-export function OPTIONS(): Response {
-  return createApiOptionsResponse();
+export function OPTIONS(req: NextRequest): Response {
+  const origin = req.headers.get('origin');
+  const corsHeaders: Record<string, string> = {
+    ...WRITE_CORS_HEADERS,
+    ...API_NO_STORE_HEADERS,
+  };
+  if (origin != null && origin.length > 0) {
+    corsHeaders['Access-Control-Allow-Origin'] = origin;
+  }
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
 }
 
 /**

@@ -5,6 +5,14 @@
  * Content files use YAML frontmatter (parsed via gray-matter) for metadata
  * and CommonMark markdown for body text.
  *
+ * **Intentional trade-off**: This module uses synchronous filesystem calls
+ * (`fs.existsSync`, `fs.readdirSync`, `fs.readFileSync`). Since content only
+ * changes at rebuild time in production and the corpus is small (~5 files),
+ * sync I/O is acceptable for Server Components. In development with hot-reloading,
+ * every page request reads all files synchronously — this adds minor latency
+ * but simplifies caching logic. If the content corpus grows significantly,
+ * consider module-level caching or async alternatives.
+ *
  * @module @/lib/content
  */
 

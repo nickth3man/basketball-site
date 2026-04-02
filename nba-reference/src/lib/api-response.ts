@@ -83,10 +83,16 @@ export function logApiError(
   error: unknown,
   metadata: Record<string, string | number | boolean | null | undefined> = {}
 ): void {
+  const stack =
+    error instanceof Error && error.stack != null
+      ? process.env.NODE_ENV === 'production'
+        ? error.stack.split('\n').slice(0, 3).join('\n')
+        : error.stack
+      : undefined;
   logError(`api:${route} failed`, {
     ...metadata,
     errorName: error instanceof Error ? error.name : 'UnknownError',
     error: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
+    stack,
   });
 }

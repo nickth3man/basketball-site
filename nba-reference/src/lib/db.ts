@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * @fileoverview Database module providing a singleton SQLite connection with explicit query caching.
  *

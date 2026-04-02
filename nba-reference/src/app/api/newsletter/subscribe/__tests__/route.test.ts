@@ -6,6 +6,7 @@ vi.mock('@/lib/newsletter-db', () => ({
 }));
 
 import { addSubscriber } from '@/lib/newsletter-db';
+import { clearRateLimitStore } from '@/lib/rate-limiter';
 import { POST } from '@/app/api/newsletter/subscribe/route';
 
 const addSubscriberMock = vi.mocked(addSubscriber);
@@ -34,6 +35,7 @@ function makeRequest(body: unknown): NextRequest {
 describe('POST /api/newsletter/subscribe', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearRateLimitStore();
   });
 
   it('subscribes a new user and returns status=subscribed', async () => {
@@ -41,11 +43,10 @@ describe('POST /api/newsletter/subscribe', () => {
 
     const req = makeRequest({ email: 'fan@example.com' });
     const res = await POST(req);
-    const body = (await res.json()) as { status: string; unsubscribe_token: string };
+    const body = (await res.json()) as { status: string };
 
     expect(res.status).toBe(200);
     expect(body.status).toBe('subscribed');
-    expect(body.unsubscribe_token).toBe('abc123token');
     expect(addSubscriberMock).toHaveBeenCalledWith('fan@example.com', 'web', 'daily');
   });
 
